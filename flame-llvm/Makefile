@@ -19,9 +19,9 @@ clean:
 	rm -rf bin/
 	rm -rf obj/
 
-bin/clr/flame-llvm.exe: $(files)
+bin/clr/flame-llvm.exe: $(files) $(libs) $(native-libs)
 	ecsc $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
 	cp $(native-libs) bin/clr/
 
-bin/flo/flame-llvm.flo: $(files)
+bin/flo/flame-llvm.flo: $(files) $(libs) $(native-libs)
 	ecsc $(files) -platform ir -runtime clr -o $@ $(common-options) --libs $(libs)
