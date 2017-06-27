@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using Flame.Binding;
 using Flame.Compiler.Build;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
@@ -15,11 +16,14 @@ namespace Flame.LLVM
         public LLVMAssembly(
             UnqualifiedName Name,
             Version AssemblyVersion,
+            IEnvironment Environment,
             AttributeMap Attributes)
         {
             this.Name = Name;
             this.AssemblyVersion = AssemblyVersion;
             this.Attributes = Attributes;
+            this.Environment = Environment;
+            this.rootNamespace = new LLVMNamespace(new SimpleName(""), default(QualifiedName), this);
             this.Module = ModuleCreateWithName(Name.ToString());
         }
 
@@ -39,6 +43,14 @@ namespace Flame.LLVM
         /// <returns>The LLVM module.</returns>
         public LLVMModuleRef Module { get; private set; }
 
+        /// <summary>
+        /// Gets the environment used by this LLVM assembly.
+        /// </summary>
+        /// <returns>The environment.</returns>
+        public IEnvironment Environment { get; private set; }
+
+        private LLVMNamespace rootNamespace;
+
         public QualifiedName FullName => Name.Qualify();
 
         public IAssembly Build()
@@ -51,12 +63,12 @@ namespace Flame.LLVM
 
         public IBinder CreateBinder()
         {
-            throw new NotImplementedException();
+            return new NamespaceTreeBinder(Environment, rootNamespace);
         }
 
         public INamespaceBuilder DeclareNamespace(string Name)
         {
-            throw new NotImplementedException();
+            return rootNamespace.DeclareNamespace(Name);
         }
 
         public IMethod GetEntryPoint()
@@ -78,7 +90,7 @@ namespace Flame.LLVM
             {
                 writer.Write(ir);
             }
-            LLVMSharp.LLVM.DisposeMessage(moduleOutput);
+            DisposeMessage(moduleOutput);
         }
 
         public void SetEntryPoint(IMethod Method)
