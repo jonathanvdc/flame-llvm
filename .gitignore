@@ -4,3 +4,4 @@ obj/
 libs/
 native-libs/
 *.userprefs
+*.log
