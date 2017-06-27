@@ -1,0 +1,58 @@
+﻿using System;
+using Flame.Compiler;
+using LLVMSharp;
+
+namespace Flame.LLVM.Codegen
+{
+    /// <summary>
+    /// A code block implementation that runs two blocks in sequence.
+    /// </summary>
+    public sealed class SequenceBlock : CodeBlock
+    {
+        public SequenceBlock(
+            LLVMCodeGenerator CodeGenerator,
+            CodeBlock FirstBlock,
+            CodeBlock SecondBlock)
+        {
+            this.codeGen = CodeGenerator;
+            this.firstBlock = FirstBlock;
+            this.secondBlock = SecondBlock;
+            var firstType = FirstBlock.Type;
+            var secondType = SecondBlock.Type;
+            if (secondType == PrimitiveTypes.Void
+                && firstType != PrimitiveTypes.Void)
+            {
+                this.secondIsResult = false;
+                this.resultType = secondType;
+            }
+            else
+            {
+                this.secondIsResult = true;
+                this.resultType = firstType;
+            }
+        }
+
+        private LLVMCodeGenerator codeGen;
+        private CodeBlock firstBlock;
+        private CodeBlock secondBlock;
+        private bool secondIsResult;
+        private IType resultType;
+
+        /// <inheritdoc/>
+        public override ICodeGenerator CodeGenerator => codeGen;
+
+        /// <inheritdoc/>
+        public override IType Type => resultType;
+
+        /// <inheritdoc/>
+        public override BlockCodegen Emit(LLVMValueRef Function, LLVMBuilderRef BasicBlock)
+        {
+            var firstCodegen = firstBlock.Emit(Function, BasicBlock);
+            var secondCodegen = secondBlock.Emit(Function, firstCodegen.BasicBlock);
+            return new BlockCodegen(
+                secondCodegen.BasicBlock,
+                secondIsResult ? secondCodegen.Value : firstCodegen.Value);
+        }
+    }
+}
+

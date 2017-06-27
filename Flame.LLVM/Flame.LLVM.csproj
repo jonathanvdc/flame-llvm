@@ -58,6 +58,8 @@
     <Compile Include="Codegen\CodeBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
+    <Compile Include="Codegen\ReturnBlock.cs" />
+    <Compile Include="Codegen\SequenceBlock.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

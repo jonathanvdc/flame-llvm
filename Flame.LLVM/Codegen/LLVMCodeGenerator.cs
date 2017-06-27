@@ -130,12 +130,12 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitReturn(ICodeBlock Value)
         {
-            throw new NotImplementedException();
+            return new ReturnBlock(this, (CodeBlock)Value);
         }
 
         public ICodeBlock EmitSequence(ICodeBlock First, ICodeBlock Second)
         {
-            throw new NotImplementedException();
+            return new SequenceBlock(this, (CodeBlock)First, (CodeBlock)Second);
         }
 
         public ICodeBlock EmitString(string Value)
