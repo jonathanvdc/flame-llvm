@@ -73,12 +73,16 @@ namespace Flame.LLVM
 
         public void Save(IOutputProvider OutputProvider)
         {
-            var file = OutputProvider.Create();
+            // Create the module.
             var module = ToModule();
+
+            // Verify it.
             IntPtr error;
             VerifyModule(module, LLVMVerifierFailureAction.LLVMAbortProcessAction, out error);
             DisposeMessage(error);
 
+            // Write it to the output file.
+            var file = OutputProvider.Create();
             IntPtr moduleOutput = PrintModuleToString(module);
             var ir = Marshal.PtrToStringAnsi(moduleOutput);
             using (var writer = new StreamWriter(file.OpenOutput()))
