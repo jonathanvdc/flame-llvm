@@ -24,7 +24,6 @@ namespace Flame.LLVM
             this.Attributes = Attributes;
             this.Environment = Environment;
             this.rootNamespace = new LLVMNamespace(new SimpleName(""), default(QualifiedName), this);
-            this.Module = ModuleCreateWithName(Name.ToString());
         }
 
         public Version AssemblyVersion { get; private set; }
@@ -38,12 +37,6 @@ namespace Flame.LLVM
         public UnqualifiedName Name { get; private set; }
 
         /// <summary>
-        /// Gets the LLVM module that is managed by this LLVM assembly.
-        /// </summary>
-        /// <returns>The LLVM module.</returns>
-        public LLVMModuleRef Module { get; private set; }
-
-        /// <summary>
         /// Gets the environment used by this LLVM assembly.
         /// </summary>
         /// <returns>The environment.</returns>
@@ -55,9 +48,6 @@ namespace Flame.LLVM
 
         public IAssembly Build()
         {
-            IntPtr error;
-            VerifyModule(Module, LLVMVerifierFailureAction.LLVMAbortProcessAction, out error);
-            DisposeMessage(error);
             return this;
         }
 
@@ -84,13 +74,25 @@ namespace Flame.LLVM
         public void Save(IOutputProvider OutputProvider)
         {
             var file = OutputProvider.Create();
-            IntPtr moduleOutput = PrintModuleToString(Module);
+            var module = ToModule();
+            IntPtr error;
+            VerifyModule(module, LLVMVerifierFailureAction.LLVMAbortProcessAction, out error);
+            DisposeMessage(error);
+
+            IntPtr moduleOutput = PrintModuleToString(module);
             var ir = Marshal.PtrToStringAnsi(moduleOutput);
             using (var writer = new StreamWriter(file.OpenOutput()))
             {
                 writer.Write(ir);
             }
             DisposeMessage(moduleOutput);
+            DisposeModule(module);
+        }
+
+        public LLVMModuleRef ToModule()
+        {
+            var module = ModuleCreateWithName(Name.ToString());
+            return module;
         }
 
         public void SetEntryPoint(IMethod Method)
