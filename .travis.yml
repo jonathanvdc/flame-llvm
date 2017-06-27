@@ -24,7 +24,7 @@ install:
 
   # Compile LLVMSharp
   # Find libLLVM.so for debugging purposes
-  - whereis libLLVM.so
+  - find /usr/lib/llvm-3.8
   - ./build-libs.sh
 script:
   # Restore NuGet packages
