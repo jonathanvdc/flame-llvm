@@ -105,12 +105,12 @@ namespace Flame.LLVM
         {
             this.attrMap.AddRange(templateInstance.Attributes.Value);
 
-            if (templateInstance.GenericParameters.Value.Any())
+            if (templateInstance.GenericParameters.Value.Any<IType>())
             {
                 throw new NotSupportedException("LLVM types do not support generic parameters");
             }
 
-            if (templateInstance.BaseTypes.Value.Any())
+            if (templateInstance.BaseTypes.Value.Any<IType>())
             {
                 throw new NotImplementedException("LLVM types do not support base types yet");
             }
