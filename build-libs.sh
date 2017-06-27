@@ -2,7 +2,7 @@
 rm -rf native-libs
 mkdir -p native-libs
 if [ -z "$1" ]; then
-  echo warning: no native library will be copied to the output directory
+  echo warning: libLLVM.so will not be copied to the output directory
   echo usage: build-libs.sh [/path/to/libLLVM.so]
 else
   cp $1 native-libs/libLLVM.so

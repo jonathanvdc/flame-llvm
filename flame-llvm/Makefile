@@ -1,6 +1,7 @@
 files = \
 	Properties/*.cs \
-	*.cs
+	*.cs \
+	../Flame.LLVM/bin/flo/Flame.LLVM.flo
 
 libs = \
 	../libs/*.dll \
@@ -14,6 +15,7 @@ libs = \
 	../packages/Loyc.Syntax.24.3.0/lib/net45/Loyc.Syntax.dll \
 	../packages/Loyc.Binary.0.1.8/lib/net45/Loyc.Binary.dll \
 	../packages/Flame.Compiler.0.9.13/lib/net45/*.dll \
+	../packages/Flame.Optimization.0.9.13/lib/net45/*.dll \
 	../packages/Flame.Front.0.9.13/lib/net45/*.dll
 
 native-libs = \

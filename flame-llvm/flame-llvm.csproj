@@ -34,7 +34,6 @@
     <Reference Include="LLVMSharp">
       <HintPath>..\libs\LLVMSharp.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
@@ -140,5 +139,11 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Flame.LLVM\Flame.LLVM.csproj">
+      <Project>{01801CC5-D103-48B6-8357-FC4B8A23294C}</Project>
+      <Name>Flame.LLVM</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
