@@ -5,7 +5,10 @@ files = \
 libs = \
 	../libs/*.dll
 
-common_options = -asm-name=flame-llvm -asm-version=0.1.0.0
+native-libs = \
+	../native-libs/*
+
+common-options = -asm-name=flame-llvm -asm-version=0.1.0.0
 
 all: exe flo
 
@@ -17,7 +20,8 @@ clean:
 	rm -rf obj/
 
 bin/clr/flame-llvm.exe: $(files)
-	ecsc $(files) -platform clr -o $@ -O3 $(common_options) --libs $(libs)
+	ecsc $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
+	cp $(native-libs) bin/clr/
 
 bin/flo/flame-llvm.flo: $(files)
-	ecsc $(files) -platform ir -runtime clr -o $@ $(common_options) --libs $(libs)
+	ecsc $(files) -platform ir -runtime clr -o $@ $(common-options) --libs $(libs)

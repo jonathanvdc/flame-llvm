@@ -2,4 +2,5 @@ packages/
 bin/
 obj/
 libs/
+native-libs/
 *.userprefs
