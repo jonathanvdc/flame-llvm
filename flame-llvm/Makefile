@@ -1,5 +1,6 @@
 files = \
-	Program.cs
+	Properties/*.cs \
+	*.cs
 
 libs = \
 	../libs/*.dll
