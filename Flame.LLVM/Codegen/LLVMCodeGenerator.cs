@@ -84,7 +84,13 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitInteger(IntegerValue Value)
         {
-            throw new NotImplementedException();
+            var llvmType = IntType((uint)Value.Spec.Size);
+            // TODO: support integer sizes greater than 64 bits
+            var uint64Val = Value.Cast(IntegerSpec.UInt64).ToUInt64();
+            return new ConstantBlock(
+                this,
+                PrimitiveTypes.GetIntegerType(Value.Spec.Size, Value.Spec.IsSigned),
+                ConstInt(llvmType, uint64Val, Value.Spec.IsSigned));
         }
 
         public ICodeBlock EmitInvocation(ICodeBlock Method, IEnumerable<ICodeBlock> Arguments)
