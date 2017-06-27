@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Flame.Build;
 using Flame.Compiler;
 using Flame.Compiler.Build;
+using Flame.LLVM.Codegen;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
 
@@ -20,6 +21,7 @@ namespace Flame.LLVM
         {
             this.Type = Type;
             this.templateInstance = new MethodSignatureInstance(Template, this);
+            this.codeGenerator = new LLVMCodeGenerator(this);
         }
 
         /// <summary>
@@ -27,6 +29,9 @@ namespace Flame.LLVM
         /// </summary>
         /// <returns>This method's declaring type.</returns>
         public LLVMType Type { get; private set; }
+
+        private LLVMCodeGenerator codeGenerator;
+        private CodeBlock body;
 
         private MethodSignatureInstance templateInstance;
 
@@ -57,7 +62,7 @@ namespace Flame.LLVM
 
         public ICodeGenerator GetBodyGenerator()
         {
-            throw new NotImplementedException();
+            return codeGenerator;
         }
 
         public void Initialize()
@@ -66,7 +71,7 @@ namespace Flame.LLVM
 
         public void SetMethodBody(ICodeBlock Body)
         {
-            throw new NotImplementedException();
+            this.body = (CodeBlock)Body;
         }
     }
 }

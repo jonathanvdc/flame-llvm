@@ -1,4 +1,5 @@
 files = \
+	Codegen/*.cs \
 	Properties/*.cs \
 	*.cs
 
