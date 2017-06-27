@@ -34,4 +34,4 @@ script:
   # Build the project with ecsc and test it
   - make all
   # Run the executable
-  - ./flame-llvm/bin/clr/flame-llvm.exe
+  - mono ./flame-llvm/bin/clr/flame-llvm.exe
