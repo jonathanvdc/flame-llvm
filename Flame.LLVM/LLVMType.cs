@@ -20,11 +20,14 @@ namespace Flame.LLVM
             this.Namespace = Namespace;
             this.templateInstance = new TypeSignatureInstance(Template, this);
             this.attrMap = new AttributeMapBuilder();
+            this.declaredMethods = new List<LLVMMethod>();
         }
 
         private AttributeMapBuilder attrMap;
 
         private TypeSignatureInstance templateInstance;
+
+        private List<LLVMMethod> declaredMethods;
 
         /// <summary>
         /// Gets this LLVM type's declaring namespace.
@@ -61,7 +64,7 @@ namespace Flame.LLVM
         /// <returns>The attribute map.</returns>
         public AttributeMap Attributes => new AttributeMap(attrMap);
 
-        public IEnumerable<IMethod> Methods => Enumerable.Empty<IMethod>();
+        public IEnumerable<IMethod> Methods => declaredMethods;
 
         public IEnumerable<IType> BaseTypes => Enumerable.Empty<IType>();
 
@@ -83,7 +86,9 @@ namespace Flame.LLVM
 
         public IMethodBuilder DeclareMethod(IMethodSignatureTemplate Template)
         {
-            throw new NotImplementedException();
+            var methodDef = new LLVMMethod(this, Template);
+            declaredMethods.Add(methodDef);
+            return methodDef;
         }
 
         public IPropertyBuilder DeclareProperty(IPropertySignatureTemplate Template)
