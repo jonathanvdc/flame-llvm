@@ -6,7 +6,7 @@ addons:
     sources:
       - llvm-toolchain-precise-3.8
     packages:
-      - llvm-3.8-dev
+      - libllvm3.8
 
 install:
   # Clone, build and install ecsc
