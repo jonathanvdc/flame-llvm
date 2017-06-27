@@ -21,9 +21,11 @@ namespace Flame.LLVM
             this.Name = Name;
             this.FullName = FullName;
             this.Assembly = Assembly;
+            this.declaredTypes = new List<LLVMType>();
+            this.declaredNamespaces = new List<LLVMNamespace>();
         }
 
-        private List<IType> declaredTypes;
+        private List<LLVMType> declaredTypes;
         private List<LLVMNamespace> declaredNamespaces;
 
         /// <summary>
@@ -80,7 +82,9 @@ namespace Flame.LLVM
 
         public ITypeBuilder DeclareType(ITypeSignatureTemplate Template)
         {
-            throw new NotImplementedException();
+            var childType = new LLVMType(this, Template);
+            declaredTypes.Add(childType);
+            return childType;
         }
 
         public void Initialize()
