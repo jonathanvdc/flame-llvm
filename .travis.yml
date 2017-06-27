@@ -1,0 +1,32 @@
+language: csharp
+
+# Grab the LLVM package
+addons:
+  apt:
+    packages:
+      - llvm-3.8-dev
+
+install:
+  # Clone, build and install ecsc
+  - git clone --depth=5 https://github.com/jonathanvdc/ecsc
+  - nuget restore ecsc/src/ecsc.sln
+  - msbuild /p:Configuration=Release /verbosity:quiet ecsc/src/ecsc.sln
+  - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.exe
+  - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.dll
+  - wget https://gist.githubusercontent.com/jonathanvdc/f2fa3b5f8d5ece27b877fae439d944d0/raw/d021752c2b9c5dfe15393028e308a6ebdcdb613b/mono-ln.sh
+  - chmod +x mono-ln.sh
+  - ./mono-ln.sh ecsc.exe $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
+  - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
+  - export PATH=$PATH:$(pwd)/ecsc/src/ecsc/bin/Release
+
+  # Compile LLVMSharp
+  - ./build-libs.sh /usr/lib/llvm-3.8/lib/libLLVM.so
+script:
+  # Restore NuGet packages
+  - nuget restore flame-llvm.sln
+  # Build the project with the reference C# compiler
+  - msbuild /p:Configuration=Release flame-llvm.sln
+  # Build the project with ecsc and test it
+  - make all
+  # Run the executable
+  - ./flame-llvm/bin/clr/flame-llvm.exe
