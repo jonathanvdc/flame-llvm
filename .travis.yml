@@ -23,9 +23,7 @@ install:
   - export PATH=$PATH:$(pwd)/ecsc/src/ecsc/bin/Release
 
   # Compile LLVMSharp
-  # Find libLLVM.so for debugging purposes
-  - find /usr/lib/llvm-3.8
-  - ./build-libs.sh
+  - ./build-libs.sh /usr/lib/llvm-3.8/lib/libLLVM.so
 script:
   # Restore NuGet packages
   - nuget restore flame-llvm.sln
