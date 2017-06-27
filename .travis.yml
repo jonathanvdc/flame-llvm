@@ -7,7 +7,7 @@ addons:
       - ubuntu-toolchain-r-test
       - llvm-toolchain-precise-3.8
     packages:
-      - libllvm3.8
+      - llvm-3.8-dev
 
 install:
   # Clone, build and install ecsc
@@ -24,8 +24,8 @@ install:
 
   # Compile LLVMSharp
   # Find libLLVM.so for debugging purposes
-  - find /usr/lib | grep libLLVM.so
-  - ./build-libs.sh /usr/lib/llvm-3.8/lib/libLLVM.so
+  - whereis libLLVM.so
+  - ./build-libs.sh
 script:
   # Restore NuGet packages
   - nuget restore flame-llvm.sln
