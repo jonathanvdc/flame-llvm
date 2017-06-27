@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{04DB0356-2BBB-40ED-9AD5-1623CD7056E5}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Flame.Llvm</RootNamespace>
+    <RootNamespace>Flame.LLVM</RootNamespace>
     <AssemblyName>flame-llvm</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
@@ -31,6 +31,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="LLVMSharp">
+      <HintPath>..\libs\LLVMSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />

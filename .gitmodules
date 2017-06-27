@@ -1,0 +1,3 @@
+[submodule "LLVMSharp"]
+	path = LLVMSharp
+	url = https://github.com/Microsoft/LLVMSharp
