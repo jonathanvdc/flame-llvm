@@ -3,6 +3,8 @@ language: csharp
 # Grab the LLVM package
 addons:
   apt:
+    sources:
+      - llvm-toolchain-precise-3.8
     packages:
       - llvm-3.8-dev
 
