@@ -78,7 +78,7 @@ namespace Flame.LLVM
 
             // Verify it.
             IntPtr error;
-            VerifyModule(module, LLVMVerifierFailureAction.LLVMAbortProcessAction, out error);
+            VerifyModule(module, LLVMVerifierFailureAction.LLVMPrintMessageAction, out error);
             DisposeMessage(error);
 
             // Write it to the output file.
@@ -96,6 +96,7 @@ namespace Flame.LLVM
         public LLVMModuleRef ToModule()
         {
             var module = ModuleCreateWithName(Name.ToString());
+            rootNamespace.Emit(new LLVMModuleBuilder(module));
             return module;
         }
 

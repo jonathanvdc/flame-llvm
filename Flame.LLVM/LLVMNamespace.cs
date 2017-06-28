@@ -90,6 +90,22 @@ namespace Flame.LLVM
         public void Initialize()
         {
         }
+
+        /// <summary>
+        /// Writes this namespace's definitions to the given module.
+        /// </summary>
+        /// <param name="Module">The module to populate.</param>
+        public void Emit(LLVMModuleBuilder Module)
+        {
+            foreach (var ns in declaredNamespaces)
+            {
+                ns.Emit(Module);
+            }
+            foreach (var type in declaredTypes)
+            {
+                type.Emit(Module);
+            }
+        }
     }
 }
 

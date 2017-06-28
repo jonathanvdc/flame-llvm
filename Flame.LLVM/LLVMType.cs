@@ -115,6 +115,18 @@ namespace Flame.LLVM
                 throw new NotImplementedException("LLVM types do not support base types yet");
             }
         }
+
+        /// <summary>
+        /// Writes this type's definitions to the given module.
+        /// </summary>
+        /// <param name="Module">The module to populate.</param>
+        public void Emit(LLVMModuleBuilder Module)
+        {
+            foreach (var method in declaredMethods)
+            {
+                method.Emit(Module);
+            }
+        }
     }
 }
 

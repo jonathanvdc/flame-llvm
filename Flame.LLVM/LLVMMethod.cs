@@ -73,6 +73,22 @@ namespace Flame.LLVM
         {
             this.body = (CodeBlock)Body;
         }
+
+        /// <summary>
+        /// Writes this method definitions to the given module.
+        /// </summary>
+        /// <param name="Module">The module to populate.</param>
+        public void Emit(LLVMModuleBuilder Module)
+        {
+            if (this.body != null)
+            {
+                var func = Module.Declare(this);
+                var basicBlock = AppendBasicBlock(func, "entry");
+                var builder = CreateBuilder();
+                PositionBuilderAtEnd(builder, basicBlock);
+                this.body.Emit(func, builder);
+            }
+        }
     }
 }
 
