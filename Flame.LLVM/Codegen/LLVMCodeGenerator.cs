@@ -69,12 +69,18 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitFloat32(float Value)
         {
-            throw new NotImplementedException();
+            return new ConstantBlock(
+                this,
+                PrimitiveTypes.Float32,
+                ConstReal(FloatType(), Value));
         }
 
         public ICodeBlock EmitFloat64(double Value)
         {
-            throw new NotImplementedException();
+            return new ConstantBlock(
+                this,
+                PrimitiveTypes.Float64,
+                ConstReal(DoubleType(), Value));
         }
 
         public ICodeBlock EmitIfElse(ICodeBlock Condition, ICodeBlock IfBody, ICodeBlock ElseBody)
