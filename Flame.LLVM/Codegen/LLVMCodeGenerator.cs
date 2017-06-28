@@ -184,7 +184,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitVoid()
         {
-            throw new NotImplementedException();
+            return new VoidBlock(this);
         }
 
         public IEmitVariable GetArgument(int Index)

@@ -57,13 +57,17 @@
     <Compile Include="LLVMNamespace.cs" />
     <Compile Include="LLVMType.cs" />
     <Compile Include="NameMangler.cs" />
-    <Compile Include="Codegen\LLVMCodeGenerator.cs" />
+    <Compile Include="Codegen\AtAddressEmitVariable.cs" />
     <Compile Include="Codegen\BinaryBlock.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
-    <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
+    <Compile Include="Codegen\DelegatingBlock.cs" />
+    <Compile Include="Codegen\LLVMCodeGenerator.cs" />
     <Compile Include="Codegen\ReturnBlock.cs" />
     <Compile Include="Codegen\SequenceBlock.cs" />
+    <Compile Include="Codegen\StoreBlock.cs" />
+    <Compile Include="Codegen\UnaryBlock.cs" />
+    <Compile Include="Codegen\VoidBlock.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

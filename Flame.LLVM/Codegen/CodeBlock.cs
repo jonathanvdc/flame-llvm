@@ -52,6 +52,11 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         /// <returns>The code block's result.</returns>
         public LLVMValueRef Value { get; private set; }
+
+        /// <summary>
+        /// Tells if the codegen for this block produces a value.
+        /// </summary>
+        public bool HasValue => Value.Pointer == IntPtr.Zero;
     }
 
     /// <summary>
