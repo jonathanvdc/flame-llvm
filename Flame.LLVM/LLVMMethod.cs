@@ -33,6 +33,11 @@ namespace Flame.LLVM
         private LLVMCodeGenerator codeGenerator;
         private CodeBlock body;
 
+        /// <summary>
+        /// Gets the ABI for this method.
+        /// </summary>
+        public LLVMAbi Abi => Type.Namespace.Assembly.Abi;
+
         private MethodSignatureInstance templateInstance;
 
         public IEnumerable<IMethod> BaseMethods => templateInstance.BaseMethods.Value;

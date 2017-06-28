@@ -12,7 +12,10 @@ namespace Flame.LLVM
         public static void Main(string[] args)
         {
             BuildTargetParsers.Parser.RegisterParser(new LLVMBuildTargetParser());
-            var compiler = new ConsoleCompiler("flame-llvm", "the Flame IR -> LLVM compiler", "https://github.com/jonathanvdc/flame-llvm/releases");
+            var compiler = new ConsoleCompiler(
+                "flame-llvm",
+                "the Flame IR -> LLVM compiler",
+                "https://github.com/jonathanvdc/flame-llvm/releases");
             Environment.Exit(compiler.Compile(args));
         }
     }

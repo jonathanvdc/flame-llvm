@@ -47,7 +47,7 @@ namespace Flame.LLVM
                     out paramTypes[0],
                     (uint)paramArr.Length,
                     false);
-                result = AddFunction(module, Method.FullName.ToString(), funcType);
+                result = AddFunction(module, Method.Abi.Mangler.Mangle(Method), funcType);
                 declaredMethods[Method] = result;
             }
             return result;

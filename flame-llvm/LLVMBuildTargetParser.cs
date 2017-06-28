@@ -32,8 +32,11 @@ namespace Flame.LLVM
         public BuildTarget CreateBuildTarget(string PlatformIdentifier, AssemblyCreationInfo Info, IDependencyBuilder DependencyBuilder)
         {
             var targetAsm = new LLVMAssembly(
-                new SimpleName(Info.Name), Info.Version,
-                DependencyBuilder.Environment, AttributeMap.Empty);
+                new SimpleName(Info.Name),
+                Info.Version,
+                DependencyBuilder.Environment,
+                new LLVMAbi(CMangler.Instance),
+                AttributeMap.Empty);
 
             var extraPasses = new PassManager();
 

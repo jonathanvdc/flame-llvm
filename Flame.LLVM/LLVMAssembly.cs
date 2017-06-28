@@ -17,9 +17,11 @@ namespace Flame.LLVM
             UnqualifiedName Name,
             Version AssemblyVersion,
             IEnvironment Environment,
+            LLVMAbi Abi,
             AttributeMap Attributes)
         {
             this.Name = Name;
+            this.Abi = Abi;
             this.AssemblyVersion = AssemblyVersion;
             this.Attributes = Attributes;
             this.Environment = Environment;
@@ -29,6 +31,12 @@ namespace Flame.LLVM
         public Version AssemblyVersion { get; private set; }
 
         public AttributeMap Attributes { get; private set; }
+
+        /// <summary>
+        /// Gets the ABI for this assembly.
+        /// </summary>
+        /// <returns>The ABI.</returns>
+        public LLVMAbi Abi { get; private set; }
 
         /// <summary>
         /// Gets the assembly's name.

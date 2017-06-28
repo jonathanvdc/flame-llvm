@@ -50,11 +50,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="LLVMAbi.cs" />
     <Compile Include="LLVMAssembly.cs" />
     <Compile Include="LLVMMethod.cs" />
     <Compile Include="LLVMModuleBuilder.cs" />
     <Compile Include="LLVMNamespace.cs" />
     <Compile Include="LLVMType.cs" />
+    <Compile Include="NameMangler.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
     <Compile Include="Codegen\BinaryBlock.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
