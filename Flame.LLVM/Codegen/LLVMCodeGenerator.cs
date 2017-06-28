@@ -7,6 +7,8 @@ using static LLVMSharp.LLVM;
 
 namespace Flame.LLVM.Codegen
 {
+    using BuildLLVMBinary = Func<LLVMBuilderRef, LLVMValueRef, LLVMValueRef, string, LLVMValueRef>;
+
     /// <summary>
     /// A code generator implementation that generates LLVM IR.
     /// </summary>
@@ -24,15 +26,31 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         public IMethod Method => owningMethod;
 
-        public IEmitVariable DeclareLocal(UniqueTag Tag, IVariableMember VariableMember)
+        public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
         {
+            var lhs = (CodeBlock)A;
+            var rhs = (CodeBlock)B;
+            if (lhs.Type.GetIsSignedInteger())
+            {
+                return new BinaryBlock(this, lhs, rhs, lhs.Type, signedIntBinaries[Op]);
+            }
             throw new NotImplementedException();
         }
 
-        public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
+        private static readonly Dictionary<Operator, BuildLLVMBinary> signedIntBinaries =
+            new Dictionary<Operator, BuildLLVMBinary>()
         {
-            throw new NotImplementedException();
-        }
+            { Operator.Add, BuildAdd },
+            { Operator.Subtract, BuildSub },
+            { Operator.Multiply, BuildMul },
+            { Operator.Divide, BuildSDiv },
+            { Operator.Remainder, BuildSRem },
+            { Operator.And, BuildAnd },
+            { Operator.Or, BuildOr },
+            { Operator.Xor, BuildXor },
+            { Operator.LeftShift, BuildShl },
+            { Operator.RightShift, BuildAShr }
+        };
 
         public ICodeBlock EmitBit(BitValue Value)
         {
@@ -180,6 +198,11 @@ namespace Flame.LLVM.Codegen
         }
 
         public IEmitVariable GetField(IField Field, ICodeBlock Target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEmitVariable DeclareLocal(UniqueTag Tag, IVariableMember VariableMember)
         {
             throw new NotImplementedException();
         }
