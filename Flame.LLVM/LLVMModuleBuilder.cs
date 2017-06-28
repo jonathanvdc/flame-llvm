@@ -36,21 +36,33 @@ namespace Flame.LLVM
             LLVMValueRef result;
             if (!declaredMethods.TryGetValue(Method, out result))
             {
-                var paramArr = Method.GetParameters();
-                var paramTypes = new LLVMTypeRef[paramArr.Length > 0 ? paramArr.Length : 1];
-                for (int i = 0; i < paramArr.Length; i++)
-                {
-                    paramTypes[i] = Declare(paramArr[i].ParameterType);
-                }
-                var funcType = FunctionType(
-                    Declare(Method.ReturnType),
-                    out paramTypes[0],
-                    (uint)paramArr.Length,
-                    false);
-                result = AddFunction(module, Method.Abi.Mangler.Mangle(Method), funcType);
+                var abi = Method.Abi;
+                var funcType = DeclareFunctionType(Method);
+                result = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
                 declaredMethods[Method] = result;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Declares the function type for the given method in the given module.
+        /// </summary>
+        /// <param name="Method">The method to find a function type for.</param>
+        /// <param name="Module">The module that declares the function.</param>
+        /// <returns>A function type.</returns>
+        private LLVMTypeRef DeclareFunctionType(LLVMMethod Method)
+        {
+            var paramArr = Method.GetParameters();
+            var paramTypes = new LLVMTypeRef[paramArr.Length > 0 ? paramArr.Length : 1];
+            for (int i = 0; i < paramArr.Length; i++)
+            {
+                paramTypes[i] = Declare(paramArr[i].ParameterType);
+            }
+            return FunctionType(
+                Declare(Method.ReturnType),
+                out paramTypes[0],
+                (uint)paramArr.Length,
+                false);
         }
 
         /// <summary>

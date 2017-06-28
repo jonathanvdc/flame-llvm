@@ -1,7 +1,7 @@
 namespace Flame.LLVM
 {
     /// <summary>
-    /// Describes an LLVM ABI.
+    /// An ABI description for an LLVM back-end configuration.
     /// </summary>
     public sealed class LLVMAbi
     {
