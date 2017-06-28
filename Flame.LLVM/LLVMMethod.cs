@@ -83,10 +83,9 @@ namespace Flame.LLVM
             if (this.body != null)
             {
                 var func = Module.Declare(this);
-                var basicBlock = AppendBasicBlock(func, "entry");
-                var builder = CreateBuilder();
-                PositionBuilderAtEnd(builder, basicBlock);
-                this.body.Emit(func, builder);
+                var bodyBuilder = new FunctionBodyBuilder(Module, func);
+                var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
+                this.body.Emit(entryPointBuilder);
             }
         }
     }

@@ -45,10 +45,10 @@ namespace Flame.LLVM.Codegen
         public override IType Type => resultType;
 
         /// <inheritdoc/>
-        public override BlockCodegen Emit(LLVMValueRef Function, LLVMBuilderRef BasicBlock)
+        public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            var firstCodegen = firstBlock.Emit(Function, BasicBlock);
-            var secondCodegen = secondBlock.Emit(Function, firstCodegen.BasicBlock);
+            var firstCodegen = firstBlock.Emit(BasicBlock);
+            var secondCodegen = secondBlock.Emit(firstCodegen.BasicBlock);
             return new BlockCodegen(
                 secondCodegen.BasicBlock,
                 secondIsResult ? secondCodegen.Value : firstCodegen.Value);

@@ -28,18 +28,18 @@ namespace Flame.LLVM.Codegen
         public override IType Type => PrimitiveTypes.Void;
 
         /// <inheritdoc/>
-        public override BlockCodegen Emit(LLVMValueRef Function, LLVMBuilderRef BasicBlock)
+        public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            var retValCodegen = retVal.Emit(Function, BasicBlock);
+            var retValCodegen = retVal.Emit(BasicBlock);
             BasicBlock = retValCodegen.BasicBlock;
             if (retVal.Type == PrimitiveTypes.Void)
             {
-                var retVoid = BuildRetVoid(BasicBlock);
+                var retVoid = BuildRetVoid(BasicBlock.Builder);
                 return new BlockCodegen(BasicBlock, retVoid);
             }
             else
             {
-                var ret = BuildRet(BasicBlock, retValCodegen.Value);
+                var ret = BuildRet(BasicBlock.Builder, retValCodegen.Value);
                 return new BlockCodegen(BasicBlock, ret);
             }
         }

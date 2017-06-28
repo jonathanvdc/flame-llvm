@@ -30,7 +30,7 @@ namespace Flame.LLVM.Codegen
         public override IType Type => instrType;
 
         /// <inheritdoc/>
-        public override BlockCodegen Emit(LLVMValueRef Function, LLVMBuilderRef BasicBlock)
+        public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
             return new BlockCodegen(BasicBlock, val);
         }

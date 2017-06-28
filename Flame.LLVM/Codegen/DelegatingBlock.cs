@@ -13,7 +13,7 @@ namespace Flame.LLVM.Codegen
         public DelegatingBlock(
             LLVMCodeGenerator CodeGenerator,
             IType Type,
-            Func<LLVMValueRef, LLVMBuilderRef, BlockCodegen> Emit)
+            Func<BasicBlockBuilder, BlockCodegen> Emit)
         {
             this.codeGen = CodeGenerator;
             this.instrType = Type;
@@ -22,7 +22,7 @@ namespace Flame.LLVM.Codegen
 
         private LLVMCodeGenerator codeGen;
         private IType instrType;
-        private Func<LLVMValueRef, LLVMBuilderRef, BlockCodegen> impl;
+        private Func<BasicBlockBuilder, BlockCodegen> impl;
 
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
@@ -31,9 +31,9 @@ namespace Flame.LLVM.Codegen
         public override IType Type => instrType;
 
         /// <inheritdoc/>
-        public override BlockCodegen Emit(LLVMValueRef Function, LLVMBuilderRef BasicBlock)
+        public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            return impl(Function, BasicBlock);
+            return impl(BasicBlock);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using Flame.Compiler;
 using LLVMSharp;
+using static LLVMSharp.LLVM;
 
 namespace Flame.LLVM.Codegen
 {
@@ -22,13 +23,11 @@ namespace Flame.LLVM.Codegen
         public abstract IType Type { get; }
 
         /// <summary>
-        /// Emits this LLVM code block's contents to the given function and basic
-        /// block.
+        /// Emits this LLVM code block's contents to the given basic block.
         /// </summary>
-        /// <param name="Function">The function to generate code for.</param>
         /// <param name="BasicBlock">The basic block to extend.</param>
         /// <returns>The next basic block to generate code for.</returns>
-        public abstract BlockCodegen Emit(LLVMValueRef Function, LLVMBuilderRef BasicBlock);
+        public abstract BlockCodegen Emit(BasicBlockBuilder BasicBlock);
     }
 
     /// <summary>
@@ -36,7 +35,7 @@ namespace Flame.LLVM.Codegen
     /// </summary>
     public struct BlockCodegen
     {
-        public BlockCodegen(LLVMBuilderRef BasicBlock, LLVMValueRef Value)
+        public BlockCodegen(BasicBlockBuilder BasicBlock, LLVMValueRef Value)
         {
             this.BasicBlock = BasicBlock;
             this.Value = Value;
@@ -46,13 +45,107 @@ namespace Flame.LLVM.Codegen
         /// Gets the next basic block to generate code for.
         /// </summary>
         /// <returns>The next basic block to generate code for.</returns>
-        public LLVMBuilderRef BasicBlock { get; private set; }
+        public BasicBlockBuilder BasicBlock { get; private set; }
 
         /// <summary>
         /// Gets the value that computes a code block's result.
         /// </summary>
         /// <returns>The code block's result.</returns>
         public LLVMValueRef Value { get; private set; }
+    }
+
+    /// <summary>
+    /// A data structure that makes building LLVM function bodies easier.
+    /// </summary>
+    public sealed class FunctionBodyBuilder
+    {
+        public FunctionBodyBuilder(
+            LLVMModuleBuilder Module,
+            LLVMValueRef Function)
+        {
+            this.Module = Module;
+            this.Function = Function;
+            this.blockNameSet = new UniqueNameSet<string>(Id, "block_");
+        }
+
+        /// <summary>
+        /// Gets the module builder for the module that defines the
+        /// function under construction.
+        /// </summary>
+        /// <returns>The module builder.</returns>
+        public LLVMModuleBuilder Module { get; private set; }
+
+        /// <summary>
+        /// Gets the LLVM function that is under construction.
+        /// </summary>
+        /// <returns>The LLVM function.</returns>
+        public LLVMValueRef Function { get; private set; }
+
+        private UniqueNameSet<string> blockNameSet;
+
+        private string Id(string Value)
+        {
+            return Value;
+        }
+
+        /// <summary>
+        /// Appends a basic block to this function body.
+        /// </summary>
+        /// <param name="Name">The preferred name for the basic block.</param>
+        /// <returns>A basic block builder.</returns>
+        public BasicBlockBuilder AppendBasicBlock(string Name)
+        {
+            var basicBlock = LLVMSharp.LLVM.AppendBasicBlock(
+                Function,
+                blockNameSet.GenerateName(Name));
+            return new BasicBlockBuilder(this, basicBlock);
+        }
+
+        /// <summary>
+        /// Appends a basic block to this function body.
+        /// </summary>
+        /// <returns>A basic block builder.</returns>
+        public BasicBlockBuilder AppendBasicBlock()
+        {
+            return AppendBasicBlock("block_0");
+        }
+    }
+
+    /// <summary>
+    /// A data structure that makes building LLVM basic blocks easier.
+    /// </summary>
+    public sealed class BasicBlockBuilder
+    {
+        /// <summary>
+        /// Creates a basic block builder from the given arguments.
+        /// </summary>
+        public BasicBlockBuilder(
+            FunctionBodyBuilder FunctionBody,
+            LLVMBasicBlockRef Block)
+        {
+            this.FunctionBody = FunctionBody;
+            this.Block = Block;
+            this.Builder = CreateBuilder();
+            PositionBuilderAtEnd(Builder, Block);
+        }
+
+        /// <summary>
+        /// Gets the function body that defines this basic block.
+        /// </summary>
+        /// <returns>The function body.</returns>
+        public FunctionBodyBuilder FunctionBody { get; private set; }
+
+        /// <summary>
+        /// Gets the LLVM basic block that is under construction.
+        /// </summary>
+        /// <returns>The LLVM basic block.</returns>
+        public LLVMBasicBlockRef Block { get; private set; }
+
+        /// <summary>
+        /// Gets the LLVM builder that is used to build the basic block.
+        /// </summary>
+        /// <returns>The LLVM builder for the basic block.</returns>
+        public LLVMBuilderRef Builder { get; private set; }
     }
 }
 
