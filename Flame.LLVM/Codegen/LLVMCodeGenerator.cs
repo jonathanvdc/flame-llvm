@@ -77,7 +77,13 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitBit(BitValue Value)
         {
-            throw new NotImplementedException();
+            var llvmType = IntType((uint)Value.Size);
+            // TODO: support bit sizes greater than 64 bits
+            var uint64Val = Value.ToInteger().Cast(IntegerSpec.UInt64).ToUInt64();
+            return new ConstantBlock(
+                this,
+                PrimitiveTypes.GetBitType(Value.Size),
+                ConstInt(llvmType, uint64Val, false));
         }
 
         public ICodeBlock EmitBoolean(bool Value)
