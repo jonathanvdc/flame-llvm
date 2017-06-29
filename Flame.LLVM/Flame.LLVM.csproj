@@ -63,6 +63,7 @@
     <Compile Include="Codegen\ConstantBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
+    <Compile Include="Codegen\PrologueSpec.cs" />
     <Compile Include="Codegen\ReturnBlock.cs" />
     <Compile Include="Codegen\SequenceBlock.cs" />
     <Compile Include="Codegen\StoreBlock.cs" />

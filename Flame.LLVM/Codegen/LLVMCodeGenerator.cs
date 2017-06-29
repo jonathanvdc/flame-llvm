@@ -17,9 +17,16 @@ namespace Flame.LLVM.Codegen
         public LLVMCodeGenerator(LLVMMethod Method)
         {
             this.owningMethod = Method;
+            this.Prologue = new PrologueSpec();
         }
 
         private LLVMMethod owningMethod;
+
+        /// <summary>
+        /// Gets the prologue for the method that defines this code generator.
+        /// </summary>
+        /// <returns>The prologue.</returns>
+        public PrologueSpec Prologue { get; private set; }
 
         /// <summary>
         /// Gets the method that owns this code generator.

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Flame.Compiler;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
@@ -71,6 +72,7 @@ namespace Flame.LLVM.Codegen
             this.Module = Module;
             this.Function = Function;
             this.blockNameSet = new UniqueNameSet<string>(Id, "block_");
+            this.taggedValues = new Dictionary<UniqueTag, LLVMValueRef>();
         }
 
         /// <summary>
@@ -86,11 +88,33 @@ namespace Flame.LLVM.Codegen
         /// <returns>The LLVM function.</returns>
         public LLVMValueRef Function { get; private set; }
 
+        private Dictionary<UniqueTag, LLVMValueRef> taggedValues;
+
         private UniqueNameSet<string> blockNameSet;
 
         private string Id(string Value)
         {
             return Value;
+        }
+
+        /// <summary>
+        /// Tags the given value with the given tag.
+        /// </summary>
+        /// <param name="Tag">The tag for the value.</param>
+        /// <param name="Value">The value to tag.</param>
+        public void TagValue(UniqueTag Tag, LLVMValueRef Value)
+        {
+            taggedValues.Add(Tag, Value);
+        }
+
+        /// <summary>
+        /// Gets the tagged value with the given tag.
+        /// </summary>
+        /// <param name="Tag">The tag of the value to retrieve.</param>
+        /// <returns>The tagged value.</returns>
+        public LLVMValueRef GetTaggedValue(UniqueTag Tag)
+        {
+            return taggedValues[Tag];
         }
 
         /// <summary>
