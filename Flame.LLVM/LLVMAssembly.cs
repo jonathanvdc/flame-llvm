@@ -82,12 +82,12 @@ namespace Flame.LLVM
         public void Save(IOutputProvider OutputProvider)
         {
             // Create the module.
-            var module = ToModule();
+            LLVMModuleRef module = ToModule();
 
             // Verify it.
-            IntPtr error;
-            VerifyModule(module, LLVMVerifierFailureAction.LLVMPrintMessageAction, out error);
-            DisposeMessage(error);
+            // IntPtr error;
+            // VerifyModule(module, LLVMVerifierFailureAction.LLVMPrintMessageAction, out error);
+            // DisposeMessage(error);
 
             // Write it to the output file.
             var file = OutputProvider.Create();
