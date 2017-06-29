@@ -96,6 +96,10 @@ namespace Flame.LLVM
             {
                 return DoubleType();
             }
+            else if (Type == PrimitiveTypes.Void)
+            {
+                return VoidType();
+            }
             else
             {
                 throw new NotImplementedException("Only primitive types have been implemented so far");

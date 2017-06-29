@@ -18,6 +18,19 @@ namespace Flame.LLVM.Codegen
         {
             this.owningMethod = Method;
             this.Prologue = new PrologueSpec();
+            this.locals = new Dictionary<UniqueTag, TaggedValueBlock>();
+            this.parameters = new List<TaggedValueBlock>();
+            foreach (var param in Method.Parameters)
+            {
+                var alloca = new AllocaBlock(this, param.ParameterType);
+                var storageTag = Prologue.AddInstruction(alloca);
+                var taggedVal = new TaggedValueBlock(this, storageTag, alloca.Type);
+                Prologue.AddInstruction(new StoreBlock(
+                    this,
+                    taggedVal,
+                    new GetParameterBlock(this, parameters.Count, param.ParameterType)));
+                parameters.Add(taggedVal);
+            }
         }
 
         private LLVMMethod owningMethod;
@@ -32,6 +45,9 @@ namespace Flame.LLVM.Codegen
         /// Gets the method that owns this code generator.
         /// </summary>
         public IMethod Method => owningMethod;
+
+        private Dictionary<UniqueTag, TaggedValueBlock> locals;
+        private List<TaggedValueBlock> parameters;
 
         public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
         {
@@ -196,7 +212,7 @@ namespace Flame.LLVM.Codegen
 
         public IEmitVariable GetArgument(int Index)
         {
-            throw new NotImplementedException();
+            return new AtAddressEmitVariable(parameters[Index]);
         }
 
         public IEmitVariable GetElement(ICodeBlock Value, IEnumerable<ICodeBlock> Index)
@@ -211,12 +227,24 @@ namespace Flame.LLVM.Codegen
 
         public IEmitVariable DeclareLocal(UniqueTag Tag, IVariableMember VariableMember)
         {
-            throw new NotImplementedException();
+            var alloca = new AllocaBlock(this, VariableMember.VariableType);
+            var valueTag = Prologue.AddInstruction(alloca);
+            var taggedValue = new TaggedValueBlock(this, valueTag, alloca.Type);
+            locals.Add(Tag, taggedValue);
+            return new AtAddressEmitVariable(taggedValue);
         }
 
         public IEmitVariable GetLocal(UniqueTag Tag)
         {
-            throw new NotImplementedException();
+            TaggedValueBlock address;
+            if (locals.TryGetValue(Tag, out address))
+            {
+                return new AtAddressEmitVariable(address);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public IEmitVariable GetThis()
