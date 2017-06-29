@@ -12,7 +12,7 @@ namespace Flame.LLVM.Codegen
     /// <summary>
     /// A code generator implementation that generates LLVM IR.
     /// </summary>
-    public sealed class LLVMCodeGenerator : ICodeGenerator
+    public sealed class LLVMCodeGenerator : IUnmanagedCodeGenerator
     {
         public LLVMCodeGenerator(LLVMMethod Method)
         {
@@ -216,7 +216,27 @@ namespace Flame.LLVM.Codegen
             return new VoidBlock(this);
         }
 
+        public ICodeBlock EmitDereferencePointer(ICodeBlock Pointer)
+        {
+            return new AtAddressEmitVariable((CodeBlock)Pointer).EmitGet();
+        }
+
+        public ICodeBlock EmitStoreAtAddress(ICodeBlock Pointer, ICodeBlock Value)
+        {
+            return new AtAddressEmitVariable((CodeBlock)Pointer).EmitSet(Value);
+        }
+
+        public ICodeBlock EmitSizeOf(IType Type)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEmitVariable GetArgument(int Index)
+        {
+            return GetUnmanagedArgument(Index);
+        }
+
+        public IUnmanagedEmitVariable GetUnmanagedArgument(int Index)
         {
             return new AtAddressEmitVariable(parameters[Index]);
         }
@@ -226,12 +246,27 @@ namespace Flame.LLVM.Codegen
             throw new NotImplementedException();
         }
 
+        public IUnmanagedEmitVariable GetUnmanagedElement(ICodeBlock Value, IEnumerable<ICodeBlock> Index)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEmitVariable GetField(IField Field, ICodeBlock Target)
         {
             throw new NotImplementedException();
         }
 
+        public IUnmanagedEmitVariable GetUnmanagedField(IField Field, ICodeBlock Target)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEmitVariable DeclareLocal(UniqueTag Tag, IVariableMember VariableMember)
+        {
+            return DeclareUnmanagedLocal(Tag, VariableMember);
+        }
+
+        public IUnmanagedEmitVariable DeclareUnmanagedLocal(UniqueTag Tag, IVariableMember VariableMember)
         {
             var alloca = new AllocaBlock(this, VariableMember.VariableType);
             var valueTag = Prologue.AddInstruction(alloca);
@@ -241,6 +276,11 @@ namespace Flame.LLVM.Codegen
         }
 
         public IEmitVariable GetLocal(UniqueTag Tag)
+        {
+            return GetUnmanagedLocal(Tag);
+        }
+
+        public IUnmanagedEmitVariable GetUnmanagedLocal(UniqueTag Tag)
         {
             TaggedValueBlock address;
             if (locals.TryGetValue(Tag, out address))
