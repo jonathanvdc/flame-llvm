@@ -72,6 +72,7 @@
     <Compile Include="Codegen\TaggedValueBlock.cs" />
     <Compile Include="Codegen\UnaryBlock.cs" />
     <Compile Include="Codegen\VoidBlock.cs" />
+    <Compile Include="Codegen\ComparisonBlock.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

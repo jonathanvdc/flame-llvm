@@ -49,13 +49,31 @@ namespace Flame.LLVM.Codegen
         private Dictionary<UniqueTag, TaggedValueBlock> locals;
         private List<TaggedValueBlock> parameters;
 
+        private ICodeBlock EmitIntBinary(
+            CodeBlock A,
+            CodeBlock B,
+            Operator Op,
+            Dictionary<Operator, BuildLLVMBinary> BinaryBuilders,
+            Dictionary<Operator, LLVMIntPredicate> BinaryPredicates)
+        {
+            LLVMIntPredicate pred;
+            if (BinaryPredicates.TryGetValue(Op, out pred))
+            {
+                return new ComparisonBlock(this, A, B, pred);
+            }
+            else
+            {
+                return new BinaryBlock(this, A, B, A.Type, BinaryBuilders[Op]);
+            }
+        }
+
         public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
         {
             var lhs = (CodeBlock)A;
             var rhs = (CodeBlock)B;
             if (lhs.Type.GetIsSignedInteger())
             {
-                return new BinaryBlock(this, lhs, rhs, lhs.Type, signedIntBinaries[Op]);
+                return EmitIntBinary(lhs, rhs, Op, signedIntBinaries, signedIntPredicates);
             }
             throw new NotImplementedException();
         }
@@ -73,6 +91,17 @@ namespace Flame.LLVM.Codegen
             { Operator.Xor, BuildXor },
             { Operator.LeftShift, BuildShl },
             { Operator.RightShift, BuildAShr }
+        };
+
+        private static readonly Dictionary<Operator, LLVMIntPredicate> signedIntPredicates =
+            new Dictionary<Operator, LLVMIntPredicate>()
+        {
+            { Operator.CheckEquality, LLVMIntPredicate.LLVMIntEQ },
+            { Operator.CheckInequality, LLVMIntPredicate.LLVMIntNE },
+            { Operator.CheckGreaterThan, LLVMIntPredicate.LLVMIntSGT },
+            { Operator.CheckGreaterThanOrEqual, LLVMIntPredicate.LLVMIntSGE },
+            { Operator.CheckLessThan, LLVMIntPredicate.LLVMIntSLT },
+            { Operator.CheckLessThanOrEqual, LLVMIntPredicate.LLVMIntSLE }
         };
 
         public ICodeBlock EmitBit(BitValue Value)
