@@ -182,7 +182,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitMethod(IMethod Method, ICodeBlock Caller, Operator Op)
         {
-            throw new NotImplementedException();
+            return new DelegateBlock(this, Method, (CodeBlock)Caller, Op);
         }
 
         public ICodeBlock EmitNewArray(IType ElementType, IEnumerable<ICodeBlock> Dimensions)

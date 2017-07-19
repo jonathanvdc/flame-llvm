@@ -62,6 +62,7 @@
     <Compile Include="Codegen\BinaryBlock.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
+    <Compile Include="Codegen\DelegateBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\GetParameterBlock.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
