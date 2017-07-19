@@ -162,7 +162,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitIfElse(ICodeBlock Condition, ICodeBlock IfBody, ICodeBlock ElseBody)
         {
-            throw new NotImplementedException();
+            return new IfElseBlock(this, (CodeBlock)Condition, (CodeBlock)IfBody, (CodeBlock)ElseBody);
         }
 
         public ICodeBlock EmitInteger(IntegerValue Value)

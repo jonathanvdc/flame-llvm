@@ -65,6 +65,7 @@
     <Compile Include="Codegen\DelegateBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\GetParameterBlock.cs" />
+    <Compile Include="Codegen\IfElseBlock.cs" />
     <Compile Include="Codegen\InvocationBlock.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
     <Compile Include="Codegen\PrologueSpec.cs" />

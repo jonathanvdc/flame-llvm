@@ -42,6 +42,12 @@ namespace Flame.LLVM.Codegen
             this.Value = Value;
         }
 
+        public BlockCodegen(BasicBlockBuilder BasicBlock)
+        {
+            this.BasicBlock = BasicBlock;
+            this.Value = default(LLVMValueRef);
+        }
+
         /// <summary>
         /// Gets the next basic block to generate code for.
         /// </summary>
