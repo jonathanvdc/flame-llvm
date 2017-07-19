@@ -84,7 +84,15 @@ namespace Flame.LLVM
 
         private LLVMTypeRef DeclareTypeImpl(IType Type)
         {
-            if (Type.GetIsInteger() || Type.GetIsBit())
+            if (Type.GetIsPointer())
+            {
+                var elemType = Type.AsPointerType().ElementType;
+                if (elemType == PrimitiveTypes.Void)
+                    return LLVMSharp.LLVM.PointerType(IntType(8), 0);
+                else
+                    return LLVMSharp.LLVM.PointerType(Declare(elemType), 0);
+            }
+            else if (Type.GetIsInteger() || Type.GetIsBit())
             {
                 return IntType((uint)Type.GetPrimitiveBitSize());
             }
