@@ -65,13 +65,18 @@ namespace Flame.LLVM
             {
                 builder.Append(EncodeTypeName(param.ParameterType));
             }
+            if (builder.Length == 0)
+            {
+                // Itanium ABI says:
+                //
+                //     Empty parameter lists, whether declared as () or conventionally
+                //     as (void), are encoded with a void parameter specifier (v).
+                //
+                builder.Append("v");
+            }
             if (IncludeReturnType)
             {
                 builder.Append(EncodeTypeName(Method.ReturnType));
-            }
-            else if (builder.Length == 0)
-            {
-                builder.Append("v");
             }
             return builder.ToString();
         }
