@@ -71,6 +71,7 @@
     <Compile Include="Codegen\PrologueSpec.cs" />
     <Compile Include="Codegen\ReturnBlock.cs" />
     <Compile Include="Codegen\SequenceBlock.cs" />
+    <Compile Include="Codegen\SimpleCastBlock.cs" />
     <Compile Include="Codegen\StoreBlock.cs" />
     <Compile Include="Codegen\TaggedValueBlock.cs" />
     <Compile Include="Codegen\UnaryBlock.cs" />

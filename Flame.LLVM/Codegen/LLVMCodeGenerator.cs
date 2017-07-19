@@ -105,6 +105,19 @@ namespace Flame.LLVM.Codegen
             { Operator.CheckLessThanOrEqual, LLVMIntPredicate.LLVMIntSLE }
         };
 
+        public ICodeBlock EmitTypeBinary(ICodeBlock Value, IType Type, Operator Op)
+        {
+            var valBlock = (CodeBlock)Value;
+            if (Op.Equals(Operator.ReinterpretCast))
+            {
+                return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public ICodeBlock EmitBit(BitValue Value)
         {
             var llvmType = IntType((uint)Value.Size);
@@ -230,11 +243,6 @@ namespace Flame.LLVM.Codegen
         }
 
         public ICodeBlock EmitTagged(UniqueTag Tag, ICodeBlock Contents)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ICodeBlock EmitTypeBinary(ICodeBlock Value, IType Type, Operator Op)
         {
             throw new NotImplementedException();
         }

@@ -22,6 +22,7 @@ namespace Flame.LLVM.Codegen
             CodeBlock Target,
             Operator Op)
         {
+            this.codeGen = CodeGenerator;
             this.Callee = Callee;
             this.Target = Target;
             this.Op = Op;
