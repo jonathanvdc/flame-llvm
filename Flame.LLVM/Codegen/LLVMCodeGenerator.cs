@@ -165,7 +165,10 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitChar(char Value)
         {
-            throw new NotImplementedException();
+            return new ConstantBlock(
+                this,
+                PrimitiveTypes.Char,
+                ConstInt(Int16Type(), Value, false));
         }
 
         public ICodeBlock EmitContinue(UniqueTag Target)

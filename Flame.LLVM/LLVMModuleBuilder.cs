@@ -108,6 +108,10 @@ namespace Flame.LLVM
             {
                 return VoidType();
             }
+            else if (Type == PrimitiveTypes.Char)
+            {
+                return IntType(16);
+            }
             else
             {
                 throw new NotImplementedException("Only primitive types have been implemented so far");
