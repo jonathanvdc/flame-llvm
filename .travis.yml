@@ -23,6 +23,13 @@ install:
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
   - export PATH=$PATH:$(pwd)/ecsc/src/ecsc/bin/Release
 
+  # Grab a compiled version of compare-test and install it.
+  - wget https://github.com/jonathanvdc/compare-test/releases/download/v0.1.5/compare-test.zip
+  - unzip -d compare-test compare-test.zip
+  - ./mono-ln.sh compare-test.exe $(pwd)/compare-test/compare-test
+  - chmod +x $(pwd)/compare-test/compare-test
+  - export PATH=$PATH:$(pwd)/compare-test
+
   # Compile LLVMSharp
   - ./build-libs.sh /usr/lib/llvm-3.8/lib/libLLVM.so
 script:
