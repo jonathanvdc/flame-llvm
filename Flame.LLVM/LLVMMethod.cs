@@ -91,7 +91,8 @@ namespace Flame.LLVM
                 var bodyBuilder = new FunctionBodyBuilder(Module, func);
                 var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
                 entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
-                this.body.Emit(entryPointBuilder);
+                var codeGen = this.body.Emit(entryPointBuilder);
+                BuildUnreachable(codeGen.BasicBlock.Builder);
             }
         }
     }
