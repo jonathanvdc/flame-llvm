@@ -1,8 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Flame.Binding;
+using Flame.Build;
+using Flame.Compiler;
 using Flame.Compiler.Build;
+using Flame.Compiler.Expressions;
+using Flame.Compiler.Statements;
+using Flame.Compiler.Variables;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
 
@@ -33,10 +39,15 @@ namespace Flame.LLVM
         public AttributeMap Attributes { get; private set; }
 
         /// <summary>
-        /// Gets the ABI for this assembly.
+        /// Gets the ABI for functions defined by this assembly.
         /// </summary>
         /// <returns>The ABI.</returns>
         public LLVMAbi Abi { get; private set; }
+
+        /// <summary>
+        /// Gets the ABI that is used for externally-defined functions.
+        /// </summary>
+        public LLVMAbi ExternalAbi { get; private set; } = new LLVMAbi(CMangler.Instance);
 
         /// <summary>
         /// Gets the assembly's name.
@@ -49,6 +60,12 @@ namespace Flame.LLVM
         /// </summary>
         /// <returns>The environment.</returns>
         public IEnvironment Environment { get; private set; }
+
+        /// <summary>
+        /// Gets the entry point method for this assembly.
+        /// </summary>
+        /// <returns>The entry point.</returns>
+        public LLVMMethod EntryPoint { get; private set; }
 
         private LLVMNamespace rootNamespace;
 
@@ -71,7 +88,12 @@ namespace Flame.LLVM
 
         public IMethod GetEntryPoint()
         {
-            throw new NotImplementedException();
+            return EntryPoint;
+        }
+
+        public void SetEntryPoint(IMethod Method)
+        {
+            this.EntryPoint = (LLVMMethod)Method;
         }
 
         public void Initialize()
@@ -104,13 +126,113 @@ namespace Flame.LLVM
         public LLVMModuleRef ToModule()
         {
             var module = ModuleCreateWithName(Name.ToString());
-            rootNamespace.Emit(new LLVMModuleBuilder(module));
+            var moduleBuilder = new LLVMModuleBuilder(module);
+            rootNamespace.Emit(moduleBuilder);
+            if (EntryPoint != null)
+            {
+                SynthesizeEntryPointThunk(moduleBuilder);
+            }
             return module;
         }
 
-        public void SetEntryPoint(IMethod Method)
+        /// <summary>
+        /// Synthesizes an entry point "thunk" function that calls the user-defined
+        /// entry point.
+        /// </summary>
+        /// <param name="Module">The LLVM module to synthesize the entry point in.</param>
+        private void SynthesizeEntryPointThunk(LLVMModuleBuilder Module)
         {
-            throw new NotImplementedException();
+            // Generate the following class:
+            //
+            // public static class __entry_point
+            // {
+            //     [#builtin_abi("C")]
+            //     public static int main(int argc, byte** argv)
+            //     {
+            //         return actual_entry_point(...);
+            //         // --or--
+            //         actual_entry_point(...);
+            //         return 0;
+            //     }
+            // }
+
+            var epTypeProto = new DescribedType(new SimpleName("__entry_point"), rootNamespace);
+            epTypeProto.AddAttribute(PrimitiveAttributes.Instance.StaticTypeAttribute);
+            var epType = new LLVMType(rootNamespace, new TypePrototypeTemplate(epTypeProto));
+            var mainProto = new DescribedMethod(
+                new SimpleName("main"), epType, PrimitiveTypes.Int32, true);
+            mainProto.AddParameter(new DescribedParameter("argc", PrimitiveTypes.Int32));
+            mainProto.AddParameter(
+                new DescribedParameter(
+                    "argv",
+                    PrimitiveTypes.UInt8
+                    .MakePointerType(PointerKind.TransientPointer)
+                    .MakePointerType(PointerKind.TransientPointer)));
+
+            var mainThunk = new LLVMMethod(epType, new MethodPrototypeTemplate(mainProto), ExternalAbi);
+            var epCall = CreateEntryPointCall(mainThunk);
+            var mainBody = epCall.Type.GetIsInteger()
+                ? (IStatement)new ReturnStatement(
+                    new StaticCastExpression(epCall, PrimitiveTypes.Int32).Simplify())
+                : new BlockStatement(new IStatement[]
+                    {
+                        new ExpressionStatement(epCall),
+                        new ReturnStatement(new IntegerExpression(0))
+                    });
+
+            mainThunk.SetMethodBody(mainBody.Emit(mainThunk.GetBodyGenerator()));
+            mainThunk.Emit(Module);
+        }
+
+        /// <summary>
+        /// Creates an expression that calls the user-defined entry point.
+        /// </summary>
+        /// <param name="EntryPointThunk">
+        /// The entry point thunk whose parameters are forwarded to the user-defined entry point.
+        /// </param>
+        /// <returns>A call to the user-defined entry point.</returns>
+        private IExpression CreateEntryPointCall(LLVMMethod EntryPointThunk)
+        {
+            var paramTypes = EntryPoint.Parameters
+                .Select<IParameter, IType>(GetParameterType)
+                .ToArray<IType>();
+
+            if (paramTypes.Length == 0)
+            {
+                // Empty parameter list.
+                return new InvocationExpression(EntryPoint, null, new IExpression[] { });
+            }
+            else if (paramTypes.SequenceEqual<IType>(new IType[]
+                {
+                    PrimitiveTypes.Int32,
+                    PrimitiveTypes.UInt8
+                    .MakePointerType(PointerKind.TransientPointer)
+                    .MakePointerType(PointerKind.TransientPointer)
+                }))
+            {
+                // Forward parameters.
+                var thunkParams = EntryPointThunk.GetParameters();
+                return new InvocationExpression(
+                    EntryPoint,
+                    null,
+                    new IExpression[]
+                    {
+                        new ArgumentVariable(thunkParams[0], 0).CreateGetExpression(),
+                        new ArgumentVariable(thunkParams[1], 1).CreateGetExpression()
+                    });
+            }
+            else
+            {
+                throw new NotSupportedException(
+                    "Unsupported entry point signature;" +
+                    "signature must be one of: " +
+                    "int|void Main(), int|void Main(int, byte**)");
+            }
+        }
+
+        private static IType GetParameterType(IParameter Parameter)
+        {
+            return Parameter.ParameterType;
         }
     }
 }

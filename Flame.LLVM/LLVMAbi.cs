@@ -1,3 +1,5 @@
+using System;
+
 namespace Flame.LLVM
 {
     /// <summary>
@@ -18,5 +20,19 @@ namespace Flame.LLVM
         /// </summary>
         /// <returns>The name mangler.</returns>
         public NameMangler Mangler { get; private set; }
+
+        private LLVMAbi GetThis()
+        {
+            return this;
+        }
+
+        /// <summary>
+        /// Wraps this LLVM ABI in a lazy object.
+        /// </summary>
+        /// <returns>A lazy wrapper for this ABI.</returns>
+        public Lazy<LLVMAbi> AsLazyAbi()
+        {
+            return new Lazy<LLVMAbi>(GetThis);
+        }
     }
 }

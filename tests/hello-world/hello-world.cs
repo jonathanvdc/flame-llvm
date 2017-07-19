@@ -4,7 +4,7 @@ public static unsafe class Program
     public static extern void free(void* data);
     public static extern int puts(byte* str);
 
-    public static int main()
+    public static int Main()
     {
         byte* str = (byte*)malloc(3);
         *str = (byte)'h';

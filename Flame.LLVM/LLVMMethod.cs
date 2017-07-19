@@ -22,6 +22,15 @@ namespace Flame.LLVM
             this.Type = Type;
             this.templateInstance = new MethodSignatureInstance(Template, this);
             this.codeGenerator = new LLVMCodeGenerator(this);
+            this.abiVal = new Lazy<LLVMAbi>(FetchAbi);
+        }
+
+        public LLVMMethod(LLVMType Type, IMethodSignatureTemplate Template, LLVMAbi Abi)
+        {
+            this.Type = Type;
+            this.templateInstance = new MethodSignatureInstance(Template, this);
+            this.codeGenerator = new LLVMCodeGenerator(this);
+            this.abiVal = Abi.AsLazyAbi();
         }
 
         /// <summary>
@@ -33,10 +42,24 @@ namespace Flame.LLVM
         private LLVMCodeGenerator codeGenerator;
         private CodeBlock body;
 
+        private Lazy<LLVMAbi> abiVal;
+
+        private LLVMAbi FetchAbi()
+        {
+            if (this.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
+            {
+                return Type.Namespace.Assembly.ExternalAbi;
+            }
+            else
+            {
+                return Type.Namespace.Assembly.Abi;
+            }
+        }
+
         /// <summary>
         /// Gets the ABI for this method.
         /// </summary>
-        public LLVMAbi Abi => Type.Namespace.Assembly.Abi;
+        public LLVMAbi Abi => abiVal.Value;
 
         private MethodSignatureInstance templateInstance;
 
