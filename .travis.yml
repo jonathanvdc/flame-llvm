@@ -8,6 +8,7 @@ addons:
       - llvm-toolchain-precise-3.8
     packages:
       - llvm-3.8-dev
+      - clang-3.8
 
 install:
   # Clone, build and install ecsc
@@ -31,5 +32,5 @@ script:
   - msbuild /p:Configuration=Release flame-llvm.sln
   # Build the project with ecsc and test it
   - make all
-  # Run the executable
-  - mono ./flame-llvm/bin/clr/flame-llvm.exe
+  # Run the test suite
+  - make test

@@ -1,0 +1,42 @@
+init
+{
+    // Compiles input-file to a native executable and ensures
+    // that its output matches the oracle.
+    template CheckOutput<input-file, oracle>
+    {
+        run
+        {
+            // Run the executable and gather its output.
+            return = @($exe-filename);
+        }
+
+        build
+        {
+            // Create some temporary files.
+            flo-filename = @($create-temp-file flo);
+            ll-filename = @($create-temp-file ll);
+            exe-filename = @($create-temp-file exe);
+
+            // Compile the C# source code to Flame IR.
+            $ecsc --source=$input-file -platform ir -Wno-build -o=$flo-filename;
+
+            // Compile the Flame IR to LLVM IR.
+            $flame-llvm --source=$flo-filename -platform llvm -Wno-build -o=$ll-filename;
+
+            // Compile the LLVM IR to a native executable and link in
+            // the C standard library.
+            $clang $ll-filename -Wno-override-module -o $exe-filename;
+        }
+
+        init
+        {
+            // Set the expected return value.
+            return = $oracle;
+        }
+    }
+}
+
+tests
+{
+    template CheckOutput<hello-world/hello-world.cs, hi>;
+}

@@ -17,3 +17,6 @@ flo:
 clean:
 	make -C Flame.LLVM clean
 	make -C flame-llvm clean
+
+test: exe
+	compare-test tests/all.test --flame-llvm=$(shell pwd)/flame-llvm/bin/clr/flame-llvm.exe;
