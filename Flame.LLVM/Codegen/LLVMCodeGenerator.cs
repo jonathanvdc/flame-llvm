@@ -245,7 +245,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitPop(ICodeBlock Value)
         {
-            throw new NotImplementedException();
+            return new PopBlock(this, (CodeBlock)Value);
         }
 
         public ICodeBlock EmitReturn(ICodeBlock Value)

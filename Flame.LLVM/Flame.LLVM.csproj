@@ -69,6 +69,7 @@
     <Compile Include="Codegen\IfElseBlock.cs" />
     <Compile Include="Codegen\InvocationBlock.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
+    <Compile Include="Codegen\PopBlock.cs" />
     <Compile Include="Codegen\PrologueSpec.cs" />
     <Compile Include="Codegen\ReturnBlock.cs" />
     <Compile Include="Codegen\SequenceBlock.cs" />
