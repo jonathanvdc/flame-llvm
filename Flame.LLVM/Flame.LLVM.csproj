@@ -64,6 +64,7 @@
     <Compile Include="Codegen\ConstantBlock.cs" />
     <Compile Include="Codegen\DelegateBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
+    <Compile Include="Codegen\GetElementPtrBlock.cs" />
     <Compile Include="Codegen\GetParameterBlock.cs" />
     <Compile Include="Codegen\IfElseBlock.cs" />
     <Compile Include="Codegen\InvocationBlock.cs" />

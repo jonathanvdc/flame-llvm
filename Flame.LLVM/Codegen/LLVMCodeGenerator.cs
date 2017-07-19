@@ -72,9 +72,30 @@ namespace Flame.LLVM.Codegen
         {
             var lhs = (CodeBlock)A;
             var rhs = (CodeBlock)B;
-            if (lhs.Type.GetIsSignedInteger())
+            var lhsType = lhs.Type;
+            var rhsType = rhs.Type;
+            if (lhsType.GetIsSignedInteger() && rhsType.GetIsSignedInteger())
             {
                 return EmitIntBinary(lhs, rhs, Op, signedIntBinaries, signedIntPredicates);
+            }
+            else if (lhsType.GetIsPointer() && rhsType.GetIsInteger())
+            {
+                if (Op.Equals(Operator.Add))
+                {
+                    return new GetElementPtrBlock(
+                        this,
+                        lhs,
+                        new CodeBlock[] { rhs },
+                        lhs.Type);
+                }
+                else if (Op.Equals(Operator.Subtract))
+                {
+                    return new GetElementPtrBlock(
+                        this,
+                        lhs,
+                        new CodeBlock[] { (CodeBlock)EmitUnary(rhs, Operator.Subtract) },
+                        lhs.Type);
+                }
             }
             throw new NotImplementedException();
         }
