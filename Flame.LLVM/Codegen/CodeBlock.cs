@@ -79,6 +79,8 @@ namespace Flame.LLVM.Codegen
             this.Function = Function;
             this.blockNameSet = new UniqueNameSet<string>(Id, "block_");
             this.taggedValues = new Dictionary<UniqueTag, LLVMValueRef>();
+            this.breakBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
+            this.continueBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
         }
 
         /// <summary>
@@ -95,6 +97,8 @@ namespace Flame.LLVM.Codegen
         public LLVMValueRef Function { get; private set; }
 
         private Dictionary<UniqueTag, LLVMValueRef> taggedValues;
+        private Dictionary<UniqueTag, LLVMBasicBlockRef> breakBlocks;
+        private Dictionary<UniqueTag, LLVMBasicBlockRef> continueBlocks;
 
         private UniqueNameSet<string> blockNameSet;
 
@@ -121,6 +125,41 @@ namespace Flame.LLVM.Codegen
         public LLVMValueRef GetTaggedValue(UniqueTag Tag)
         {
             return taggedValues[Tag];
+        }
+
+        /// <summary>
+        /// Tags the given break and continue blocks with the given tag.
+        /// </summary>
+        /// <param name="Tag">The tag for a flow block.</param>
+        /// <param name="BreakBlock">The 'break' basic block for the flow block.</param>
+        /// <param name="ContinueBlock">The 'continue' basic block for the flow block.</param>
+        public void TagFlowBlock(
+            UniqueTag Tag,
+            LLVMBasicBlockRef BreakBlock,
+            LLVMBasicBlockRef ContinueBlock)
+        {
+            breakBlocks.Add(Tag, BreakBlock);
+            continueBlocks.Add(Tag, ContinueBlock);
+        }
+
+        /// <summary>
+        /// Gets the 'break' basic block for the given tag.
+        /// </summary>
+        /// <param name="Tag">The tag to find a 'break' basic block for.</param>
+        /// <returns>The 'break' basic block.</returns>
+        public LLVMBasicBlockRef GetBreakBlock(UniqueTag Tag)
+        {
+            return breakBlocks[Tag];
+        }
+
+        /// <summary>
+        /// Gets the 'continue' basic block for the given tag.
+        /// </summary>
+        /// <param name="Tag">The tag to find a 'continue' basic block for.</param>
+        /// <returns>The 'continue' basic block.</returns>
+        public LLVMBasicBlockRef GetContinueBlock(UniqueTag Tag)
+        {
+            return continueBlocks[Tag];
         }
 
         /// <summary>

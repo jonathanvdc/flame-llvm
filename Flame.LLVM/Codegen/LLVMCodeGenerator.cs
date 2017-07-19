@@ -243,7 +243,10 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitNull()
         {
-            throw new NotImplementedException();
+            return new ConstantBlock(
+                this,
+                PrimitiveTypes.Null,
+                ConstNull(PointerType(IntType(8), 0)));
         }
 
         public ICodeBlock EmitPop(ICodeBlock Value)
@@ -268,7 +271,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitTagged(UniqueTag Tag, ICodeBlock Contents)
         {
-            throw new NotImplementedException();
+            return new TaggedFlowBlock(this, Tag, (CodeBlock)Contents);
         }
 
         public ICodeBlock EmitUnary(ICodeBlock Value, Operator Op)
