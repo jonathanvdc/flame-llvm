@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Flame.Compiler;
 using Flame.Compiler.Emit;
 using LLVMSharp;
@@ -177,7 +178,10 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitInvocation(ICodeBlock Method, IEnumerable<ICodeBlock> Arguments)
         {
-            throw new NotImplementedException();
+            return new InvocationBlock(
+                this,
+                (CodeBlock)Method,
+                Arguments.Cast<CodeBlock>());
         }
 
         public ICodeBlock EmitMethod(IMethod Method, ICodeBlock Caller, Operator Op)

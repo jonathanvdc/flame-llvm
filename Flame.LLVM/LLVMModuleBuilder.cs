@@ -17,12 +17,12 @@ namespace Flame.LLVM
         public LLVMModuleBuilder(LLVMModuleRef Module)
         {
             this.module = Module;
-            this.declaredMethods = new Dictionary<LLVMMethod, LLVMValueRef>();
+            this.declaredMethods = new Dictionary<IMethod, LLVMValueRef>();
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
         }
 
         private LLVMModuleRef module;
-        private Dictionary<LLVMMethod, LLVMValueRef> declaredMethods;
+        private Dictionary<IMethod, LLVMValueRef> declaredMethods;
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Flame.LLVM
         /// <param name="Method">The method to find a function type for.</param>
         /// <param name="Module">The module that declares the function.</param>
         /// <returns>A function type.</returns>
-        private LLVMTypeRef DeclareFunctionType(LLVMMethod Method)
+        private LLVMTypeRef DeclareFunctionType(IMethod Method)
         {
             var paramArr = Method.GetParameters();
             var paramTypes = new LLVMTypeRef[paramArr.Length > 0 ? paramArr.Length : 1];
