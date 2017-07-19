@@ -84,14 +84,18 @@ namespace Flame.LLVM.Codegen
                 if (deleg.Op.Equals(Operator.GetDelegate)
                     || deleg.Op.Equals(Operator.GetCurriedDelegate))
                 {
+                    bool hasVoidRetType = retType == PrimitiveTypes.Void;
                     var argsAndBlock = EmitArguments(BasicBlock, deleg.Target, Arguments);
                     BasicBlock = argsAndBlock.Item2;
                     var callRef = BuildCall(
                         BasicBlock.Builder,
                         BasicBlock.FunctionBody.Module.Declare((LLVMMethod)deleg.Callee),
                         argsAndBlock.Item1,
-                        "call_tmp");
-                    return new BlockCodegen(BasicBlock, callRef);
+                        hasVoidRetType ? "" : "call_tmp");
+
+                    return hasVoidRetType
+                        ? new BlockCodegen(BasicBlock)
+                        : new BlockCodegen(BasicBlock, callRef);
                 }
                 else
                 {
