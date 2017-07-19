@@ -17,6 +17,7 @@ public static unsafe class Program
         FillString(str);
         puts(str);
         free((void*)str);
+        str = null;
         return 0;
     }
 }
