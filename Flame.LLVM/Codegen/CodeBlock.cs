@@ -63,7 +63,7 @@ namespace Flame.LLVM.Codegen
         /// <summary>
         /// Tells if the codegen for this block produces a value.
         /// </summary>
-        public bool HasValue => Value.Pointer == IntPtr.Zero;
+        public bool HasValue => Value.Pointer != IntPtr.Zero;
     }
 
     /// <summary>
