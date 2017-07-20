@@ -38,6 +38,6 @@ init
 
 tests
 {
-    template CheckOutput<hello-world/hello-world.cs, , hi>;
     template CheckOutput<echo/echo.cs, howdy, howdy>;
+    template CheckOutput<hello-world/hello-world.cs, , hi>;
 }
