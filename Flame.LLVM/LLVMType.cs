@@ -21,6 +21,8 @@ namespace Flame.LLVM
             this.templateInstance = new TypeSignatureInstance(Template, this);
             this.attrMap = new AttributeMapBuilder();
             this.declaredMethods = new List<LLVMMethod>();
+            this.declaredInstanceFields = new List<LLVMField>();
+            this.declaredStaticFields = new List<LLVMField>();
             this.declaredFields = new List<LLVMField>();
         }
 
@@ -29,6 +31,8 @@ namespace Flame.LLVM
         private TypeSignatureInstance templateInstance;
 
         private List<LLVMMethod> declaredMethods;
+        private List<LLVMField> declaredInstanceFields;
+        private List<LLVMField> declaredStaticFields;
         private List<LLVMField> declaredFields;
 
         /// <summary>
@@ -66,13 +70,18 @@ namespace Flame.LLVM
         /// <returns>The attribute map.</returns>
         public AttributeMap Attributes => new AttributeMap(attrMap);
 
+        /// <summary>
+        /// Gets the list of all instance fields defined by this type.
+        /// </summary>
+        public IReadOnlyList<LLVMField> InstanceFields => declaredInstanceFields;
+
         public IEnumerable<IMethod> Methods => declaredMethods;
 
         public IEnumerable<IType> BaseTypes => Enumerable.Empty<IType>();
 
         public IEnumerable<IProperty> Properties => Enumerable.Empty<IProperty>();
 
-        public IEnumerable<IField> Fields => Enumerable.Empty<IField>();
+        public IEnumerable<IField> Fields => declaredFields;
 
         public IEnumerable<IGenericParameter> GenericParameters => Enumerable.Empty<IGenericParameter>();
 
@@ -83,7 +92,12 @@ namespace Flame.LLVM
 
         public IFieldBuilder DeclareField(IFieldSignatureTemplate Template)
         {
-            var fieldDef = new LLVMField(this, Template, declaredFields.Count);
+            var fieldDef = new LLVMField(this, Template, declaredInstanceFields.Count);
+            if (fieldDef.IsStatic)
+                declaredStaticFields.Add(fieldDef);
+            else
+                declaredInstanceFields.Add(fieldDef);
+
             declaredFields.Add(fieldDef);
             return fieldDef;
         }
@@ -127,10 +141,10 @@ namespace Flame.LLVM
         /// <returns>An LLVM type ref for this type's data layout.</returns>
         public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
         {
-            var elementTypes = new LLVMTypeRef[declaredFields.Count];
+            var elementTypes = new LLVMTypeRef[declaredInstanceFields.Count];
             for (int i = 0; i < elementTypes.Length; i++)
             {
-                elementTypes[i] = Module.Declare(declaredFields[i].FieldType);
+                elementTypes[i] = Module.Declare(declaredInstanceFields[i].FieldType);
             }
             return StructType(elementTypes, false);
         }
@@ -145,6 +159,11 @@ namespace Flame.LLVM
             {
                 method.Emit(Module);
             }
+        }
+
+        public override string ToString()
+        {
+            return FullName.ToString();
         }
     }
 }

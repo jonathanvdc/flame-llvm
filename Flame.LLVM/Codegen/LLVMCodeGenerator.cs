@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Flame.Compiler;
 using Flame.Compiler.Emit;
+using Flame.Compiler.Expressions;
+using Flame.Compiler.Variables;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
 
@@ -21,16 +23,14 @@ namespace Flame.LLVM.Codegen
             this.Prologue = new PrologueSpec();
             this.locals = new Dictionary<UniqueTag, TaggedValueBlock>();
             this.parameters = new List<TaggedValueBlock>();
+            int thisParamCount = Method.IsStatic ? 0 : 1;
+            if (!Method.IsStatic)
+            {
+                thisParameter = SpillParameter(ThisVariable.GetThisType(Method.DeclaringType), 0);
+            }
             foreach (var param in Method.Parameters)
             {
-                var alloca = new AllocaBlock(this, param.ParameterType);
-                var storageTag = Prologue.AddInstruction(alloca);
-                var taggedVal = new TaggedValueBlock(this, storageTag, alloca.Type);
-                Prologue.AddInstruction(new StoreBlock(
-                    this,
-                    taggedVal,
-                    new GetParameterBlock(this, parameters.Count, param.ParameterType)));
-                parameters.Add(taggedVal);
+                parameters.Add(SpillParameter(param.ParameterType, thisParamCount + parameters.Count));
             }
         }
 
@@ -49,6 +49,7 @@ namespace Flame.LLVM.Codegen
 
         private Dictionary<UniqueTag, TaggedValueBlock> locals;
         private List<TaggedValueBlock> parameters;
+        private TaggedValueBlock thisParameter;
 
         private ICodeBlock EmitIntBinary(
             CodeBlock A,
@@ -228,6 +229,28 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitDefaultValue(IType Type)
         {
+            if (Type.GetIsInteger() || Type.GetIsFloatingPoint())
+            {
+                return new StaticCastExpression(new IntegerExpression(0), Type)
+                    .Simplify()
+                    .Emit(this);
+            }
+            else if (Type == PrimitiveTypes.Char)
+            {
+                return EmitChar(default(char));
+            }
+            else if (Type == PrimitiveTypes.Boolean)
+            {
+                return EmitBoolean(default(bool));
+            }
+            else if (Type.GetIsPointer())
+            {
+                return EmitTypeBinary(EmitNull(), Type, Operator.ReinterpretCast);
+            }
+            else if (Type.GetIsValueType())
+            {
+                return new DefaultStructBlock(this, (LLVMType)Type);
+            }
             throw new NotImplementedException();
         }
 
@@ -412,12 +435,29 @@ namespace Flame.LLVM.Codegen
             return new AtAddressEmitVariable(new GetFieldPtrBlock(this, targetBlock, (LLVMField)Field));
         }
 
-        private CodeBlock SpillToTempAddress(CodeBlock Value)
+        private void SpillToAddress(CodeBlock Value, out TaggedValueBlock Address, out CodeBlock Store)
         {
             var alloca = new AllocaBlock(this, Value.Type);
             var storageTag = Prologue.AddInstruction(alloca);
-            var taggedVal = new TaggedValueBlock(this, storageTag, alloca.Type);
-            return (CodeBlock)EmitSequence(new StoreBlock(this, taggedVal, Value), taggedVal);
+            Address = new TaggedValueBlock(this, storageTag, alloca.Type);
+            Store = new StoreBlock(this, Address, Value);
+        }
+
+        private TaggedValueBlock SpillParameter(IType Type, int ExtendedParameterIndex)
+        {
+            CodeBlock store;
+            TaggedValueBlock ptr;
+            SpillToAddress(new GetParameterBlock(this, ExtendedParameterIndex, Type), out ptr, out store);
+            Prologue.AddInstruction(store);
+            return ptr;
+        }
+
+        private CodeBlock SpillToTempAddress(CodeBlock Value)
+        {
+            CodeBlock store;
+            TaggedValueBlock ptr;
+            SpillToAddress(Value, out ptr, out store);
+            return (CodeBlock)EmitSequence(store, ptr);
         }
 
         public IEmitVariable DeclareLocal(UniqueTag Tag, IVariableMember VariableMember)
@@ -454,7 +494,7 @@ namespace Flame.LLVM.Codegen
 
         public IEmitVariable GetThis()
         {
-            throw new NotImplementedException();
+            return new AtAddressEmitVariable(thisParameter);
         }
     }
 }

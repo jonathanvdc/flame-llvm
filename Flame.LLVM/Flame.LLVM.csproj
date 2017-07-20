@@ -65,6 +65,7 @@
     <Compile Include="Codegen\BranchBlock.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
+    <Compile Include="Codegen\DefaultStructBlock.cs" />
     <Compile Include="Codegen\DelegateBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\GetElementPtrBlock.cs" />

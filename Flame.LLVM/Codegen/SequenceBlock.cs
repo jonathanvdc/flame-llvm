@@ -23,12 +23,12 @@ namespace Flame.LLVM.Codegen
                 && firstType != PrimitiveTypes.Void)
             {
                 this.secondIsResult = false;
-                this.resultType = secondType;
+                this.resultType = firstType;
             }
             else
             {
                 this.secondIsResult = true;
-                this.resultType = firstType;
+                this.resultType = secondType;
             }
         }
 

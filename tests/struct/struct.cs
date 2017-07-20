@@ -1,5 +1,11 @@
 public struct Utf8String
 {
+    public Utf8String(byte* data, int length)
+    {
+        this.Data = data;
+        this.Length = length;
+    }
+
     public int Length;
     public byte* Data;
 }
@@ -20,10 +26,7 @@ public static class Program
 
     private static Utf8String ToUtf8String(byte* str)
     {
-        Utf8String result;
-        result.Length = (int)strlen(str);
-        result.Data = str;
-        return result;
+        return new Utf8String(str, (int)strlen(str));
     }
 
     public static int Main(int argc, byte* * argv)

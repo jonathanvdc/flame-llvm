@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Flame.Compiler.Variables;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
 
@@ -53,15 +54,20 @@ namespace Flame.LLVM
         private LLVMTypeRef DeclareFunctionType(IMethod Method)
         {
             var paramArr = Method.GetParameters();
-            var paramTypes = new LLVMTypeRef[paramArr.Length > 0 ? paramArr.Length : 1];
+            int thisParamCount = Method.IsStatic ? 0 : 1;
+            var extParamTypes = new LLVMTypeRef[paramArr.Length > 0 ? thisParamCount + paramArr.Length : 1];
+            if (!Method.IsStatic)
+            {
+                extParamTypes[0] = Declare(ThisVariable.GetThisType(Method.DeclaringType));
+            }
             for (int i = 0; i < paramArr.Length; i++)
             {
-                paramTypes[i] = Declare(paramArr[i].ParameterType);
+                extParamTypes[i + thisParamCount] = Declare(paramArr[i].ParameterType);
             }
             return FunctionType(
                 Declare(Method.ReturnType),
-                out paramTypes[0],
-                (uint)paramArr.Length,
+                out extParamTypes[0],
+                (uint)(paramArr.Length + thisParamCount),
                 false);
         }
 

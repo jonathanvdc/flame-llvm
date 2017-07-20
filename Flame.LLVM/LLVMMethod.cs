@@ -17,17 +17,17 @@ namespace Flame.LLVM
     /// </summary>
     public sealed class LLVMMethod : IMethodBuilder
     {
-        public LLVMMethod(LLVMType Type, IMethodSignatureTemplate Template)
+        public LLVMMethod(LLVMType DeclaringType, IMethodSignatureTemplate Template)
         {
-            this.Type = Type;
+            this.ParentType = DeclaringType;
             this.templateInstance = new MethodSignatureInstance(Template, this);
             this.codeGenerator = new LLVMCodeGenerator(this);
             this.abiVal = new Lazy<LLVMAbi>(FetchAbi);
         }
 
-        public LLVMMethod(LLVMType Type, IMethodSignatureTemplate Template, LLVMAbi Abi)
+        public LLVMMethod(LLVMType DeclaringType, IMethodSignatureTemplate Template, LLVMAbi Abi)
         {
-            this.Type = Type;
+            this.ParentType = DeclaringType;
             this.templateInstance = new MethodSignatureInstance(Template, this);
             this.codeGenerator = new LLVMCodeGenerator(this);
             this.abiVal = Abi.AsLazyAbi();
@@ -37,7 +37,7 @@ namespace Flame.LLVM
         /// Gets the type that declares this method.
         /// </summary>
         /// <returns>This method's declaring type.</returns>
-        public LLVMType Type { get; private set; }
+        public LLVMType ParentType { get; private set; }
 
         private LLVMCodeGenerator codeGenerator;
         private CodeBlock body;
@@ -48,11 +48,11 @@ namespace Flame.LLVM
         {
             if (this.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
             {
-                return Type.Namespace.Assembly.ExternalAbi;
+                return ParentType.Namespace.Assembly.ExternalAbi;
             }
             else
             {
-                return Type.Namespace.Assembly.Abi;
+                return ParentType.Namespace.Assembly.Abi;
             }
         }
 
@@ -73,7 +73,7 @@ namespace Flame.LLVM
 
         public bool IsStatic => templateInstance.Template.IsStatic;
 
-        public IType DeclaringType => Type;
+        public IType DeclaringType => ParentType;
 
         public IEnumerable<IGenericParameter> GenericParameters => Enumerable.Empty<IGenericParameter>();
 
@@ -81,7 +81,7 @@ namespace Flame.LLVM
 
         public UnqualifiedName Name => templateInstance.Name;
 
-        public QualifiedName FullName => Name.Qualify(Type.FullName);
+        public QualifiedName FullName => Name.Qualify(ParentType.FullName);
 
         public IMethod Build()
         {
