@@ -276,6 +276,23 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitUnary(ICodeBlock Value, Operator Op)
         {
+            var valBlock = (CodeBlock)Value;
+            var valType = valBlock.Type;
+            if (Op.Equals(Operator.Not))
+            {
+                return new UnaryBlock(this, valBlock, valType, BuildNot);
+            }
+            else if (Op.Equals(Operator.Subtract))
+            {
+                if (valType.GetIsFloatingPoint())
+                {
+                    return new UnaryBlock(this, valBlock, valType, BuildFNeg);
+                }
+                else
+                {
+                    return new UnaryBlock(this, valBlock, valType, BuildNeg);
+                }
+            }
             throw new NotImplementedException();
         }
 
