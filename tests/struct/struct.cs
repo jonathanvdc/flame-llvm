@@ -1,18 +1,19 @@
 public struct Utf8String
 {
-    public Utf8String(byte* data, int length)
+    public Utf8String(byte* data)
     {
         this.Data = data;
-        this.Length = length;
+        this.Length = (int)strlen(data);
     }
 
     public int Length;
     public byte* Data;
+
+    private extern static ulong strlen(byte* str);
 }
 
 public static class Program
 {
-    public extern static ulong strlen(byte* str);
     public extern static void putchar(byte c);
 
     private static void WriteLine(Utf8String str)
@@ -26,7 +27,7 @@ public static class Program
 
     private static Utf8String ToUtf8String(byte* str)
     {
-        return new Utf8String(str, (int)strlen(str));
+        return new Utf8String(str);
     }
 
     public static int Main(int argc, byte* * argv)
