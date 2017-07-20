@@ -158,22 +158,12 @@ namespace Flame.LLVM.Codegen
                 ConstInt(Int1Type(), Value ? 1ul : 0ul, false));
         }
 
-        public ICodeBlock EmitBreak(UniqueTag Target)
-        {
-            throw new NotImplementedException();
-        }
-
         public ICodeBlock EmitChar(char Value)
         {
             return new ConstantBlock(
                 this,
                 PrimitiveTypes.Char,
                 ConstInt(Int16Type(), Value, false));
-        }
-
-        public ICodeBlock EmitContinue(UniqueTag Target)
-        {
-            throw new NotImplementedException();
         }
 
         public ICodeBlock EmitDefaultValue(IType Type)
@@ -200,6 +190,21 @@ namespace Flame.LLVM.Codegen
         public ICodeBlock EmitIfElse(ICodeBlock Condition, ICodeBlock IfBody, ICodeBlock ElseBody)
         {
             return new IfElseBlock(this, (CodeBlock)Condition, (CodeBlock)IfBody, (CodeBlock)ElseBody);
+        }
+
+        public ICodeBlock EmitTagged(UniqueTag Tag, ICodeBlock Contents)
+        {
+            return new TaggedFlowBlock(this, Tag, (CodeBlock)Contents);
+        }
+
+        public ICodeBlock EmitBreak(UniqueTag Target)
+        {
+            return new BranchBlock(this, Target, true);
+        }
+
+        public ICodeBlock EmitContinue(UniqueTag Target)
+        {
+            return new BranchBlock(this, Target, false);
         }
 
         public ICodeBlock EmitInteger(IntegerValue Value)
@@ -267,11 +272,6 @@ namespace Flame.LLVM.Codegen
         public ICodeBlock EmitString(string Value)
         {
             throw new NotImplementedException();
-        }
-
-        public ICodeBlock EmitTagged(UniqueTag Tag, ICodeBlock Contents)
-        {
-            return new TaggedFlowBlock(this, Tag, (CodeBlock)Contents);
         }
 
         public ICodeBlock EmitUnary(ICodeBlock Value, Operator Op)

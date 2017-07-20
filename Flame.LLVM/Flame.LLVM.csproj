@@ -61,6 +61,7 @@
     <Compile Include="Codegen\AllocaBlock.cs" />
     <Compile Include="Codegen\AtAddressEmitVariable.cs" />
     <Compile Include="Codegen\BinaryBlock.cs" />
+    <Compile Include="Codegen\BranchBlock.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
     <Compile Include="Codegen\DelegateBlock.cs" />
