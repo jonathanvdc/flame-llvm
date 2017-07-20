@@ -2,12 +2,12 @@ init
 {
     // Compiles input-file to a native executable and ensures
     // that its output matches the oracle.
-    template CheckOutput<input-file, oracle>
+    template CheckOutput<input-file, input, oracle>
     {
         run
         {
             // Run the executable and gather its output.
-            return = @($exe-filename);
+            return = @($exe-filename $input);
         }
 
         build
@@ -18,7 +18,7 @@ init
             exe-filename = @($create-temp-file exe);
 
             // Compile the C# source code to Flame IR.
-            $ecsc --source=$input-file -platform ir -Wno-build -o=$flo-filename;
+            $ecsc --source=$input-file -platform ir -Wno-build -fignore-main-prototype -o=$flo-filename;
 
             // Compile the Flame IR to LLVM IR.
             $flame-llvm --source=$flo-filename -platform llvm -Wno-build -o=$ll-filename;
@@ -38,5 +38,6 @@ init
 
 tests
 {
-    template CheckOutput<hello-world/hello-world.cs, hi>;
+    template CheckOutput<hello-world/hello-world.cs, , hi>;
+    template CheckOutput<echo/echo.cs, howdy, howdy>;
 }
