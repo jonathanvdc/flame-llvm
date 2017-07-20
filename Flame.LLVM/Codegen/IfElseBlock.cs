@@ -62,17 +62,19 @@ namespace Flame.LLVM.Codegen
         private BlockCodegen EmitClause(
             BasicBlockBuilder MergeBlock,
             CodeBlock Body,
-            string Name)
+            string Name,
+            out BasicBlockBuilder ClauseBlock)
         {
             if (Body != null)
             {
-                var clauseBlock = MergeBlock.FunctionBody.AppendBasicBlock(Name);
-                var clauseResult = Body.Emit(clauseBlock);
+                ClauseBlock = MergeBlock.FunctionBody.AppendBasicBlock(Name);
+                var clauseResult = Body.Emit(ClauseBlock);
                 BuildBr(clauseResult.BasicBlock.Builder, MergeBlock.Block);
-                return new BlockCodegen(clauseBlock, clauseResult.Value);
+                return clauseResult;
             }
             else
             {
+                ClauseBlock = MergeBlock;
                 return new BlockCodegen(MergeBlock);
             }
         }
@@ -84,13 +86,15 @@ namespace Flame.LLVM.Codegen
             BasicBlock = conditionResult.BasicBlock;
             var mergeBlock = BasicBlock.FunctionBody.AppendBasicBlock("if_else_merge");
 
-            var ifResult = EmitClause(mergeBlock, IfClause, "if_clause");
-            var elseResult = EmitClause(mergeBlock, ElseClause, "else_clause");
+            BasicBlockBuilder ifBlock;
+            BasicBlockBuilder elseBlock;
+            var ifResult = EmitClause(mergeBlock, IfClause, "if_clause", out ifBlock);
+            var elseResult = EmitClause(mergeBlock, ElseClause, "else_clause", out elseBlock);
             BuildCondBr(
                 BasicBlock.Builder,
                 conditionResult.Value,
-                ifResult.BasicBlock.Block,
-                elseResult.BasicBlock.Block);
+                ifBlock.Block,
+                elseBlock.Block);
 
             if (ifResult.HasValue)
             {
@@ -100,8 +104,8 @@ namespace Flame.LLVM.Codegen
                     new LLVMValueRef[] { ifResult.Value, elseResult.Value },
                     new LLVMBasicBlockRef[]
                     {
-                        ifResult.Value.GetInstructionParent(),
-                        elseResult.Value.GetInstructionParent()
+                        ifResult.BasicBlock.Block,
+                        elseResult.BasicBlock.Block
                     },
                     2);
                 return new BlockCodegen(mergeBlock, phiVal);
