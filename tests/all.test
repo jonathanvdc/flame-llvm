@@ -41,4 +41,5 @@ tests
     template CheckOutput<echo/echo.cs, howdy, howdy>;
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
     template CheckOutput<hello-world/hello-world.cs, , hi>;
+    template CheckOutput<struct/struct.cs, struct-test, struct-test>;
 }
