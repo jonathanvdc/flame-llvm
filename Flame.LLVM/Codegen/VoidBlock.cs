@@ -22,7 +22,7 @@ namespace Flame.LLVM.Codegen
 
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            return new BlockCodegen(BasicBlock, default(LLVMValueRef));
+            return new BlockCodegen(BasicBlock);
         }
     }
 }

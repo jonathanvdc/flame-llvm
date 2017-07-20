@@ -35,9 +35,8 @@ namespace Flame.LLVM.Codegen
         {
             var lhsCodegen = address.Emit(BasicBlock);
             var rhsCodegen = val.Emit(lhsCodegen.BasicBlock);
-            return new BlockCodegen(
-                rhsCodegen.BasicBlock,
-                BuildStore(rhsCodegen.BasicBlock.Builder, rhsCodegen.Value, lhsCodegen.Value));
+            BuildStore(rhsCodegen.BasicBlock.Builder, rhsCodegen.Value, lhsCodegen.Value);
+            return new BlockCodegen(rhsCodegen.BasicBlock);
         }
     }
 }
