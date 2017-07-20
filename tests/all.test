@@ -42,4 +42,5 @@ tests
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
     template CheckOutput<hello-world/hello-world.cs, , hi>;
     template CheckOutput<struct/struct.cs, struct-test, struct-test>;
+    template CheckOutput<static/static.cs, static-test, static-test>;
 }
