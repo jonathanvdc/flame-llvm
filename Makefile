@@ -19,4 +19,4 @@ clean:
 	make -C flame-llvm clean
 
 test: exe
-	compare-test tests/all.test --flame-llvm=$(shell pwd)/flame-llvm/bin/clr/flame-llvm.exe --clang=clang-3.8
+	compare-test tests/all.test --flame-llvm=$(shell pwd)/flame-llvm/bin/clr/flame-llvm.exe --clang=clang-3.8 -j
