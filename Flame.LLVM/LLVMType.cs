@@ -21,6 +21,7 @@ namespace Flame.LLVM
             this.templateInstance = new TypeSignatureInstance(Template, this);
             this.attrMap = new AttributeMapBuilder();
             this.declaredMethods = new List<LLVMMethod>();
+            this.declaredFields = new List<LLVMField>();
         }
 
         private AttributeMapBuilder attrMap;
@@ -28,6 +29,7 @@ namespace Flame.LLVM
         private TypeSignatureInstance templateInstance;
 
         private List<LLVMMethod> declaredMethods;
+        private List<LLVMField> declaredFields;
 
         /// <summary>
         /// Gets this LLVM type's declaring namespace.
@@ -81,7 +83,9 @@ namespace Flame.LLVM
 
         public IFieldBuilder DeclareField(IFieldSignatureTemplate Template)
         {
-            throw new NotImplementedException();
+            var fieldDef = new LLVMField(this, Template);
+            declaredFields.Add(fieldDef);
+            return fieldDef;
         }
 
         public IMethodBuilder DeclareMethod(IMethodSignatureTemplate Template)
