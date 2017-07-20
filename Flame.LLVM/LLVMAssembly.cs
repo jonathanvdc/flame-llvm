@@ -184,6 +184,13 @@ namespace Flame.LLVM
             mainThunk.Emit(Module);
         }
 
+        private static IType[] GetParameterTypes(IMethod Method)
+        {
+            return Method.Parameters
+                .Select<IParameter, IType>(GetParameterType)
+                .ToArray<IType>();
+        }
+
         /// <summary>
         /// Creates an expression that calls the user-defined entry point.
         /// </summary>
@@ -193,22 +200,18 @@ namespace Flame.LLVM
         /// <returns>A call to the user-defined entry point.</returns>
         private IExpression CreateEntryPointCall(LLVMMethod EntryPointThunk)
         {
-            var paramTypes = EntryPoint.Parameters
-                .Select<IParameter, IType>(GetParameterType)
-                .ToArray<IType>();
+            var paramTypes = GetParameterTypes(EntryPoint);
+            var thunkParamTypes = GetParameterTypes(EntryPointThunk);
 
             if (paramTypes.Length == 0)
             {
                 // Empty parameter list.
                 return new InvocationExpression(EntryPoint, null, new IExpression[] { });
             }
-            else if (paramTypes.SequenceEqual<IType>(new IType[]
-                {
-                    PrimitiveTypes.Int32,
-                    PrimitiveTypes.UInt8
-                    .MakePointerType(PointerKind.TransientPointer)
-                    .MakePointerType(PointerKind.TransientPointer)
-                }))
+            else if (paramTypes.Length == 2
+                && thunkParamTypes.Length == 2
+                && paramTypes[0].IsEquivalent(thunkParamTypes[0])
+                && paramTypes[1].IsEquivalent(thunkParamTypes[1]))
             {
                 // Forward parameters.
                 var thunkParams = EntryPointThunk.GetParameters();
