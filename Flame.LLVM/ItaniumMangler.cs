@@ -49,6 +49,12 @@ namespace Flame.LLVM
             return "_Z" + EncodeFunctionName(Method);
         }
 
+        /// <inheritdoc/>
+        public override string Mangle(IField Field)
+        {
+            return "_Z" + EncodeQualifiedName(Field);
+        }
+
         private static string EncodeFunctionName(IMethod Method)
         {
             var funcName = Method.DeclaringType == null

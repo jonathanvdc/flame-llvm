@@ -1,23 +1,22 @@
 using System;
 using Flame.Compiler;
 using Flame.Compiler.Build;
+using LLVMSharp;
+using static LLVMSharp.LLVM;
 
 namespace Flame.LLVM
 {
     /// <summary>
     /// A field build implementation for LLVM fields.
     /// </summary>
-    public sealed class LLVMField : IFieldBuilder
+    public sealed class LLVMField : LLVMSymbolTypeMember, IFieldBuilder
     {
         public LLVMField(LLVMType DeclaringType, IFieldSignatureTemplate Template, int FieldIndex)
+            : base(DeclaringType)
         {
-            this.DeclaringType = DeclaringType;
             this.templateInstance = new FieldSignatureInstance(Template, this);
             this.FieldIndex = FieldIndex;
         }
-
-        /// <inheritdoc/>
-        public IType DeclaringType { get; private set; }
 
         /// <summary>
         /// Gets the index of this field in the type that defines it.
@@ -31,16 +30,13 @@ namespace Flame.LLVM
         public IType FieldType => templateInstance.FieldType.Value;
 
         /// <inheritdoc/>
-        public bool IsStatic => templateInstance.Template.IsStatic;
+        public override bool IsStatic => templateInstance.Template.IsStatic;
 
         /// <inheritdoc/>
-        public AttributeMap Attributes => templateInstance.Attributes.Value;
+        public override AttributeMap Attributes => templateInstance.Attributes.Value;
 
         /// <inheritdoc/>
-        public UnqualifiedName Name => templateInstance.Name;
-
-        /// <inheritdoc/>
-        public QualifiedName FullName => Name.Qualify(DeclaringType.FullName);
+        public override UnqualifiedName Name => templateInstance.Name;
 
         public IField Build()
         {

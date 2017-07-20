@@ -13,18 +13,29 @@ namespace Flame.LLVM.Codegen
             ICodeGenerator CodeGenerator,
             CodeBlock Operand,
             IType Type,
-            Func<LLVMBuilderRef, LLVMValueRef, string, LLVMValueRef> BuildUnary)
+            Func<LLVMBuilderRef, LLVMValueRef, string, LLVMValueRef> BuildUnary,
+            Func<LLVMValueRef, LLVMValueRef> BuildConstUnary)
         {
             this.codeGen = CodeGenerator;
             this.operand = Operand;
             this.resultType = Type;
             this.build = BuildUnary;
+            this.buildConst = BuildConstUnary;
         }
+
+        public UnaryBlock(
+            ICodeGenerator CodeGenerator,
+            CodeBlock Operand,
+            IType Type,
+            Func<LLVMBuilderRef, LLVMValueRef, string, LLVMValueRef> BuildUnary)
+            : this(CodeGenerator, Operand, Type, BuildUnary, null)
+        { }
 
         private ICodeGenerator codeGen;
         private CodeBlock operand;
         private IType resultType;
         private Func<LLVMBuilderRef, LLVMValueRef, string, LLVMValueRef> build;
+        private Func<LLVMValueRef, LLVMValueRef> buildConst;
 
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
@@ -36,9 +47,18 @@ namespace Flame.LLVM.Codegen
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
             var operandCodegen = operand.Emit(BasicBlock);
-            return new BlockCodegen(
-                operandCodegen.BasicBlock,
-                build(operandCodegen.BasicBlock.Builder, operandCodegen.Value, "tmp"));
+            if (buildConst != null && operandCodegen.Value.IsConstant())
+            {
+                return new BlockCodegen(
+                    operandCodegen.BasicBlock,
+                    buildConst(operandCodegen.Value));
+            }
+            else
+            {
+                return new BlockCodegen(
+                    operandCodegen.BasicBlock,
+                    build(operandCodegen.BasicBlock.Builder, operandCodegen.Value, "tmp"));
+            }
         }
     }
 }

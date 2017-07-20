@@ -27,6 +27,19 @@ namespace Flame.LLVM.Codegen
         }
 
         /// <summary>
+        /// Creates a field pointer block from the given static field.
+        /// </summary>
+        /// <param name="CodeGenerator">The code generator that creates this block.</param>
+        /// <param name="Field">The field to address.</param>
+        public GetFieldPtrBlock(
+            ICodeGenerator CodeGenerator,
+            LLVMField Field)
+        {
+            this.codeGen = CodeGenerator;
+            this.Field = Field;
+        }
+
+        /// <summary>
         /// Gets a block that produces a pointer to the object in which a field is addressed.
         /// </summary>
         /// <returns>The object in which a field is addressed.</returns>
@@ -37,6 +50,11 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         /// <returns>The field to address.</returns>
         public LLVMField Field { get; private set; }
+
+        /// <summary>
+        /// Tests if a static field is accessed by this block.
+        /// </summary>
+        public bool AccessesStaticField => Target == null;
 
         private ICodeGenerator codeGen;
 
@@ -49,15 +67,24 @@ namespace Flame.LLVM.Codegen
         /// <inheritdoc/>
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            var targetResult = Target.Emit(BasicBlock);
-            BasicBlock = targetResult.BasicBlock;
-            return new BlockCodegen(
-                BasicBlock,
-                BuildStructGEP(
-                    BasicBlock.Builder,
-                    targetResult.Value,
-                    (uint)Field.FieldIndex,
-                    "field_ptr_tmp"));
+            if (AccessesStaticField)
+            {
+                return new BlockCodegen(
+                    BasicBlock,
+                    BasicBlock.FunctionBody.Module.DeclareGlobal(Field));
+            }
+            else
+            {
+                var targetResult = Target.Emit(BasicBlock);
+                BasicBlock = targetResult.BasicBlock;
+                return new BlockCodegen(
+                    BasicBlock,
+                    BuildStructGEP(
+                        BasicBlock.Builder,
+                        targetResult.Value,
+                        (uint)Field.FieldIndex,
+                        "field_ptr_tmp"));
+            }
         }
     }
 }

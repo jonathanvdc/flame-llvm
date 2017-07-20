@@ -23,14 +23,18 @@ namespace Flame.LLVM.Codegen
             this.Prologue = new PrologueSpec();
             this.locals = new Dictionary<UniqueTag, TaggedValueBlock>();
             this.parameters = new List<TaggedValueBlock>();
-            int thisParamCount = Method.IsStatic ? 0 : 1;
-            if (!Method.IsStatic)
+            if (Method != null)
             {
-                thisParameter = SpillParameter(ThisVariable.GetThisType(Method.DeclaringType), 0);
-            }
-            foreach (var param in Method.Parameters)
-            {
-                parameters.Add(SpillParameter(param.ParameterType, thisParamCount + parameters.Count));
+                // `Method` is null when we're generating constant field initializers.
+                int thisParamCount = Method.IsStatic ? 0 : 1;
+                if (!Method.IsStatic)
+                {
+                    thisParameter = SpillParameter(ThisVariable.GetThisType(Method.DeclaringType), 0);
+                }
+                foreach (var param in Method.Parameters)
+                {
+                    parameters.Add(SpillParameter(param.ParameterType, thisParamCount + parameters.Count));
+                }
             }
         }
 
@@ -162,7 +166,7 @@ namespace Flame.LLVM.Codegen
             var valBlock = (CodeBlock)Value;
             if (Op.Equals(Operator.ReinterpretCast))
             {
-                return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast);
+                return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast, ConstPointerCast);
             }
             else if (Op.Equals(Operator.StaticCast))
             {
@@ -177,24 +181,24 @@ namespace Flame.LLVM.Codegen
                     }
                     else if (valSpec.Size > targetSpec.Size)
                     {
-                        return new SimpleCastBlock(this, valBlock, Type, BuildTrunc);
+                        return new SimpleCastBlock(this, valBlock, Type, BuildTrunc, ConstTrunc);
                     }
                     else if (targetSpec.IsSigned)
                     {
-                        return new SimpleCastBlock(this, valBlock, Type, BuildSExt);
+                        return new SimpleCastBlock(this, valBlock, Type, BuildSExt, ConstSExt);
                     }
                     else
                     {
-                        return new SimpleCastBlock(this, valBlock, Type, BuildZExt);
+                        return new SimpleCastBlock(this, valBlock, Type, BuildZExt, ConstZExt);
                     }
                 }
                 else if (valType.GetIsPointer() && Type.GetIsInteger())
                 {
-                    return new SimpleCastBlock(this, valBlock, Type, BuildPtrToInt);
+                    return new SimpleCastBlock(this, valBlock, Type, BuildPtrToInt, ConstPtrToInt);
                 }
                 else if (valType.GetIsInteger() && Type.GetIsPointer())
                 {
-                    return new SimpleCastBlock(this, valBlock, Type, BuildIntToPtr);
+                    return new SimpleCastBlock(this, valBlock, Type, BuildIntToPtr, ConstIntToPtr);
                 }
             }
             throw new NotImplementedException();
@@ -363,17 +367,17 @@ namespace Flame.LLVM.Codegen
             var valType = valBlock.Type;
             if (Op.Equals(Operator.Not))
             {
-                return new UnaryBlock(this, valBlock, valType, BuildNot);
+                return new UnaryBlock(this, valBlock, valType, BuildNot, ConstNot);
             }
             else if (Op.Equals(Operator.Subtract))
             {
                 if (valType.GetIsFloatingPoint())
                 {
-                    return new UnaryBlock(this, valBlock, valType, BuildFNeg);
+                    return new UnaryBlock(this, valBlock, valType, BuildFNeg, ConstFNeg);
                 }
                 else
                 {
-                    return new UnaryBlock(this, valBlock, valType, BuildNeg);
+                    return new UnaryBlock(this, valBlock, valType, BuildNeg, ConstNeg);
                 }
             }
             throw new NotImplementedException();
@@ -426,6 +430,11 @@ namespace Flame.LLVM.Codegen
 
         public IUnmanagedEmitVariable GetUnmanagedField(IField Field, ICodeBlock Target)
         {
+            if (Field.IsStatic)
+            {
+                return new AtAddressEmitVariable(new GetFieldPtrBlock(this, (LLVMField)Field));
+            }
+
             var targetBlock = (CodeBlock)Target;
             if (!targetBlock.Type.GetIsPointer())
             {

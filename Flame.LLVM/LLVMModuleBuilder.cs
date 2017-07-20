@@ -20,11 +20,13 @@ namespace Flame.LLVM
             this.module = Module;
             this.declaredMethods = new Dictionary<IMethod, LLVMValueRef>();
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
+            this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
         }
 
         private LLVMModuleRef module;
         private Dictionary<IMethod, LLVMValueRef> declaredMethods;
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
+        private Dictionary<IField, LLVMValueRef> declaredGlobals;
 
         /// <summary>
         /// Declares the given method if it was not declared already.
@@ -84,6 +86,45 @@ namespace Flame.LLVM
             {
                 result = DeclareTypeImpl(Type);
                 declaredTypes[Type] = result;
+            }
+            return result;
+        }
+
+
+        /// <summary>
+        /// Declares the given field if it is static and has not been declared
+        /// already. An LLVM value that corresponds to the declaration is returned.
+        /// </summary>
+        /// <param name="Field">The field to declare.</param>
+        /// <returns>An LLVM global.</returns>
+        public LLVMValueRef DeclareGlobal(LLVMField Field)
+        {
+            if (!Field.IsStatic)
+            {
+                throw new InvalidOperationException(
+                    "Instance field '" + Field.Name +
+                    "' cannot be declared as a global.");
+            }
+
+            LLVMValueRef result;
+            if (!declaredGlobals.TryGetValue(Field, out result))
+            {
+                // Declare the global.
+                var abiMangler = Field.Abi.Mangler;
+                result = AddGlobal(module, Declare(Field.FieldType), abiMangler.Mangle(Field));
+                result.SetLinkage(Field.Linkage);
+
+                // Zero-initialize it.
+                var codeGenerator = new Codegen.LLVMCodeGenerator(null);
+                var defaultValueBlock = (Codegen.CodeBlock)codeGenerator.EmitDefaultValue(Field.FieldType);
+                var defaultValueRef = defaultValueBlock.Emit(
+                    new Codegen.BasicBlockBuilder(
+                        new Codegen.FunctionBodyBuilder(this, default(LLVMValueRef)),
+                        default(LLVMBasicBlockRef)));
+                LLVMSharp.LLVM.SetInitializer(result, defaultValueRef.Value);
+
+                // Store it in the dictionary.
+                declaredGlobals[Field] = result;
             }
             return result;
         }

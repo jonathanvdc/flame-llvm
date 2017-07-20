@@ -11,6 +11,13 @@ namespace Flame.LLVM
         /// <param name="Method">The method whose name is to be mangled.</param>
         /// <returns>The mangled name.</returns>
         public abstract string Mangle(IMethod Method);
+
+        /// <summary>
+        /// Gets the given field's mangled name.
+        /// </summary>
+        /// <param name="Field">The field whose name is to be mangled.</param>
+        /// <returns>The mangled name.</returns>
+        public abstract string Mangle(IField Method);
     }
 
     /// <summary>
@@ -30,6 +37,12 @@ namespace Flame.LLVM
         public override string Mangle(IMethod Method)
         {
             return Method.Name.ToString();
+        }
+
+        /// <inheritdoc/>
+        public override string Mangle(IField Field)
+        {
+            return Field.Name.ToString();
         }
     }
 }

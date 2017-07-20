@@ -14,12 +14,14 @@ namespace Flame.LLVM.Codegen
             ICodeGenerator CodeGenerator,
             CodeBlock Value,
             IType Type,
-            Func<LLVMBuilderRef, LLVMValueRef, LLVMTypeRef, string, LLVMValueRef> BuildCast)
+            Func<LLVMBuilderRef, LLVMValueRef, LLVMTypeRef, string, LLVMValueRef> BuildCast,
+            Func<LLVMValueRef, LLVMTypeRef, LLVMValueRef> BuildConstCast)
         {
             this.codeGen = CodeGenerator;
             this.Value = Value;
             this.targetType = Type;
             this.build = BuildCast;
+            this.buildConst = BuildConstCast;
         }
 
         /// <summary>
@@ -31,6 +33,7 @@ namespace Flame.LLVM.Codegen
         private ICodeGenerator codeGen;
         private IType targetType;
         private Func<LLVMBuilderRef, LLVMValueRef, LLVMTypeRef, string, LLVMValueRef> build;
+        private Func<LLVMValueRef, LLVMTypeRef, LLVMValueRef> buildConst;
 
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
@@ -42,13 +45,21 @@ namespace Flame.LLVM.Codegen
         {
             var valResult = Value.Emit(BasicBlock);
             BasicBlock = valResult.BasicBlock;
-            return new BlockCodegen(
-                BasicBlock,
-                build(
-                    BasicBlock.Builder,
-                    valResult.Value,
-                    BasicBlock.FunctionBody.Module.Declare(targetType),
-                    "cast_tmp"));
+            var llvmType = BasicBlock.FunctionBody.Module.Declare(targetType);
+            if (valResult.Value.IsConstant())
+            {
+                return new BlockCodegen(BasicBlock, buildConst(valResult.Value, llvmType));
+            }
+            else
+            {
+                return new BlockCodegen(
+                    BasicBlock,
+                    build(
+                        BasicBlock.Builder,
+                        valResult.Value,
+                        llvmType,
+                        "cast_tmp"));
+            }
         }
     }
 }

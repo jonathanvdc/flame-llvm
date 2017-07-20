@@ -92,7 +92,11 @@ namespace Flame.LLVM
 
         public IFieldBuilder DeclareField(IFieldSignatureTemplate Template)
         {
-            var fieldDef = new LLVMField(this, Template, declaredInstanceFields.Count);
+            var fieldDef = new LLVMField(
+                this,
+                Template,
+                Template.IsStatic ? -1 : declaredInstanceFields.Count);
+
             if (fieldDef.IsStatic)
                 declaredStaticFields.Add(fieldDef);
             else
