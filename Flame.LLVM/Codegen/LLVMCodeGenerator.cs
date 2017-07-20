@@ -166,10 +166,7 @@ namespace Flame.LLVM.Codegen
                     return new SimpleCastBlock(this, valBlock, Type, BuildIntToPtr);
                 }
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         public ICodeBlock EmitBit(BitValue Value)
