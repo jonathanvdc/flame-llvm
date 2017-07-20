@@ -133,6 +133,39 @@ namespace Flame.LLVM.Codegen
             {
                 return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast);
             }
+            else if (Op.Equals(Operator.StaticCast))
+            {
+                var valType = valBlock.Type;
+                if (valType.GetIsInteger() && Type.GetIsInteger())
+                {
+                    var valSpec = valType.GetIntegerSpec();
+                    var targetSpec = Type.GetIntegerSpec();
+                    if (valSpec.Size == targetSpec.Size)
+                    {
+                        return new RetypedBlock(this, valBlock, Type);
+                    }
+                    else if (valSpec.Size > targetSpec.Size)
+                    {
+                        return new SimpleCastBlock(this, valBlock, Type, BuildTrunc);
+                    }
+                    else if (targetSpec.IsSigned)
+                    {
+                        return new SimpleCastBlock(this, valBlock, Type, BuildSExt);
+                    }
+                    else
+                    {
+                        return new SimpleCastBlock(this, valBlock, Type, BuildZExt);
+                    }
+                }
+                else if (valType.GetIsPointer() && Type.GetIsInteger())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildPtrToInt);
+                }
+                else if (valType.GetIsInteger() && Type.GetIsPointer())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildIntToPtr);
+                }
+            }
             else
             {
                 throw new NotImplementedException();
