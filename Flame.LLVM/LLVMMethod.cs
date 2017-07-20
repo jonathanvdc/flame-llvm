@@ -103,14 +103,42 @@ namespace Flame.LLVM
         }
 
         /// <summary>
+        /// Gets the linkage for this function.
+        /// </summary>
+        /// <returns>The linkage.</returns>
+        public LLVMLinkage Linkage
+        {
+            get
+            {
+                if (this.HasAttribute(
+                    PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
+                {
+                    return LLVMLinkage.LLVMExternalLinkage;
+                }
+
+                var access = this.GetAccess();
+                switch (access)
+                {
+                    case AccessModifier.Private:
+                    case AccessModifier.Assembly:
+                    case AccessModifier.ProtectedAndAssembly:
+                        return LLVMLinkage.LLVMInternalLinkage;
+                    default:
+                        return LLVMLinkage.LLVMExternalLinkage;
+                }
+            }
+        }
+
+        /// <summary>
         /// Writes this method definitions to the given module.
         /// </summary>
         /// <param name="Module">The module to populate.</param>
         public void Emit(LLVMModuleBuilder Module)
         {
+            var func = Module.Declare(this);
+            func.SetLinkage(Linkage);
             if (this.body != null)
             {
-                var func = Module.Declare(this);
                 var bodyBuilder = new FunctionBodyBuilder(Module, func);
                 var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
                 entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
