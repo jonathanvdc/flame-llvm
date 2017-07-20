@@ -83,7 +83,7 @@ namespace Flame.LLVM
 
         public IFieldBuilder DeclareField(IFieldSignatureTemplate Template)
         {
-            var fieldDef = new LLVMField(this, Template);
+            var fieldDef = new LLVMField(this, Template, declaredFields.Count);
             declaredFields.Add(fieldDef);
             return fieldDef;
         }
@@ -118,6 +118,21 @@ namespace Flame.LLVM
             {
                 throw new NotImplementedException("LLVM types do not support base types yet");
             }
+        }
+
+        /// <summary>
+        /// Defines the data layout of this type as an LLVM type.
+        /// </summary>
+        /// <param name="Module">The module to define the type in.</param>
+        /// <returns>An LLVM type ref for this type's data layout.</returns>
+        public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
+        {
+            var elementTypes = new LLVMTypeRef[declaredFields.Count];
+            for (int i = 0; i < elementTypes.Length; i++)
+            {
+                elementTypes[i] = Module.Declare(declaredFields[i].FieldType);
+            }
+            return StructType(elementTypes, false);
         }
 
         /// <summary>

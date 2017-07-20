@@ -9,14 +9,21 @@ namespace Flame.LLVM
     /// </summary>
     public sealed class LLVMField : IFieldBuilder
     {
-        public LLVMField(LLVMType DeclaringType, IFieldSignatureTemplate Template)
+        public LLVMField(LLVMType DeclaringType, IFieldSignatureTemplate Template, int FieldIndex)
         {
             this.DeclaringType = DeclaringType;
             this.templateInstance = new FieldSignatureInstance(Template, this);
+            this.FieldIndex = FieldIndex;
         }
 
         /// <inheritdoc/>
         public IType DeclaringType { get; private set; }
+
+        /// <summary>
+        /// Gets the index of this field in the type that defines it.
+        /// </summary>
+        /// <returns>The field index of this field.</returns>
+        public int FieldIndex { get; private set; }
 
         private FieldSignatureInstance templateInstance;
 

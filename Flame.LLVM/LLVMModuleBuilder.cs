@@ -112,6 +112,10 @@ namespace Flame.LLVM
             {
                 return IntType(16);
             }
+            else if (Type is LLVMType)
+            {
+                return ((LLVMType)Type).DefineLayout(this);
+            }
             else
             {
                 throw new NotImplementedException("Only primitive types have been implemented so far");

@@ -398,12 +398,26 @@ namespace Flame.LLVM.Codegen
 
         public IEmitVariable GetField(IField Field, ICodeBlock Target)
         {
-            throw new NotImplementedException();
+            return GetUnmanagedField(Field, Target);
         }
 
         public IUnmanagedEmitVariable GetUnmanagedField(IField Field, ICodeBlock Target)
         {
-            throw new NotImplementedException();
+            var targetBlock = (CodeBlock)Target;
+            if (!targetBlock.Type.GetIsPointer())
+            {
+                // Spill non-pointer values to a local first.
+                targetBlock = SpillToTempAddress(targetBlock);
+            }
+            return new AtAddressEmitVariable(new GetFieldPtrBlock(this, targetBlock, (LLVMField)Field));
+        }
+
+        private CodeBlock SpillToTempAddress(CodeBlock Value)
+        {
+            var alloca = new AllocaBlock(this, Value.Type);
+            var storageTag = Prologue.AddInstruction(alloca);
+            var taggedVal = new TaggedValueBlock(this, storageTag, alloca.Type);
+            return (CodeBlock)EmitSequence(new StoreBlock(this, taggedVal, Value), taggedVal);
         }
 
         public IEmitVariable DeclareLocal(UniqueTag Tag, IVariableMember VariableMember)
