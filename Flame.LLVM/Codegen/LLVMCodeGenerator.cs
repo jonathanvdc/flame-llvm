@@ -78,6 +78,10 @@ namespace Flame.LLVM.Codegen
             {
                 return EmitIntBinary(lhs, rhs, Op, signedIntBinaries, signedIntPredicates);
             }
+            else if (lhsType.GetIsUnsignedInteger() && rhsType.GetIsUnsignedInteger())
+            {
+                return EmitIntBinary(lhs, rhs, Op, unsignedIntBinaries, unsignedIntPredicates);
+            }
             else if (lhsType.GetIsPointer() && rhsType.GetIsInteger())
             {
                 if (Op.Equals(Operator.Add))
@@ -124,6 +128,32 @@ namespace Flame.LLVM.Codegen
             { Operator.CheckGreaterThanOrEqual, LLVMIntPredicate.LLVMIntSGE },
             { Operator.CheckLessThan, LLVMIntPredicate.LLVMIntSLT },
             { Operator.CheckLessThanOrEqual, LLVMIntPredicate.LLVMIntSLE }
+        };
+
+        private static readonly Dictionary<Operator, BuildLLVMBinary> unsignedIntBinaries =
+            new Dictionary<Operator, BuildLLVMBinary>()
+        {
+            { Operator.Add, BuildAdd },
+            { Operator.Subtract, BuildSub },
+            { Operator.Multiply, BuildMul },
+            { Operator.Divide, BuildUDiv },
+            { Operator.Remainder, BuildURem },
+            { Operator.And, BuildAnd },
+            { Operator.Or, BuildOr },
+            { Operator.Xor, BuildXor },
+            { Operator.LeftShift, BuildShl },
+            { Operator.RightShift, BuildLShr }
+        };
+
+        private static readonly Dictionary<Operator, LLVMIntPredicate> unsignedIntPredicates =
+            new Dictionary<Operator, LLVMIntPredicate>()
+        {
+            { Operator.CheckEquality, LLVMIntPredicate.LLVMIntEQ },
+            { Operator.CheckInequality, LLVMIntPredicate.LLVMIntNE },
+            { Operator.CheckGreaterThan, LLVMIntPredicate.LLVMIntUGT },
+            { Operator.CheckGreaterThanOrEqual, LLVMIntPredicate.LLVMIntUGE },
+            { Operator.CheckLessThan, LLVMIntPredicate.LLVMIntULT },
+            { Operator.CheckLessThanOrEqual, LLVMIntPredicate.LLVMIntULE }
         };
 
         public ICodeBlock EmitTypeBinary(ICodeBlock Value, IType Type, Operator Op)
