@@ -34,7 +34,7 @@ namespace Flame.LLVM
         }
 
         /// <summary>
-        /// Creates a new GC method finder from the given binder and log.
+        /// Creates a GC description from the given binder and log.
         /// </summary>
         /// <param name="Binder">The binder to find types with.</param>
         /// <param name="Log">The log to use when an error is to be reported.</param>
@@ -65,7 +65,7 @@ namespace Flame.LLVM
     internal sealed class ExternalGCMethodFinder
     {
         /// <summary>
-        /// Creates a new GC method finder from the given binder and log.
+        /// Creates a GC method finder from the given binder and log.
         /// </summary>
         /// <param name="Binder">The binder to find types with.</param>
         /// <param name="Log">The log to use when an error is to be reported.</param>
