@@ -324,9 +324,14 @@ namespace Flame.LLVM.Codegen
             throw new NotImplementedException();
         }
 
-        private IExpression ToExpression(CodeBlock Block)
+        private static IExpression ToExpression(CodeBlock Block)
         {
             return new CodeBlockExpression(Block, Block.Type);
+        }
+
+        private IExpression Allocate(IExpression Size)
+        {
+            return ((LLVMMethod)Method).Abi.GarbageCollector.Allocate(Size);
         }
 
         public ICodeBlock EmitNewObject(IMethod Constructor, IEnumerable<ICodeBlock> Arguments)
@@ -353,7 +358,7 @@ namespace Flame.LLVM.Codegen
                     {
                         tmp.CreateSetStatement(
                             new ReinterpretCastExpression(
-                                ((LLVMMethod)Constructor).Abi.GarbageCollector.Allocate(
+                                Allocate(
                                     new StaticCastExpression(
                                         ToExpression(new SizeOfBlock(this, constructedType, false)),
                                         PrimitiveTypes.UInt64)),
