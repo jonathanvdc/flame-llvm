@@ -18,7 +18,7 @@ bin/native/runtime.ll: bin/flo/runtime.flo
 	flame-llvm bin/flo/runtime.flo -platform llvm -Wno-build -o $@
 
 bin/native/runtime-opt.ll: bin/native/runtime.ll
-	opt bin/native/runtime.ll -O3 -S -o $@
+	opt-3.8 bin/native/runtime.ll -O3 -S -o $@
 
 bin/native/runtime.o: bin/native/runtime-opt.ll
-	llc bin/native/runtime-opt.ll -filetype=obj -o bin/native/runtime.o
+	llc-3.8 bin/native/runtime-opt.ll -filetype=obj -o bin/native/runtime.o
