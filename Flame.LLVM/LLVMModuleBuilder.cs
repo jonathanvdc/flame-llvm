@@ -13,16 +13,18 @@ namespace Flame.LLVM
     public sealed class LLVMModuleBuilder
     {
         /// <summary>
-        /// Creates a module builder from the given module.
+        /// Creates a module builder from the given assembly and module.
         /// </summary>
-        public LLVMModuleBuilder(LLVMModuleRef Module)
+        public LLVMModuleBuilder(LLVMAssembly Assembly, LLVMModuleRef Module)
         {
+            this.assembly = Assembly;
             this.module = Module;
             this.declaredMethods = new Dictionary<IMethod, LLVMValueRef>();
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
         }
 
+        private LLVMAssembly assembly;
         private LLVMModuleRef module;
         private Dictionary<IMethod, LLVMValueRef> declaredMethods;
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
@@ -34,12 +36,12 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Method">The method to declare.</param>
         /// <returns>An LLVM function.</returns>
-        public LLVMValueRef Declare(LLVMMethod Method)
+        public LLVMValueRef Declare(IMethod Method)
         {
             LLVMValueRef result;
             if (!declaredMethods.TryGetValue(Method, out result))
             {
-                var abi = Method.Abi;
+                var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
                 var funcType = DeclareFunctionType(Method);
                 result = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
                 declaredMethods[Method] = result;
@@ -97,7 +99,7 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Field">The field to declare.</param>
         /// <returns>An LLVM global.</returns>
-        public LLVMValueRef DeclareGlobal(LLVMField Field)
+        public LLVMValueRef DeclareGlobal(IField Field)
         {
             if (!Field.IsStatic)
             {
@@ -110,18 +112,25 @@ namespace Flame.LLVM
             if (!declaredGlobals.TryGetValue(Field, out result))
             {
                 // Declare the global.
-                var abiMangler = Field.Abi.Mangler;
+                var abiMangler = LLVMSymbolTypeMember.GetLLVMAbi(Field, assembly).Mangler;
                 result = AddGlobal(module, Declare(Field.FieldType), abiMangler.Mangle(Field));
-                result.SetLinkage(Field.Linkage);
 
-                // Zero-initialize it.
-                var codeGenerator = new Codegen.LLVMCodeGenerator(null);
-                var defaultValueBlock = (Codegen.CodeBlock)codeGenerator.EmitDefaultValue(Field.FieldType);
-                var defaultValueRef = defaultValueBlock.Emit(
-                    new Codegen.BasicBlockBuilder(
-                        new Codegen.FunctionBodyBuilder(this, default(LLVMValueRef)),
-                        default(LLVMBasicBlockRef)));
-                LLVMSharp.LLVM.SetInitializer(result, defaultValueRef.Value);
+                if (Field is LLVMField)
+                {
+                    var llvmField = (LLVMField)Field;
+
+                    // Set the field's linkage.
+                    result.SetLinkage(llvmField.Linkage);
+
+                    // Zero-initialize it.
+                    var codeGenerator = new Codegen.LLVMCodeGenerator(null);
+                    var defaultValueBlock = (Codegen.CodeBlock)codeGenerator.EmitDefaultValue(Field.FieldType);
+                    var defaultValueRef = defaultValueBlock.Emit(
+                        new Codegen.BasicBlockBuilder(
+                            new Codegen.FunctionBodyBuilder(this, default(LLVMValueRef)),
+                            default(LLVMBasicBlockRef)));
+                    LLVMSharp.LLVM.SetInitializer(result, defaultValueRef.Value);
+                }
 
                 // Store it in the dictionary.
                 declaredGlobals[Field] = result;
@@ -161,12 +170,17 @@ namespace Flame.LLVM
             }
             else if (Type is LLVMType)
             {
-                return ((LLVMType)Type).DefineLayout(this);
+                var llvmType = (LLVMType)Type;
+                if (llvmType.GetIsValueType())
+                {
+                    return llvmType.DefineLayout(this);
+                }
+                else if (llvmType.GetIsReferenceType())
+                {
+                    return PointerType(llvmType.DefineLayout(this), 0);
+                }
             }
-            else
-            {
-                throw new NotImplementedException("Only primitive types have been implemented so far");
-            }
+            throw new NotImplementedException(string.Format("Type not supported: '{0}'", Type));
         }
     }
 }

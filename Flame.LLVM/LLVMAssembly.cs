@@ -127,7 +127,7 @@ namespace Flame.LLVM
         public LLVMModuleRef ToModule()
         {
             var module = ModuleCreateWithName(Name.ToString());
-            var moduleBuilder = new LLVMModuleBuilder(module);
+            var moduleBuilder = new LLVMModuleBuilder(this, module);
             rootNamespace.Emit(moduleBuilder);
             if (EntryPoint != null)
             {

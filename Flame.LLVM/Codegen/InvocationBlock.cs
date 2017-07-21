@@ -89,7 +89,7 @@ namespace Flame.LLVM.Codegen
                     BasicBlock = argsAndBlock.Item2;
                     var callRef = BuildCall(
                         BasicBlock.Builder,
-                        BasicBlock.FunctionBody.Module.Declare((LLVMMethod)deleg.Callee),
+                        BasicBlock.FunctionBody.Module.Declare(deleg.Callee),
                         argsAndBlock.Item1,
                         hasVoidRetType ? "" : "call_tmp");
 

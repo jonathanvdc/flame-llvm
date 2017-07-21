@@ -4,6 +4,7 @@ using System.Linq;
 using Flame.Compiler;
 using Flame.Compiler.Emit;
 using Flame.Compiler.Expressions;
+using Flame.Compiler.Statements;
 using Flame.Compiler.Variables;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
@@ -323,6 +324,11 @@ namespace Flame.LLVM.Codegen
             throw new NotImplementedException();
         }
 
+        private IExpression ToExpression(CodeBlock Block)
+        {
+            return new CodeBlockExpression(Block, Block.Type);
+        }
+
         public ICodeBlock EmitNewObject(IMethod Constructor, IEnumerable<ICodeBlock> Arguments)
         {
             var constructedType = Constructor.DeclaringType;
@@ -335,7 +341,34 @@ namespace Flame.LLVM.Codegen
             }
             else if (constructedType.GetIsReferenceType())
             {
-                
+                var tmp = new SSAVariable("class_tmp", constructedType);
+                // Write the following code:
+                //
+                //     var ptr = gcalloc(sizeof(T));
+                //     ptr.ctor(args...);
+                //     ptr
+                //
+                var expr = new InitializedExpression(
+                    new BlockStatement(new IStatement[]
+                    {
+                        tmp.CreateSetStatement(
+                            new ReinterpretCastExpression(
+                                ((LLVMMethod)Constructor).Abi.GarbageCollector.Allocate(
+                                    new StaticCastExpression(
+                                        ToExpression(new SizeOfBlock(this, constructedType, false)),
+                                        PrimitiveTypes.UInt64)),
+                                constructedType)),
+                        new ExpressionStatement(
+                            new InvocationExpression(
+                                Constructor,
+                                tmp.CreateGetExpression(),
+                                Arguments.Cast<CodeBlock>()
+                                .Select<CodeBlock, IExpression>(ToExpression)
+                                .ToArray<IExpression>()))
+                    }),
+                    tmp.CreateGetExpression()
+                );
+                return expr.Emit(this);
             }
             throw new NotImplementedException();
         }
@@ -412,7 +445,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitSizeOf(IType Type)
         {
-            throw new NotImplementedException();
+            return new SizeOfBlock(this, Type);
         }
 
         public IEmitVariable GetArgument(int Index)
@@ -448,9 +481,9 @@ namespace Flame.LLVM.Codegen
             }
 
             var targetBlock = (CodeBlock)Target;
-            if (!targetBlock.Type.GetIsPointer())
+            if (targetBlock.Type.GetIsValueType())
             {
-                // Spill non-pointer values to a local first.
+                // Spill by-value structs to a local first.
                 targetBlock = SpillToTempAddress(targetBlock);
             }
             return new AtAddressEmitVariable(new GetFieldPtrBlock(this, targetBlock, (LLVMField)Field));

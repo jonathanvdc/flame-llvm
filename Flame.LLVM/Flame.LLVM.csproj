@@ -83,6 +83,7 @@
     <Compile Include="Codegen\RetypedBlock.cs" />
     <Compile Include="Codegen\SequenceBlock.cs" />
     <Compile Include="Codegen\SimpleCastBlock.cs" />
+    <Compile Include="Codegen\SizeOfBlock.cs" />
     <Compile Include="Codegen\StoreBlock.cs" />
     <Compile Include="Codegen\TaggedFlowBlock.cs" />
     <Compile Include="Codegen\TaggedValueBlock.cs" />

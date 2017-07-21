@@ -20,7 +20,7 @@ namespace Flame.LLVM
         public LLVMSymbolTypeMember(LLVMType DeclaringType)
         {
             this.ParentType = DeclaringType;
-            this.abiVal = new Lazy<LLVMAbi>(FetchAbi);
+            this.abiVal = new Lazy<LLVMAbi>(PickLLVMAbi);
         }
 
         public LLVMSymbolTypeMember(LLVMType DeclaringType, LLVMAbi Abi)
@@ -37,17 +37,38 @@ namespace Flame.LLVM
 
         private Lazy<LLVMAbi> abiVal;
 
-        private LLVMAbi FetchAbi()
+        private LLVMAbi PickLLVMAbi()
         {
-            if (IsStatic
-                && this.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
+            return PickLLVMAbi(this, ParentType.Namespace.Assembly);
+        }
+
+        private static LLVMAbi PickLLVMAbi(ITypeMember Member, LLVMAssembly DeclaringAssembly)
+        {
+            if (Member.IsStatic
+                && Member.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
             {
-                return ParentType.Namespace.Assembly.ExternalAbi;
+                return DeclaringAssembly.ExternalAbi;
             }
             else
             {
-                return ParentType.Namespace.Assembly.Abi;
+                return DeclaringAssembly.Abi;
             }
+        }
+
+        /// <summary>
+        /// Gets the ABI for the given member.
+        /// </summary>
+        /// <param name="Member">The member for which an ABI is to be found.</param>
+        /// <param name="DeclaringAssembly">The assembly that is examined for candidate ABIs.</param>
+        /// <returns>The right ABI for the given member.</returns>
+        public static LLVMAbi GetLLVMAbi(ITypeMember Member, LLVMAssembly DeclaringAssembly)
+        {
+            if (Member is LLVMMethod)
+                return ((LLVMMethod)Member).Abi;
+            else if (Member is LLVMField)
+                return ((LLVMField)Member).Abi;
+            else
+                return PickLLVMAbi(Member, DeclaringAssembly);
         }
 
         /// <summary>
