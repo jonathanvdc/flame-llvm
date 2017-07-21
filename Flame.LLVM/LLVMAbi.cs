@@ -10,9 +10,10 @@ namespace Flame.LLVM
         /// <summary>
         /// Creates an LLVM ABI from the given name mangler.
         /// </summary>
-        public LLVMAbi(NameMangler Mangler)
+        public LLVMAbi(NameMangler Mangler, GCDescription GarbageCollector)
         {
             this.Mangler = Mangler;
+            this.GarbageCollector = GarbageCollector;
         }
 
         /// <summary>
@@ -20,6 +21,12 @@ namespace Flame.LLVM
         /// </summary>
         /// <returns>The name mangler.</returns>
         public NameMangler Mangler { get; private set; }
+
+        /// <summary>
+        /// Gets the garbage collector description for this ABI.
+        /// </summary>
+        /// <returns>The garbage collector interface.</returns>
+        public GCDescription GarbageCollector { get; private set; }
 
         private LLVMAbi GetThis()
         {

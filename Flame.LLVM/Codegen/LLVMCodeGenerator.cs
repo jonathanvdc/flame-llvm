@@ -325,6 +325,18 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitNewObject(IMethod Constructor, IEnumerable<ICodeBlock> Arguments)
         {
+            var constructedType = Constructor.DeclaringType;
+            if (constructedType.GetIsValueType())
+            {
+                throw new InvalidOperationException(
+                    "cannot create a new 'struct' object; " +
+                    "'struct' object creation must be lowered to " +
+                    "method invocation before codegen");
+            }
+            else if (constructedType.GetIsReferenceType())
+            {
+                
+            }
             throw new NotImplementedException();
         }
 

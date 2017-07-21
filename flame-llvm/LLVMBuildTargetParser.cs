@@ -35,7 +35,9 @@ namespace Flame.LLVM
                 new SimpleName(Info.Name),
                 Info.Version,
                 DependencyBuilder.Environment,
-                new LLVMAbi(ItaniumMangler.Instance),
+                new LLVMAbi(
+                    ItaniumMangler.Instance,
+                    new ExternalGCDescription(DependencyBuilder.Binder, DependencyBuilder.Log)),
                 AttributeMap.Empty);
 
             var extraPasses = new PassManager();

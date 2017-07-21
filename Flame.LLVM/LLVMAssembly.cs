@@ -28,6 +28,7 @@ namespace Flame.LLVM
         {
             this.Name = Name;
             this.Abi = Abi;
+            this.ExternalAbi = new LLVMAbi(CMangler.Instance, Abi.GarbageCollector);
             this.AssemblyVersion = AssemblyVersion;
             this.Attributes = Attributes;
             this.Environment = Environment;
@@ -47,7 +48,7 @@ namespace Flame.LLVM
         /// <summary>
         /// Gets the ABI that is used for externally-defined functions.
         /// </summary>
-        public LLVMAbi ExternalAbi { get; private set; } = new LLVMAbi(CMangler.Instance);
+        public LLVMAbi ExternalAbi { get; private set; }
 
         /// <summary>
         /// Gets the assembly's name.
