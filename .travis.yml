@@ -37,7 +37,16 @@ script:
   - nuget restore flame-llvm.sln
   # Build the project with the reference C# compiler
   - msbuild /p:Configuration=Release flame-llvm.sln
-  # Build the project with ecsc and test it
+  # Build the project with ecsc
   - make all
+
+  # Add flame-llvm to the PATH variable
+  - ./mono-ln.sh flame-llvm.exe $(pwd)/flame-llvm/bin/clr/flame-llvm
+  - chmod +x $(pwd)/flame-llvm/bin/clr/flame-llvm
+  - export PATH=$PATH:$(pwd)/flame-llvm/bin/clr/flame-llvm
+
+  # Build the runtime
+  - make runtime
+
   # Run the test suite
   - make test
