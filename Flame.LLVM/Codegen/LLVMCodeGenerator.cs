@@ -319,9 +319,92 @@ namespace Flame.LLVM.Codegen
             return new DelegateBlock(this, Method, (CodeBlock)Caller, Op);
         }
 
+        private ICodeBlock EmitProduct(IEnumerable<ICodeBlock> Values)
+        {
+            var accumulator = EmitInteger(new IntegerValue(1));
+            foreach (var dim in Values)
+            {
+                accumulator = EmitBinary(
+                    accumulator,
+                    dim,
+                    Operator.Multiply);
+            }
+            return accumulator;
+        }
+
+        private IReadOnlyList<ICodeBlock> SpillDimensions(
+            IEnumerable<ICodeBlock> Dimensions,
+            List<IStatement> Statements)
+        {
+            var dimVals = new List<ICodeBlock>();
+            foreach (var dim in Dimensions)
+            {
+                var dimTmp = new SSAVariable("dimension_tmp", PrimitiveTypes.Int32);
+                Statements.Add(
+                    dimTmp.CreateSetStatement(
+                        ToExpression(
+                            (CodeBlock)EmitTypeBinary(dim, PrimitiveTypes.Int32, Operator.StaticCast))));
+                dimVals.Add(dimTmp.CreateGetExpression().Emit(this));
+            }
+            return dimVals;
+        }
+
+        private void StoreDimensionsInArrayHeader(
+            CodeBlock ArrayPointer,
+            IReadOnlyList<ICodeBlock> Dimensions,
+            List<IStatement> Statements)
+        {
+            for (int i = 0; i < Dimensions.Count; i++)
+            {
+                Statements.Add(
+                    new CodeBlockStatement(
+                        EmitStoreAtAddress(
+                            new GetDimensionPtrBlock(this, ArrayPointer, i),
+                            Dimensions[i])));
+            }
+        }
+
         public ICodeBlock EmitNewArray(IType ElementType, IEnumerable<ICodeBlock> Dimensions)
         {
-            throw new NotImplementedException();
+            var arrayType = ElementType.MakeArrayType(Enumerable.Count<ICodeBlock>(Dimensions));
+
+            // First, store all dimensions in temporaries.
+            var statements = new List<IStatement>();
+            var dimVals = SpillDimensions(Dimensions, statements);
+            var arrayTmp = new SSAVariable("array_tmp", arrayType);
+
+            // The number of elements to allocate is equal to the product of
+            // the dimensions.
+            var elemCount = EmitProduct(dimVals);
+
+            // The size of the chunk of memory to allocate is
+            //
+            //     sizeof({ i32, ..., [0 x <element type>]}) + elemCount * sizeof(<element type>)
+            //
+            var allocationSize = EmitBinary(
+                new SizeOfBlock(this, arrayType, false),
+                EmitBinary(
+                    elemCount,
+                    new SizeOfBlock(this, ElementType, true),
+                    Operator.Multiply),
+                Operator.Add);
+
+            // Allocate the array and store it in a temporary.
+            statements.Add(
+                arrayTmp.CreateSetStatement(
+                    Allocate(
+                        new CodeBlockExpression(allocationSize, PrimitiveTypes.Int32),
+                        arrayType)));
+
+            // Store the array's dimensions in the array header.
+            StoreDimensionsInArrayHeader(
+                (CodeBlock)arrayTmp.CreateGetExpression().Emit(this),
+                dimVals,
+                statements);
+
+            return EmitSequence(
+                new BlockStatement(statements).Emit(this),
+                arrayTmp.CreateGetExpression().Emit(this));
         }
 
         private static IExpression ToExpression(CodeBlock Block)
@@ -329,9 +412,12 @@ namespace Flame.LLVM.Codegen
             return new CodeBlockExpression(Block, Block.Type);
         }
 
-        private IExpression Allocate(IExpression Size)
+        private IExpression Allocate(IExpression Size, IType ResultType)
         {
-            return ((LLVMMethod)Method).Abi.GarbageCollector.Allocate(Size);
+            return new ReinterpretCastExpression(
+                ((LLVMMethod)Method).Abi.GarbageCollector.Allocate(
+                    new StaticCastExpression(Size, PrimitiveTypes.UInt64)),
+                ResultType);
         }
 
         public ICodeBlock EmitNewObject(IMethod Constructor, IEnumerable<ICodeBlock> Arguments)
@@ -357,11 +443,8 @@ namespace Flame.LLVM.Codegen
                     new BlockStatement(new IStatement[]
                     {
                         tmp.CreateSetStatement(
-                            new ReinterpretCastExpression(
-                                Allocate(
-                                    new StaticCastExpression(
-                                        ToExpression(new SizeOfBlock(this, constructedType, false)),
-                                        PrimitiveTypes.UInt64)),
+                            Allocate(
+                                ToExpression(new SizeOfBlock(this, constructedType, false)),
                                 constructedType)),
                         new ExpressionStatement(
                             new InvocationExpression(
@@ -371,8 +454,7 @@ namespace Flame.LLVM.Codegen
                                 .Select<CodeBlock, IExpression>(ToExpression)
                                 .ToArray<IExpression>()))
                     }),
-                    tmp.CreateGetExpression()
-                );
+                    tmp.CreateGetExpression());
                 return expr.Emit(this);
             }
             throw new NotImplementedException();
@@ -465,7 +547,7 @@ namespace Flame.LLVM.Codegen
 
         public IEmitVariable GetElement(ICodeBlock Value, IEnumerable<ICodeBlock> Index)
         {
-            throw new NotImplementedException();
+            return GetUnmanagedElement(Value, Index);
         }
 
         public IUnmanagedEmitVariable GetUnmanagedElement(ICodeBlock Value, IEnumerable<ICodeBlock> Index)

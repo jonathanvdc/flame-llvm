@@ -152,23 +152,23 @@ namespace Flame.LLVM
             {
                 // We'll lay out arrays like so:
                 //
-                //     { i32, [0 x <type>] }
+                //     { i32, ..., [0 x <type>] }
                 //
-                // where the first field is the length and the second field
+                // where the first fields are the dimensions and the last field
                 // is the data. When we allocate an array, we'll allocate the
                 // right amount of tail room for the data by allocating
-                // `sizeof(i32, [0 x <type>])` bytes.
+                // `sizeof(i32, ..., [0 x <type>])` bytes.
 
                 var elemType = Type.AsArrayType().ElementType;
+                var fields = new LLVMTypeRef[Type.AsArrayType().ArrayRank + 1];
+                for (int i = 0; i < fields.Length - 1; i++)
+                {
+                    fields[i] = Int32Type();
+                }
+                fields[fields.Length - 1] = ArrayType(Declare(elemType), 0);
                 return LLVMSharp.LLVM.PointerType(
-                        StructType(
-                            new LLVMTypeRef[]
-                            {
-                                Int32Type(),
-                                ArrayType(Declare(elemType), 0)
-                            },
-                            false),
-                        0);
+                    StructType(fields, false),
+                    0);
             }
             else if (Type.GetIsInteger() || Type.GetIsBit())
             {
