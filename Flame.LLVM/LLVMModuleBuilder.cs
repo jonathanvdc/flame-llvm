@@ -150,8 +150,25 @@ namespace Flame.LLVM
             }
             else if (Type.GetIsArray())
             {
+                // We'll lay out arrays like so:
+                //
+                //     { i32, [0 x <type>] }
+                //
+                // where the first field is the length and the second field
+                // is the data. When we allocate an array, we'll allocate the
+                // right amount of tail room for the data by allocating
+                // `sizeof(i32, [0 x <type>])` bytes.
+
                 var elemType = Type.AsArrayType().ElementType;
-                return LLVMSharp.LLVM.PointerType(Declare(elemType), 0);
+                return LLVMSharp.LLVM.PointerType(
+                        StructType(
+                            new LLVMTypeRef[]
+                            {
+                                Int32Type(),
+                                ArrayType(Declare(elemType), 0)
+                            },
+                            false),
+                        0);
             }
             else if (Type.GetIsInteger() || Type.GetIsBit())
             {
