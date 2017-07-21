@@ -43,7 +43,7 @@ script:
   # Add flame-llvm to the PATH variable
   - ./mono-ln.sh flame-llvm.exe $(pwd)/flame-llvm/bin/clr/flame-llvm
   - chmod +x $(pwd)/flame-llvm/bin/clr/flame-llvm
-  - export PATH=$PATH:$(pwd)/flame-llvm/bin/clr/flame-llvm
+  - export PATH=$PATH:$(pwd)/flame-llvm/bin/clr
 
   # Build the runtime
   - make runtime
