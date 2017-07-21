@@ -52,11 +52,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ItaniumMangler.cs" />
     <Compile Include="LLVMAbi.cs" />
+    <Compile Include="LLVMAccessor.cs" />
     <Compile Include="LLVMAssembly.cs" />
     <Compile Include="LLVMField.cs" />
     <Compile Include="LLVMMethod.cs" />
     <Compile Include="LLVMModuleBuilder.cs" />
     <Compile Include="LLVMNamespace.cs" />
+    <Compile Include="LLVMProperty.cs" />
     <Compile Include="LLVMType.cs" />
     <Compile Include="NameMangler.cs" />
     <Compile Include="Codegen\AllocaBlock.cs" />

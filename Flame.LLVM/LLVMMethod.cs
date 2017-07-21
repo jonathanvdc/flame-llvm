@@ -30,16 +30,17 @@ namespace Flame.LLVM
         }
 
         /// <summary>
-        /// Gets this symbol type member's parent type.
+        /// /// Gets this symbol type member's declaring type as an LLVM type.
         /// </summary>
-        /// <returns>The parent type.</returns>
+        /// <returns>The declaring type.</returns>
         public LLVMType ParentType { get; private set; }
 
         private Lazy<LLVMAbi> abiVal;
 
         private LLVMAbi FetchAbi()
         {
-            if (this.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
+            if (IsStatic
+                && this.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
             {
                 return ParentType.Namespace.Assembly.ExternalAbi;
             }
@@ -91,7 +92,7 @@ namespace Flame.LLVM
     /// <summary>
     /// A method builder for LLVM assemblies.
     /// </summary>
-    public sealed class LLVMMethod : LLVMSymbolTypeMember, IMethodBuilder
+    public class LLVMMethod : LLVMSymbolTypeMember, IMethodBuilder
     {
         public LLVMMethod(LLVMType DeclaringType, IMethodSignatureTemplate Template)
             : base(DeclaringType)

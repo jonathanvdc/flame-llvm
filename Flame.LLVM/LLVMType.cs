@@ -24,6 +24,7 @@ namespace Flame.LLVM
             this.declaredInstanceFields = new List<LLVMField>();
             this.declaredStaticFields = new List<LLVMField>();
             this.declaredFields = new List<LLVMField>();
+            this.declaredProperties = new List<LLVMProperty>();
         }
 
         private AttributeMapBuilder attrMap;
@@ -34,6 +35,7 @@ namespace Flame.LLVM
         private List<LLVMField> declaredInstanceFields;
         private List<LLVMField> declaredStaticFields;
         private List<LLVMField> declaredFields;
+        private List<LLVMProperty> declaredProperties;
 
         /// <summary>
         /// Gets this LLVM type's declaring namespace.
@@ -115,7 +117,9 @@ namespace Flame.LLVM
 
         public IPropertyBuilder DeclareProperty(IPropertySignatureTemplate Template)
         {
-            throw new NotImplementedException();
+            var propDef = new LLVMProperty(this, Template);
+            declaredProperties.Add(propDef);
+            return propDef;
         }
 
         public IBoundObject GetDefaultValue()
@@ -162,6 +166,10 @@ namespace Flame.LLVM
             foreach (var method in declaredMethods)
             {
                 method.Emit(Module);
+            }
+            foreach (var property in declaredProperties)
+            {
+                property.Emit(Module);
             }
         }
 
