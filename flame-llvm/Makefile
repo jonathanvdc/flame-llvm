@@ -34,6 +34,7 @@ clean:
 
 bin/clr/flame-llvm.exe: $(files) $(libs) $(native-libs)
 	ecsc $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
+	chmod +x bin/clr/flame-llvm.exe
 	if [ ! -z $(native-libs) ]; then cp -t bin/clr/ $(native-libs); fi
 
 bin/flo/flame-llvm.flo: $(files) $(libs) $(native-libs)
