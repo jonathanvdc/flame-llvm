@@ -106,6 +106,11 @@ namespace Flame.LLVM
                 }
                 return prefix + EncodeTypeName(ptrType.ElementType);
             }
+            else if (Type.GetIsArray())
+            {
+                var arrayType = Type.AsArrayType();
+                return "UArray" + arrayType.ArrayRank + "D" + EncodeTypeName(arrayType.ElementType);
+            }
             else
             {
                 return EncodeQualifiedName(Type);

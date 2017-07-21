@@ -148,6 +148,11 @@ namespace Flame.LLVM
                 else
                     return LLVMSharp.LLVM.PointerType(Declare(elemType), 0);
             }
+            else if (Type.GetIsArray())
+            {
+                var elemType = Type.AsArrayType().ElementType;
+                return LLVMSharp.LLVM.PointerType(Declare(elemType), 0);
+            }
             else if (Type.GetIsInteger() || Type.GetIsBit())
             {
                 return IntType((uint)Type.GetPrimitiveBitSize());
