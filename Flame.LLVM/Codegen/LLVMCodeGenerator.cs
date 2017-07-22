@@ -193,6 +193,14 @@ namespace Flame.LLVM.Codegen
                         return new SimpleCastBlock(this, valBlock, Type, BuildZExt, ConstZExt);
                     }
                 }
+                else if (valType == PrimitiveTypes.Char)
+                {
+                    return EmitTypeBinary(new RetypedBlock(this, valBlock, PrimitiveTypes.Int16), Type, Op);
+                }
+                else if (Type == PrimitiveTypes.Char)
+                {
+                    return new RetypedBlock(this, (CodeBlock)EmitTypeBinary(valBlock, PrimitiveTypes.Int16, Op), Type);
+                }
                 else if (valType.GetIsPointer() && Type.GetIsInteger())
                 {
                     return new SimpleCastBlock(this, valBlock, Type, BuildPtrToInt, ConstPtrToInt);
