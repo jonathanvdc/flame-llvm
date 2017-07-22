@@ -552,6 +552,51 @@ namespace Flame.LLVM.Codegen
 
         public IUnmanagedEmitVariable GetUnmanagedElement(ICodeBlock Value, IEnumerable<ICodeBlock> Index)
         {
+            var valBlock = (CodeBlock)Value;
+            var valType = valBlock.Type;
+            if (valType.GetIsArray())
+            {
+                // Suppose that an n-dimensional array with dimensions
+                //
+                //     dim_1, dim_2, ..., dim_n
+                //
+                // is indexed with
+                //
+                //     i_1, i_2, ..., i_n.
+                //
+                // To compute a pointer to the element with that index, we can
+                // use the following formula:
+                //
+                //     offset = i_1 + i_2 * dim_1 + i_3 * dim_1 * dim_2 + ... +
+                //              i_n * dim_1 * dim_2 * ... * dim_n-1
+                //
+                //            = i_1 + dim_1 * (i_2 + dim_2 * (...))
+                //
+                // The latter identity requires fewer multiplications, so we'll use that.
+
+                var arrayPtrTmp = new SSAVariable("array_tmp", valBlock.Type);
+                var arrayPtr = (CodeBlock)arrayPtrTmp.CreateGetExpression().Emit(this);
+                var indexArray = Index.ToArray<ICodeBlock>();
+                var offset = EmitInteger(new IntegerValue(0));
+                for (int i = indexArray.Length - 1; i >= 0; i--)
+                {
+                    // offset <- i_i + dim_i * offset
+                    offset = EmitBinary(
+                        EmitTypeBinary(indexArray[i], PrimitiveTypes.Int32, Operator.StaticCast),
+                        EmitBinary(
+                            EmitDereferencePointer(new GetDimensionPtrBlock(this, arrayPtr, i)),
+                            offset,
+                            Operator.Multiply),
+                        Operator.Add);
+                }
+
+                // Now add this offset to the data pointer of the array and dereference the result.
+                return new AtAddressEmitVariable(
+                    (CodeBlock)EmitSequence(
+                        arrayPtrTmp.CreateSetStatement(ToExpression(valBlock)).Emit(this),
+                        EmitBinary(new GetDataPtrBlock(this, arrayPtr), offset, Operator.Add)));
+            }
+
             throw new NotImplementedException();
         }
 

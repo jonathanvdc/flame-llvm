@@ -6,29 +6,24 @@ using static LLVMSharp.LLVM;
 namespace Flame.LLVM.Codegen
 {
     /// <summary>
-    /// A code block that produces a pointer to an array dimension field.
+    /// A code block that produces a pointer to an array's data buffer.
     /// </summary>
-    public sealed class GetDimensionPtrBlock : CodeBlock
+    public sealed class GetDataPtrBlock : CodeBlock
     {
         /// <summary>
-        /// Creates a block that produces a pointer to the nth dimension
-        /// field of the array pointed to.
+        /// Creates a block that produces a pointer to the data section
+        /// of an array.
         /// </summary>
         /// <param name="CodeGenerator">The code generator that creates this block.</param>
         /// <param name="ArrayPointer">
         /// A code block that creates a pointer to an array.
         /// </param>
-        /// <param name="DimensionIndex">
-        /// The index of the dimension to which a pointer should be created.
-        /// </param>
-        public GetDimensionPtrBlock(
+        public GetDataPtrBlock(
             ICodeGenerator CodeGenerator,
-            CodeBlock ArrayPointer,
-            int DimensionIndex)
+            CodeBlock ArrayPointer)
         {
             this.codeGen = CodeGenerator;
             this.ArrayPointer = ArrayPointer;
-            this.DimensionIndex = DimensionIndex;
         }
 
         /// <summary>
@@ -37,32 +32,37 @@ namespace Flame.LLVM.Codegen
         /// <returns>A code block that creates a pointer to an array.</returns>
         public CodeBlock ArrayPointer { get; private set; }
 
-        /// <summary>
-        /// Gets the index of the dimension to which a pointer should be created.
-        /// </summary>
-        /// <returns>The dimension index.</returns>
-        public int DimensionIndex { get; private set; }
-
         private ICodeGenerator codeGen;
 
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
 
         /// <inheritdoc/>
-        public override IType Type => PrimitiveTypes.Int32.MakePointerType(PointerKind.ReferencePointer);
+        public override IType Type =>
+            ArrayPointer.Type
+            .AsArrayType().ElementType
+            .MakePointerType(PointerKind.ReferencePointer);
 
         /// <inheritdoc/>
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
+            // The data layout of an array is `{ i32, ..., [0 x <element type>] }`,
+            // so the last field has the same index as the array's rank.
+            // To compute our result, we'll create a pointer to that field.
+            int rank = ArrayPointer.Type.AsArrayType().ArrayRank;
             var baseAddressResult = ArrayPointer.Emit(BasicBlock);
             BasicBlock = baseAddressResult.BasicBlock;
             return new BlockCodegen(
                 BasicBlock,
-                BuildStructGEP(
+                BuildBitCast(
                     BasicBlock.Builder,
-                    baseAddressResult.Value,
-                    (uint)DimensionIndex,
-                    "dimension_ptr_tmp"));
+                    BuildStructGEP(
+                        BasicBlock.Builder,
+                        baseAddressResult.Value,
+                        (uint)rank,
+                        "data_array_tmp"),
+                    BasicBlock.FunctionBody.Module.Declare(Type),
+                    "data_ptr_tmp"));
         }
     }
 }
