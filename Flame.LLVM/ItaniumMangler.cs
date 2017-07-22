@@ -119,6 +119,11 @@ namespace Flame.LLVM
 
         private static string EncodeQualifiedName(IMember Member)
         {
+            if (Member is INamespace && !(Member is IType))
+            {
+                return EncodeNamespaceName((INamespace)Member);
+            }
+
             var suffix = EncodeUnqualifiedName(Member.Name.ToString());
             var declaringMember = GetDeclaringMember(Member);
             if (declaringMember == null)
@@ -133,6 +138,18 @@ namespace Flame.LLVM
             {
                 return EncodeQualifiedName(declaringMember) + suffix;
             }
+        }
+
+        private static string EncodeNamespaceName(INamespace Namespace)
+        {
+            var fullName = Namespace.FullName;
+            var result = new StringBuilder();
+            while (!fullName.IsEmpty)
+            {
+                result.Append(EncodeUnqualifiedName(fullName.Qualifier.ToString()));
+                fullName = fullName.Name;
+            }
+            return result.ToString();
         }
 
         private static string EncodeUnqualifiedName(string Name)
