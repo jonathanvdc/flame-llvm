@@ -2,6 +2,7 @@ init
 {
     rt-flo-filename = ../runtime/bin/flo/runtime.flo;
     rt-obj-filename = ../runtime/bin/native/runtime.o;
+    stdlib-flo-filename = ../standard-library/bin/flo/stdlib.flo;
 
     // Compiles input-file to a native executable and ensures
     // that its output matches the oracle.
@@ -21,10 +22,10 @@ init
             exe-filename = @($create-temp-file exe);
 
             // Compile the C# source code to Flame IR.
-            $ecsc --source=$input-file -platform ir -Wno-build -fignore-main-prototype -o=$flo-filename;
+            $ecsc $input-file -platform ir -Wno-build -fignore-main-prototype --rt-libs $stdlib-flo-filename $rt-flo-filename -o $flo-filename;
 
             // Compile the Flame IR to LLVM IR.
-            $flame-llvm --source=$flo-filename -platform llvm -Wno-build -o=$ll-filename --rt-libs=$rt-flo-filename;
+            $flame-llvm $flo-filename $stdlib-flo-filename -platform llvm -Wno-build -o $ll-filename --rt-libs $rt-flo-filename;
 
             // Compile the LLVM IR to a native executable and link in
             // the C standard library.
@@ -47,6 +48,7 @@ tests
     template CheckOutput<gc/main.cs, gc, gc>;
     template CheckOutput<hello-world/hello-world.cs, , hi>;
     template CheckOutput<property/property.cs, hello, hello>;
-    template CheckOutput<struct/struct.cs, struct-test, struct-test>;
     template CheckOutput<static/static.cs, static-test, static-test>;
+    template CheckOutput<stdlib-hello-world/stdlib-hello-world.cs, , hi>;
+    template CheckOutput<struct/struct.cs, struct-test, struct-test>;
 }
