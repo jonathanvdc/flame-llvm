@@ -18,7 +18,7 @@ namespace Flame.LLVM.Codegen
     /// </summary>
     public sealed class LLVMCodeGenerator : IUnmanagedCodeGenerator
     {
-        public LLVMCodeGenerator(LLVMMethod Method)
+        public LLVMCodeGenerator(IMethod Method)
         {
             this.owningMethod = Method;
             this.Prologue = new PrologueSpec();
@@ -39,7 +39,7 @@ namespace Flame.LLVM.Codegen
             }
         }
 
-        private LLVMMethod owningMethod;
+        private IMethod owningMethod;
 
         /// <summary>
         /// Gets the prologue for the method that defines this code generator.
@@ -319,7 +319,7 @@ namespace Flame.LLVM.Codegen
             return new DelegateBlock(this, Method, (CodeBlock)Caller, Op);
         }
 
-        private ICodeBlock EmitProduct(IEnumerable<ICodeBlock> Values)
+        public ICodeBlock EmitProduct(IEnumerable<ICodeBlock> Values)
         {
             var accumulator = EmitInteger(new IntegerValue(1));
             foreach (var dim in Values)

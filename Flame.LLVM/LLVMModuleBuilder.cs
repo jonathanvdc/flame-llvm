@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Flame.Compiler;
 using Flame.Compiler.Variables;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
@@ -41,9 +42,12 @@ namespace Flame.LLVM
             LLVMValueRef result;
             if (!declaredMethods.TryGetValue(Method, out result))
             {
-                var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
-                var funcType = DeclareFunctionType(Method);
-                result = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
+                if (!TryDeclareIntrinsic(Method, out result))
+                {
+                    var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
+                    var funcType = DeclareFunctionType(Method);
+                    result = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
+                }
                 declaredMethods[Method] = result;
             }
             return result;
@@ -73,6 +77,66 @@ namespace Flame.LLVM
                 out extParamTypes[0],
                 (uint)(paramArr.Length + thisParamCount),
                 false);
+        }
+
+        /// <summary>
+        /// Tries to declare the given method as an intrinsic.
+        /// </summary>
+        /// <param name="Method">The method to declare.</param>
+        /// <param name="Result">The resulting declaration.</param>
+        /// <returns><c>true</c> if the method is an intrinsic; otherwise, <c>false</c>.</returns>
+        private bool TryDeclareIntrinsic(IMethod Method, out LLVMValueRef Result)
+        {
+            if (Method.DeclaringType.GetIsArray())
+            {
+                if (Method is IAccessor)
+                {
+                    var arrayAccessor = (IAccessor)Method;
+                    if (arrayAccessor.DeclaringProperty.Name.ToString() == "Length"
+                        && arrayAccessor.GetIsGetAccessor())
+                    {
+                        Result = DeclareArrayLength(Method);
+                        return true;
+                    }
+                }
+            }
+            Result = default(LLVMValueRef);
+            return false;
+        }
+
+        private LLVMValueRef DeclareArrayLength(IMethod Method)
+        {
+            var arrayType = Method.DeclaringType.AsArrayType();
+
+            // Declare T[,...].Length.
+            var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
+            var funcType = DeclareFunctionType(Method);
+            var funcDef = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
+            funcDef.SetLinkage(LLVMLinkage.LLVMWeakODRLinkage);
+
+            // Define T[,...].Length's body.
+            var codeGenerator = new Codegen.LLVMCodeGenerator(Method);
+
+            // T[,...].Length computes the product of all dimensions.
+            var dimensions = new ICodeBlock[arrayType.ArrayRank];
+            for (int i = 0; i < dimensions.Length; i++)
+            {
+                dimensions[i] = codeGenerator.EmitDereferencePointer(
+                    new Codegen.GetDimensionPtrBlock(
+                        codeGenerator,
+                        (Codegen.CodeBlock)codeGenerator.GetThis().EmitGet(),
+                        i));
+            }
+
+            var body = (Codegen.CodeBlock)codeGenerator.EmitReturn(codeGenerator.EmitProduct(dimensions));
+
+            // Emit T[,...].Length's body.
+            var bodyBuilder = new Codegen.FunctionBodyBuilder(this, funcDef);
+            var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
+            entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
+            body.Emit(entryPointBuilder);
+
+            return funcDef;
         }
 
         /// <summary>
