@@ -257,6 +257,10 @@ namespace Flame.LLVM
             {
                 return IntType(16);
             }
+            else if (Type == PrimitiveTypes.Boolean)
+            {
+                return Int1Type();
+            }
             else if (Type is LLVMType)
             {
                 var llvmType = (LLVMType)Type;
