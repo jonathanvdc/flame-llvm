@@ -31,14 +31,24 @@ namespace Flame.LLVM
 
         public BuildTarget CreateBuildTarget(string PlatformIdentifier, AssemblyCreationInfo Info, IDependencyBuilder DependencyBuilder)
         {
+            var multiBinder = new MultiBinder(DependencyBuilder.Binder.Environment);
+            multiBinder.AddBinder(DependencyBuilder.Binder);
+
             var targetAsm = new LLVMAssembly(
                 new SimpleName(Info.Name),
                 Info.Version,
                 DependencyBuilder.Environment,
                 new LLVMAbi(
                     ItaniumMangler.Instance,
-                    new ExternalGCDescription(DependencyBuilder.Binder, DependencyBuilder.Log)),
+                    new ExternalGCDescription(multiBinder, DependencyBuilder.Log)),
                 AttributeMap.Empty);
+
+            // -fintegrated-runtime will look in the compiled assembly for runtime types.
+            // This flag facilitates building the runtime library.
+            if (DependencyBuilder.Log.Options.GetFlag("integrated-runtime", false))
+            {
+                multiBinder.AddBinder(targetAsm.CreateBinder());
+            }
 
             var extraPasses = new PassManager();
 
