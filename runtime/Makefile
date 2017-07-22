@@ -1,5 +1,6 @@
 files = \
-	*.cs
+	*.cs \
+	Runtime/InteropServices/*.cs
 
 common-options = -asm-name=runtime -asm-version=0.1.0.0
 

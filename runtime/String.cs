@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace System
 {
     /// <summary>
@@ -33,6 +35,53 @@ namespace System
         /// Gets the character at the given position in this string.
         /// </summary>
         public char this[int i] => data[i];
+
+        /// <summary>
+        /// Creates a string from the given null-terminated string
+        /// of UTF-8 encoded characters.
+        /// </summary>
+        /// <param name="buffer">The buffer that contains the string.</param>
+        /// <returns>A string.</returns>
+        public static String FromCString(byte* buffer)
+        {
+            // TODO: actually implement proper UTF-8 -> UTF-16 conversion.
+            // This naive algorithm only works for some characters.
+            // (fortunately, these characters include the ASCII range)
+
+            var str = new String();
+            int length = (int)strlen(buffer);
+            str.data = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                str.data[i] = (char)buffer[i];
+            }
+            return str;
+        }
+
+        /// <summary>
+        /// Allocates an unmanaged buffer and fills it with this string's contents,
+        /// re-encoded as UTF-8. The resulting buffer is terminated by the null
+        /// terminator character. The caller is responsible for freeing the buffer
+        /// when it's done using it.
+        /// </summary>
+        /// <param name="str">The string to convert to a C-style string.</param>
+        /// <returns>A C-style string for which the caller is responsible.</returns>
+        public static byte* ToCString(String str)
+        {
+            // TODO: actually implement proper UTF-16 -> UTF-8 conversion.
+            // This naive algorithm only works for some characters.
+            // (fortunately, these characters include the ASCII range)
+
+            byte* cStr = (byte*)Marshal.AllocHGlobal(str.Length + 1);
+            for (int i = 0; i < str.Length; i++)
+            {
+                cStr[i] = (byte)str[i];
+            }
+            cStr[str.Length] = (byte)'\0';
+            return cStr;
+        }
+
+        private static extern ulong strlen(byte* str);
     }
 }
 
@@ -54,6 +103,11 @@ namespace __compiler_rt
             var str = new System.String();
             str.data = array;
             return str;
+        }
+
+        public static System.String StringFromCString(byte* ptr)
+        {
+            return System.String.FromCString(ptr);
         }
     }
 }
