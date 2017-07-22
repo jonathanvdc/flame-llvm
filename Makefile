@@ -22,6 +22,10 @@ flo:
 runtime: exe
 	make -C runtime all
 
+.PHONY: stdlib
+stdlib: exe runtime
+	make -C standard-library all
+
 .PHONY: clean
 clean:
 	make -C Flame.LLVM clean
