@@ -45,8 +45,8 @@ script:
   - chmod +x $(pwd)/flame-llvm/bin/clr/flame-llvm
   - export PATH=$PATH:$(pwd)/flame-llvm/bin/clr
 
-  # Build the runtime
-  - make runtime
+  # Build the runtime and stdlib
+  - make stdlib
 
   # Run the test suite
   - make test
