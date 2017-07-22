@@ -184,7 +184,7 @@ namespace Flame.LLVM.Codegen
                     {
                         return new SimpleCastBlock(this, valBlock, Type, BuildTrunc, ConstTrunc);
                     }
-                    else if (targetSpec.IsSigned)
+                    else if (valSpec.IsSigned)
                     {
                         return new SimpleCastBlock(this, valBlock, Type, BuildSExt, ConstSExt);
                     }
