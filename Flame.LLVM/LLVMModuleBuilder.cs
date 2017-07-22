@@ -273,6 +273,12 @@ namespace Flame.LLVM
                     return PointerType(llvmType.DefineLayout(this), 0);
                 }
             }
+            else if (Type.GetIsReferenceType())
+            {
+                // We don't know what the reference type's layout is, so the
+                // best we can do is to just create a void pointer.
+                return PointerType(Int8Type(), 0);
+            }
             throw new NotImplementedException(string.Format("Type not supported: '{0}'", Type));
         }
     }
