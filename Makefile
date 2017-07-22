@@ -19,7 +19,7 @@ flo:
 	make -C flame-llvm flo
 
 .PHONY: runtime
-runtime:
+runtime: exe
 	make -C runtime all
 
 .PHONY: clean
