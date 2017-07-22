@@ -186,14 +186,17 @@ namespace Flame.LLVM
                     // Set the field's linkage.
                     result.SetLinkage(llvmField.Linkage);
 
-                    // Zero-initialize it.
-                    var codeGenerator = new Codegen.LLVMCodeGenerator(null);
-                    var defaultValueBlock = (Codegen.CodeBlock)codeGenerator.EmitDefaultValue(Field.FieldType);
-                    var defaultValueRef = defaultValueBlock.Emit(
-                        new Codegen.BasicBlockBuilder(
-                            new Codegen.FunctionBodyBuilder(this, default(LLVMValueRef)),
-                            default(LLVMBasicBlockRef)));
-                    LLVMSharp.LLVM.SetInitializer(result, defaultValueRef.Value);
+                    if (!llvmField.IsImport)
+                    {
+                        // Zero-initialize it.
+                        var codeGenerator = new Codegen.LLVMCodeGenerator(null);
+                        var defaultValueBlock = (Codegen.CodeBlock)codeGenerator.EmitDefaultValue(Field.FieldType);
+                        var defaultValueRef = defaultValueBlock.Emit(
+                            new Codegen.BasicBlockBuilder(
+                                new Codegen.FunctionBodyBuilder(this, default(LLVMValueRef)),
+                                default(LLVMBasicBlockRef)));
+                        LLVMSharp.LLVM.SetInitializer(result, defaultValueRef.Value);
+                    }
                 }
 
                 // Store it in the dictionary.

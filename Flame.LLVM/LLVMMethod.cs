@@ -35,6 +35,15 @@ namespace Flame.LLVM
         /// <returns>The declaring type.</returns>
         public LLVMType ParentType { get; private set; }
 
+        /// <summary>
+        /// Tests if this member is defined externally and only imported.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if this member is defined externally;
+        /// <c>false</c> if it is defined internally.
+        /// </returns>
+        public bool IsImport => IsImportedMember(this);
+
         private Lazy<LLVMAbi> abiVal;
 
         private LLVMAbi PickLLVMAbi()
@@ -42,10 +51,14 @@ namespace Flame.LLVM
             return PickLLVMAbi(this, ParentType.Namespace.Assembly);
         }
 
+        private static bool IsImportedMember(ITypeMember Member)
+        {
+            return Member.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType);
+        }
+
         private static LLVMAbi PickLLVMAbi(ITypeMember Member, LLVMAssembly DeclaringAssembly)
         {
-            if (Member.IsStatic
-                && Member.HasAttribute(PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
+            if (Member.IsStatic && IsImportedMember(Member))
             {
                 return DeclaringAssembly.ExternalAbi;
             }
