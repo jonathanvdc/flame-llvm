@@ -105,6 +105,12 @@ namespace __compiler_rt
             return str;
         }
 
+        /// <summary>
+        /// Creates a string from the given null-terminated string
+        /// of UTF-8 encoded characters.
+        /// </summary>
+        /// <param name="ptr">A pointer to the buffer that contains the string.</param>
+        /// <returns>A string.</returns>
         public static System.String StringFromCString(byte* ptr)
         {
             return System.String.FromCString(ptr);
