@@ -13,8 +13,10 @@
   - [x] `struct` values
   - [x] `class` values
   - [x] arrays
+  - [x] support for strings
+  - [x] conservative garbage collection (Boehm-Demers-Weiser GC)
   - [ ] inheritance
   - [ ] indirect function calls
   - [ ] `virtual` calls
   - [ ] floating-point arithmetic
-  - [ ] garbage collection
+  - [ ] precise garbage collection
