@@ -1,17 +1,24 @@
 language: csharp
 
-# Grab the LLVM package
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.8
-    packages:
-      - llvm-3.8-dev
-      - clang-3.8
-      - libgc-dev
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - llvm-3.8-dev
+            - clang-3.8
+            - libgc-dev
+
+    - os: osx
 
 install:
+  # Install homebrew packages if we're running on OS X
+  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install mono; brew install llvm; brew install libgc; fi
+
   # Clone, build and install ecsc
   - git clone --depth=5 https://github.com/jonathanvdc/ecsc
   - nuget restore ecsc/src/ecsc.sln
