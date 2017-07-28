@@ -9,14 +9,13 @@ libs = \
 	../packages/Mono.Cecil.0.9.6.4/lib/net45/Mono.Cecil.Mdb.dll \
 	../packages/Mono.Cecil.0.9.6.4/lib/net45/Mono.Cecil.Pdb.dll \
 	../packages/Mono.Cecil.0.9.6.4/lib/net45/Mono.Cecil.Rocks.dll \
-	../packages/Newtonsoft.Json.10.0.2/lib/net45/Newtonsoft.Json.dll \
 	../packages/Loyc.Essentials.24.3.0/lib/net45/Loyc.Essentials.dll \
 	../packages/Loyc.Collections.24.3.0/lib/net45/Loyc.Collections.dll \
 	../packages/Loyc.Syntax.24.3.0/lib/net45/Loyc.Syntax.dll \
 	../packages/Loyc.Binary.0.1.8/lib/net45/Loyc.Binary.dll \
-	../packages/Flame.Compiler.0.9.14/lib/net45/*.dll \
-	../packages/Flame.Optimization.0.9.14/lib/net45/*.dll \
-	../packages/Flame.Front.0.9.14/lib/net45/*.dll
+	../packages/Flame.Compiler.0.9.15/lib/net45/*.dll \
+	../packages/Flame.Optimization.0.9.15/lib/net45/*.dll \
+	../packages/Flame.Front.0.9.15/lib/net45/*.dll
 
 native-libs = \
 	$(shell find ../native-libs/ -type f)
