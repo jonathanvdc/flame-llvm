@@ -17,7 +17,7 @@ matrix:
 
 install:
   # Install homebrew packages if we're running on OS X
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install mono; brew install llvm; brew install libgc; fi
+  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install llvm; brew install libgc; fi
 
   # Clone, build and install ecsc
   - git clone --depth=5 https://github.com/jonathanvdc/ecsc
