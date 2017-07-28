@@ -7,6 +7,14 @@ namespace __compiler_rt
     /// </summary>
     public static unsafe class GC
     {
+        /// <summary>
+        /// Initializes the garbage collector.
+        /// </summary>
+        static GC()
+        {
+            GC_init();
+        }
+
         private static extern void* GC_malloc(ulong size);
         private static extern void GC_init();
 
@@ -18,14 +26,6 @@ namespace __compiler_rt
         public static void* Allocate(ulong size)
         {
             return GC_malloc(size);
-        }
-
-        /// <summary>
-        /// Initializes the garbage collector.
-        /// </summary>
-        public static void Initialize()
-        {
-            GC_init();
         }
     }
 }
