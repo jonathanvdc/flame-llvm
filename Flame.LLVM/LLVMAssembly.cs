@@ -228,7 +228,7 @@ namespace Flame.LLVM
             else
             {
                 throw new NotSupportedException(
-                    "Unsupported entry point signature;" +
+                    "Unsupported entry point signature; " +
                     "signature must be one of: " +
                     "int|void Main(), int|void Main(int, byte**)");
             }
