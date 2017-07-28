@@ -33,5 +33,5 @@ clean:
 	make -C runtime clean
 
 .PHONY: test
-test: exe runtime
+test: exe runtime stdlib
 	compare-test tests/all.test --clang=clang-3.8 -j

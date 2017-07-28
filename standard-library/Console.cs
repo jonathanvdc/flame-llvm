@@ -18,7 +18,7 @@ namespace System
         /// Writes a string to standard output.
         /// </summary>
         /// <param name="str">The string to write.</param>
-        public static void Write(String str)
+        public static void Write(string str)
         {
             for (int i = 0; i < str.Length; i++)
             {
@@ -48,7 +48,7 @@ namespace System
         /// Writes a string to standard output, followed by an end-of-line sequence.
         /// </summary>
         /// <param name="str">The string to write.</param>
-        public static void WriteLine(String str)
+        public static void WriteLine(string str)
         {
             Write(str);
             WriteLine();

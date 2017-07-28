@@ -12,7 +12,7 @@ clean:
 	rm -rf bin/
 
 bin/flo/stdlib.flo: $(files)
-	ecsc $(files) -platform ir -Wno-build -rt-libs ../runtime/bin/flo/runtime.flo -o $@ $(common-options)
+	ecsc $(files) -platform ir -environment standalone -Wno-build -rt-libs ../runtime/bin/flo/runtime.flo -o $@ $(common-options)
 
 bin/native/stdlib.ll: bin/flo/stdlib.flo
 	flame-llvm bin/flo/stdlib.flo -platform llvm -Wno-build -rt-libs ../runtime/bin/flo/runtime.flo -o $@

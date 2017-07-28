@@ -22,7 +22,7 @@ init
             exe-filename = @($create-temp-file exe);
 
             // Compile the C# source code to Flame IR.
-            $ecsc $input-file -platform ir -Wno-build -fignore-main-prototype --rt-libs $stdlib-flo-filename $rt-flo-filename -o $flo-filename;
+            $ecsc $input-file -platform ir -environment standalone -Wno-build -fignore-main-prototype --rt-libs $stdlib-flo-filename $rt-flo-filename -o $flo-filename;
 
             // Compile the Flame IR to LLVM IR.
             $flame-llvm $flo-filename $stdlib-flo-filename -platform llvm -Wno-build -o $ll-filename --rt-libs $rt-flo-filename;
