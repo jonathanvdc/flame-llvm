@@ -7,6 +7,7 @@ using Flame.Front;
 using Flame.Front.Target;
 using Flame.Front.Passes;
 using Flame.Optimization;
+using Flame.LLVM.Passes;
 
 namespace Flame.LLVM
 {
@@ -52,8 +53,16 @@ namespace Flame.LLVM
 
             var extraPasses = new PassManager();
 
+            // Always use -flower-string-literals to lower string literals to calls.
+            extraPasses.RegisterMethodPass(
+                new AtomicPassInfo<BodyPassArgument, IStatement>(
+                    StringLiteralPass.Instance,
+                    StringLiteralPass.StringLiteralPassName));
+
+            extraPasses.RegisterPassCondition(StringLiteralPass.StringLiteralPassName, UseAlways);
+
             // Always use -flower-new-struct, for correctness reasons.
-            extraPasses.RegisterPassCondition(new PassCondition(NewValueTypeLoweringPass.NewValueTypeLoweringPassName, UseAlways));
+            extraPasses.RegisterPassCondition(NewValueTypeLoweringPass.NewValueTypeLoweringPassName, UseAlways);
 
             return new BuildTarget(targetAsm, DependencyBuilder, "ll", true, extraPasses.ToPreferences());
         }

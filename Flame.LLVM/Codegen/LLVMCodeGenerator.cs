@@ -498,7 +498,21 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitString(string Value)
         {
-            throw new NotImplementedException();
+            var env = ((LLVMMethod)owningMethod).ParentType.Namespace.Assembly.Environment;
+            var strType = env.GetEquivalentType(PrimitiveTypes.String);
+            var fromConstArrMethod = strType.GetMethod(
+                new SimpleName("FromConstCharArray"),
+                true,
+                PrimitiveTypes.String,
+                new IType[] { PrimitiveTypes.Char.MakeArrayType(1) });
+
+            if (fromConstArrMethod == null)
+            {
+                throw new NotImplementedException(
+                    "System.String must define 'static string FromConstCharArray(char[])' " + 
+                    "for string literals to work.");
+            }
+            throw new NotSupportedException();
         }
 
         public ICodeBlock EmitUnary(ICodeBlock Value, Operator Op)
