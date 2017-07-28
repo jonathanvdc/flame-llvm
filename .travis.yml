@@ -17,7 +17,7 @@ matrix:
 
 install:
   # Install homebrew packages if we're running on OS X
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install llvm; brew install libgc; fi
+  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install llvm; brew install libgc; brew install greadlink; alias readlink=greadlink; fi
 
   # Clone, build and install ecsc
   - git clone --depth=5 https://github.com/jonathanvdc/ecsc
@@ -25,7 +25,7 @@ install:
   - msbuild /p:Configuration=Release /verbosity:quiet ecsc/src/ecsc.sln
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.exe
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.dll
-  - wget https://gist.githubusercontent.com/jonathanvdc/f2fa3b5f8d5ece27b877fae439d944d0/raw/5da9911aaa7b791960feb19329a6ad33ed76483d/mono-ln.sh
+  - wget https://gist.githubusercontent.com/jonathanvdc/f2fa3b5f8d5ece27b877fae439d944d0/raw/9cab53259d8de8edbf56034a6f9ea77b257ba54e/mono-ln.sh
   - chmod +x mono-ln.sh
   - ./mono-ln.sh ecsc.exe $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
