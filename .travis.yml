@@ -25,7 +25,7 @@ install:
   - msbuild /p:Configuration=Release /verbosity:quiet ecsc/src/ecsc.sln
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.exe
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.dll
-  - wget https://gist.githubusercontent.com/jonathanvdc/f2fa3b5f8d5ece27b877fae439d944d0/raw/d021752c2b9c5dfe15393028e308a6ebdcdb613b/mono-ln.sh
+  - wget https://gist.githubusercontent.com/jonathanvdc/f2fa3b5f8d5ece27b877fae439d944d0/raw/5da9911aaa7b791960feb19329a6ad33ed76483d/mono-ln.sh
   - chmod +x mono-ln.sh
   - ./mono-ln.sh ecsc.exe $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
   - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
