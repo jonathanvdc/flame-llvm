@@ -1,5 +1,7 @@
 # `flame-llvm`: an LLVM back-end for Flame
 
+[![Build Status](https://travis-ci.org/jonathanvdc/flame-llvm.svg?branch=master)](https://travis-ci.org/jonathanvdc/flame-llvm)
+
 `flame-llvm` is a tool that compiles [Flame](https://github.com/jonathanvdc/Flame) IR to [LLVM](http://llvm.org) IR. Since [`ecsc`](https://github.com/jonathanvdc/ecsc) can compile C# source code to Flame IR, `flame-llvm` can (indirectly) be used to turn C# programs into fast, native binaries.
 
 ## Feature status
