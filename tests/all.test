@@ -29,7 +29,7 @@ init
 
             // Compile the LLVM IR to a native executable and link in
             // the C standard library.
-            $clang $ll-filename $rt-obj-filename -Wno-override-module -o $exe-filename;
+            $clang $ll-filename $rt-obj-filename -lgc -Wno-override-module -o $exe-filename;
         }
 
         init

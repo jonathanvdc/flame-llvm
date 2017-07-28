@@ -9,6 +9,7 @@ addons:
     packages:
       - llvm-3.8-dev
       - clang-3.8
+      - libgc-dev
 
 install:
   # Clone, build and install ecsc
