@@ -18,7 +18,7 @@ libs = \
 	../packages/Flame.Front.0.9.15/lib/net45/*.dll
 
 native-libs = \
-	$(shell find ../native-libs/ -type f)
+	$(shell find ../native-libs -type f)
 
 common-options = -asm-name=flame-llvm -asm-version=0.1.0.0
 
