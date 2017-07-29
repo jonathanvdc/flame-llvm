@@ -17,7 +17,7 @@
   - [x] arrays
   - [x] support for strings
   - [x] conservative garbage collection (Boehm-Demers-Weiser GC)
-  - [ ] inheritance
+  - [x] inheritance
   - [ ] indirect function calls
   - [ ] `virtual` calls
   - [ ] floating-point arithmetic
