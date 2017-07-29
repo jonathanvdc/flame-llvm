@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
   echo warning: libLLVM.so will not be copied to the output directory
   echo usage: build-libs.sh [/path/to/libLLVM.so]
 else
-  cp $1 native-libs/libLLVM.so
+  cp $1 native-libs/$(basename $1)
 fi
 
 mkdir -p libs
