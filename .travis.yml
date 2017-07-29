@@ -13,11 +13,25 @@ matrix:
             - clang-3.8
             - libgc-dev
 
-    - os: osx
+    # OS X build won't find libLLVM.dylib for some reason.
+    # I'd love to get flame-llvm to work on OS X, but I don't own a computer with
+    # OS X on it and debugging Travis builds without a machine running
+    # the same OS is pretty hard.
+    # Giving up on this now, might revisit it later.
+    # - os: osx
 
 install:
   # Install homebrew packages if we're running on OS X
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install llvm; brew install libgc; export readlink_name="greadlink"; export libllvm_path="/usr/local/opt/llvm/lib/libLLVM.dylib"; export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/opt/llvm/lib; else export readlink_name="readlink"; export libllvm_path="/usr/lib/llvm-3.8/lib/libLLVM.so"; fi
+  - if [ $TRAVIS_OS_NAME == "osx" ]; then
+      brew update;
+      brew install llvm;
+      brew install libgc;
+      export readlink_name="greadlink";
+      export libllvm_path="/usr/local/opt/llvm/lib/libLLVM.dylib";
+    else
+      export readlink_name="readlink";
+      export libllvm_path="/usr/lib/llvm-3.8/lib/libLLVM.so";
+    fi
 
   # Clone, build and install ecsc
   - git clone --depth=5 https://github.com/jonathanvdc/ecsc
