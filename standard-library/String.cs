@@ -5,7 +5,7 @@ namespace System
     /// <summary>
     /// A character string that uses the UTF-16 encoding.
     /// </summary>
-    public sealed class String
+    public sealed class String : Object
     {
         internal String()
         { }
