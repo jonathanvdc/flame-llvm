@@ -143,7 +143,7 @@ namespace Flame.LLVM
                 throw new NotSupportedException("LLVM types do not support generic parameters");
             }
 
-            this.fieldCounter += this.GetParent() == null ? 0 : 1;
+            this.fieldCounter += this.GetIsValueType() ? 0 : 1;
         }
 
         /// <summary>
@@ -153,13 +153,25 @@ namespace Flame.LLVM
         /// <returns>An LLVM type ref for this type's data layout.</returns>
         public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
         {
-            var baseType = this.GetParent();
-            int offset = baseType == null ? 0 : 1;
+            bool isStruct = this.GetIsValueType();
+
+            int offset = isStruct ? 0 : 1;
             var elementTypes = new LLVMTypeRef[offset + declaredInstanceFields.Count];
-            if (baseType != null)
+            if (!isStruct)
             {
-                elementTypes[0] = Module.DeclareDataLayout((LLVMType)baseType);
+                var baseType = this.GetParent();
+                if (baseType == null)
+                {
+                    // Type is a root type. Embed a pointer to its vtable.
+                    elementTypes[0] = Module.Declare(PrimitiveTypes.UInt8.MakePointerType(PointerKind.TransientPointer));
+                }
+                else
+                {
+                    // Type is not a root type. Embed its base type.
+                    elementTypes[0] = Module.DeclareDataLayout((LLVMType)baseType);
+                }
             }
+
             for (int i = 0; i < elementTypes.Length - offset; i++)
             {
                 elementTypes[i + offset] = Module.Declare(declaredInstanceFields[i].FieldType);
