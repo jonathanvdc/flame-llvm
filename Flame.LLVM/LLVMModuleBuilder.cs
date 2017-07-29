@@ -200,8 +200,23 @@ namespace Flame.LLVM
             LLVMTypeRef result;
             if (!declaredDataLayouts.TryGetValue(Type, out result))
             {
-                result = Type.DefineLayout(this);
-                declaredDataLayouts[Type] = result;
+                if (Type.GetIsValueType())
+                {
+                    // The layout of value types can be computed naively.
+                    result = Type.DefineLayout(this);
+                    declaredDataLayouts[Type] = result;
+                }
+                else
+                {
+                    // Reference types cannot have their layout computed naively, because
+                    // they might refer to themselves. To get around this, we first declare
+                    // a named struct, then figure out what its layout should look like and
+                    // finally fill it out.
+                    result = StructCreateNamed(GetGlobalContext(), Type.FullName.ToString());
+                    declaredDataLayouts[Type] = result;
+                    var layout = Type.DefineLayout(this);
+                    StructSetBody(result, GetStructElementTypes(layout), IsPackedStruct(layout));
+                }
             }
             return result;
         }
