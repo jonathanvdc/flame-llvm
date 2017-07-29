@@ -17,7 +17,7 @@ matrix:
 
 install:
   # Install homebrew packages if we're running on OS X
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install llvm; brew install libgc; export readlink_name="greadlink"; export libllvm_path="/usr/local/opt/llvm/lib/libLLVM.dylib"; else export readlink_name="readlink"; export libllvm_path="/usr/lib/llvm-3.8/lib/libLLVM.so"; fi
+  - if [ $TRAVIS_OS_NAME == "osx" ]; then brew update; brew install llvm; brew install libgc; export readlink_name="greadlink"; export libllvm_path="/usr/local/opt/llvm/lib/libLLVM.dylib"; export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/opt/llvm/lib; else export readlink_name="readlink"; export libllvm_path="/usr/lib/llvm-3.8/lib/libLLVM.so"; fi
 
   # Clone, build and install ecsc
   - git clone --depth=5 https://github.com/jonathanvdc/ecsc
