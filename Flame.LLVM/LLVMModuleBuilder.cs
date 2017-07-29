@@ -22,6 +22,7 @@ namespace Flame.LLVM
             this.module = Module;
             this.declaredMethods = new Dictionary<IMethod, LLVMValueRef>();
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
+            this.declaredDataLayouts = new Dictionary<LLVMType, LLVMTypeRef>();
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
         }
 
@@ -30,6 +31,7 @@ namespace Flame.LLVM
         private Dictionary<IMethod, LLVMValueRef> declaredMethods;
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
         private Dictionary<IField, LLVMValueRef> declaredGlobals;
+        private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
 
         /// <summary>
         /// Declares the given method if it was not declared already.
@@ -140,24 +142,6 @@ namespace Flame.LLVM
         }
 
         /// <summary>
-        /// Declares the given type if it was not declared already.
-        /// An LLVM type that corresponds to the declaration is returned.
-        /// </summary>
-        /// <param name="Type">The type to declare.</param>
-        /// <returns>An LLVM type.</returns>
-        public LLVMTypeRef Declare(IType Type)
-        {
-            LLVMTypeRef result;
-            if (!declaredTypes.TryGetValue(Type, out result))
-            {
-                result = DeclareTypeImpl(Type);
-                declaredTypes[Type] = result;
-            }
-            return result;
-        }
-
-
-        /// <summary>
         /// Declares the given field if it is static and has not been declared
         /// already. An LLVM value that corresponds to the declaration is returned.
         /// </summary>
@@ -201,6 +185,40 @@ namespace Flame.LLVM
 
                 // Store it in the dictionary.
                 declaredGlobals[Field] = result;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Declares the data layout of the given type if it was not declared already.
+        /// An LLVM type that corresponds to the declaration is returned.
+        /// </summary>
+        /// <param name="Type">The type to declare.</param>
+        /// <returns>An LLVM type.</returns>
+        public LLVMTypeRef DeclareDataLayout(LLVMType Type)
+        {
+            LLVMTypeRef result;
+            if (!declaredDataLayouts.TryGetValue(Type, out result))
+            {
+                result = Type.DefineLayout(this);
+                declaredDataLayouts[Type] = result;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Declares the given type if it was not declared already.
+        /// An LLVM type that corresponds to the declaration is returned.
+        /// </summary>
+        /// <param name="Type">The type to declare.</param>
+        /// <returns>An LLVM type.</returns>
+        public LLVMTypeRef Declare(IType Type)
+        {
+            LLVMTypeRef result;
+            if (!declaredTypes.TryGetValue(Type, out result))
+            {
+                result = DeclareTypeImpl(Type);
+                declaredTypes[Type] = result;
             }
             return result;
         }
@@ -266,11 +284,11 @@ namespace Flame.LLVM
                 var llvmType = (LLVMType)Type;
                 if (llvmType.GetIsValueType())
                 {
-                    return llvmType.DefineLayout(this);
+                    return DeclareDataLayout(llvmType);
                 }
                 else if (llvmType.GetIsReferenceType())
                 {
-                    return PointerType(llvmType.DefineLayout(this), 0);
+                    return PointerType(DeclareDataLayout(llvmType), 0);
                 }
             }
             else if (Type.GetIsReferenceType())

@@ -24,6 +24,7 @@ namespace Flame.LLVM
             this.declaredInstanceFields = new List<LLVMField>();
             this.declaredStaticFields = new List<LLVMField>();
             this.declaredFields = new List<LLVMField>();
+            this.fieldCounter = 0;
             this.declaredProperties = new List<LLVMProperty>();
         }
 
@@ -33,6 +34,7 @@ namespace Flame.LLVM
 
         private List<LLVMMethod> declaredMethods;
         private List<LLVMField> declaredInstanceFields;
+        private int fieldCounter;
         private List<LLVMField> declaredStaticFields;
         private List<LLVMField> declaredFields;
         private List<LLVMProperty> declaredProperties;
@@ -79,9 +81,9 @@ namespace Flame.LLVM
 
         public IEnumerable<IMethod> Methods => declaredMethods;
 
-        public IEnumerable<IType> BaseTypes => Enumerable.Empty<IType>();
+        public IEnumerable<IType> BaseTypes => templateInstance.BaseTypes.Value;
 
-        public IEnumerable<IProperty> Properties => Enumerable.Empty<IProperty>();
+        public IEnumerable<IProperty> Properties => declaredProperties;
 
         public IEnumerable<IField> Fields => declaredFields;
 
@@ -97,12 +99,17 @@ namespace Flame.LLVM
             var fieldDef = new LLVMField(
                 this,
                 Template,
-                Template.IsStatic ? -1 : declaredInstanceFields.Count);
+                Template.IsStatic ? -1 : fieldCounter);
 
             if (fieldDef.IsStatic)
+            {
                 declaredStaticFields.Add(fieldDef);
+            }
             else
+            {
                 declaredInstanceFields.Add(fieldDef);
+                fieldCounter++;
+            }
 
             declaredFields.Add(fieldDef);
             return fieldDef;
@@ -136,10 +143,7 @@ namespace Flame.LLVM
                 throw new NotSupportedException("LLVM types do not support generic parameters");
             }
 
-            if (templateInstance.BaseTypes.Value.Any<IType>())
-            {
-                throw new NotImplementedException("LLVM types do not support base types yet");
-            }
+            this.fieldCounter += this.GetParent() == null ? 0 : 1;
         }
 
         /// <summary>
@@ -149,10 +153,16 @@ namespace Flame.LLVM
         /// <returns>An LLVM type ref for this type's data layout.</returns>
         public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
         {
-            var elementTypes = new LLVMTypeRef[declaredInstanceFields.Count];
-            for (int i = 0; i < elementTypes.Length; i++)
+            var baseType = this.GetParent();
+            int offset = baseType == null ? 0 : 1;
+            var elementTypes = new LLVMTypeRef[offset + declaredInstanceFields.Count];
+            if (baseType != null)
             {
-                elementTypes[i] = Module.Declare(declaredInstanceFields[i].FieldType);
+                elementTypes[0] = Module.DeclareDataLayout((LLVMType)baseType);
+            }
+            for (int i = 0; i < elementTypes.Length - offset; i++)
+            {
+                elementTypes[i + offset] = Module.Declare(declaredInstanceFields[i].FieldType);
             }
             return StructType(elementTypes, false);
         }
