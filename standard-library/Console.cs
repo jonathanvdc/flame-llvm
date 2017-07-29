@@ -27,6 +27,15 @@ namespace System
         }
 
         /// <summary>
+        /// Writes an integer to standard output.
+        /// </summary>
+        /// <param name="i">The integer to write.</param>
+        public static void Write(int i)
+        {
+            Write(Convert.ToString(i));
+        }
+
+        /// <summary>
         /// Writes an end-of-line sequence to standard output.
         /// </summary>
         public static void WriteLine()
@@ -51,6 +60,16 @@ namespace System
         public static void WriteLine(string str)
         {
             Write(str);
+            WriteLine();
+        }
+
+        /// <summary>
+        /// Writes an integer to standard output, followed by an end-of-line sequence.
+        /// </summary>
+        /// <param name="i">The integer to write.</param>
+        public static void WriteLine(int i)
+        {
+            Write(i);
             WriteLine();
         }
     }
