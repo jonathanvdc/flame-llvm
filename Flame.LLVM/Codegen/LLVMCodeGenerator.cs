@@ -88,6 +88,12 @@ namespace Flame.LLVM.Codegen
             {
                 return EmitIntBinary(lhs, rhs, Op, unsignedIntBinaries, unsignedIntPredicates);
             }
+            else if (Operator.IsComparisonOperator(Op)
+                && (lhsType.GetIsPointer() || lhsType.GetIsReferenceType())
+                && (rhsType.GetIsPointer() || rhsType.GetIsReferenceType()))
+            {
+                return EmitIntBinary(lhs, rhs, Op, unsignedIntBinaries, unsignedIntPredicates);
+            }
             else if (lhsType.GetIsPointer() && rhsType.GetIsInteger())
             {
                 if (Op.Equals(Operator.Add))
