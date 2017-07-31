@@ -32,7 +32,7 @@ namespace System
         /// <param name="i">The integer to write.</param>
         public static void Write(int i)
         {
-            Write(Convert.ToString(i));
+            Write(i.ToString());
         }
 
         /// <summary>
