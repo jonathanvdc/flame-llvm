@@ -79,6 +79,13 @@ namespace Flame.LLVM
         /// </summary>
         public IReadOnlyList<LLVMField> InstanceFields => declaredInstanceFields;
 
+        /// <summary>
+        /// Tests if this type is a value type that is stored as a single value.
+        /// The runtime representation of these types is not wrapped in a struct.
+        /// </summary>
+        /// <returns><c>true</c> if this is a single-value value type; otherwise, <c>false</c>.</returns>
+        public bool IsSingleValue => InstanceFields.Count == 1 && this.GetIsValueType();
+
         public IEnumerable<IMethod> Methods => declaredMethods;
 
         public IEnumerable<IType> BaseTypes => templateInstance.BaseTypes.Value;
@@ -154,6 +161,11 @@ namespace Flame.LLVM
         public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
         {
             bool isStruct = this.GetIsValueType();
+
+            if (isStruct && IsSingleValue)
+            {
+                return Module.Declare(declaredInstanceFields[0].FieldType);
+            }
 
             int offset = isStruct ? 0 : 1;
             var elementTypes = new LLVMTypeRef[offset + declaredInstanceFields.Count];

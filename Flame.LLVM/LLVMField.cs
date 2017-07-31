@@ -24,6 +24,11 @@ namespace Flame.LLVM
         /// <returns>The field index of this field.</returns>
         public int FieldIndex { get; private set; }
 
+        /// <summary>
+        /// Tells if this field is the value of a single-value type.
+        /// </summary>
+        public bool IsSingleValueField => ParentType.IsSingleValue && !IsStatic;
+
         private FieldSignatureInstance templateInstance;
 
         /// <inheritdoc/>

@@ -73,10 +73,15 @@ namespace Flame.LLVM.Codegen
                     BasicBlock,
                     BasicBlock.FunctionBody.Module.DeclareGlobal(Field));
             }
+
+            var targetResult = Target.Emit(BasicBlock);
+            BasicBlock = targetResult.BasicBlock;
+            if (Field.IsSingleValueField)
+            {
+                return new BlockCodegen(BasicBlock, targetResult.Value);
+            }
             else
             {
-                var targetResult = Target.Emit(BasicBlock);
-                BasicBlock = targetResult.BasicBlock;
                 return new BlockCodegen(
                     BasicBlock,
                     BuildStructGEP(
