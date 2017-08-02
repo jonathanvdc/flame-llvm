@@ -192,6 +192,25 @@ namespace Flame.LLVM
         }
 
         /// <summary>
+        /// Defines the vtable for this type.
+        /// </summary>
+        /// <param name="Module">The module to define the vtable in.</param>
+        /// <returns>An LLVM global for this type's vtable.</returns>
+        public LLVMValueRef DefineVTable(LLVMModuleBuilder Module)
+        {
+            var fields = new LLVMValueRef[1];
+            fields[0] = ConstInt(Int64Type(), Module.GetTypeId(this), true);
+            var vtableContents = ConstStruct(fields, false);
+            var vtable = Module.DeclareGlobal(
+                TypeOf(vtableContents),
+                FullName.ToString() + ".vtable");
+            vtable.SetGlobalConstant(true);
+            vtable.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+            vtable.SetInitializer(vtableContents);
+            return vtable;
+        }
+
+        /// <summary>
         /// Writes this type's definitions to the given module.
         /// </summary>
         /// <param name="Module">The module to populate.</param>

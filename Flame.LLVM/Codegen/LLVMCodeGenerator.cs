@@ -450,7 +450,8 @@ namespace Flame.LLVM.Codegen
                 // Write the following code:
                 //
                 //     var ptr = gcalloc(sizeof(T));
-                //     ptr.ctor(args...);
+                //     ptr->vtable = (byte*)T.vtable;
+                //     ptr->ctor(args...);
                 //     ptr
                 //
                 var expr = new InitializedExpression(
@@ -460,6 +461,9 @@ namespace Flame.LLVM.Codegen
                             Allocate(
                                 ToExpression(new SizeOfBlock(this, constructedType, false)),
                                 constructedType)),
+                        new StoreAtAddressStatement(
+                            GetVTablePtrExpr(tmp.CreateGetExpression()),
+                            ToExpression(new TypeVTableBlock(this, (LLVMType)constructedType))),
                         new ExpressionStatement(
                             new InvocationExpression(
                                 Constructor,
@@ -472,6 +476,35 @@ namespace Flame.LLVM.Codegen
                 return expr.Emit(this);
             }
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates an expression that gets a pointer to the given value's vtable.
+        /// </summary>
+        /// <param name="Value">The value whose vtable is to be retrieved.</param>
+        /// <returns></returns>
+        public IExpression GetVTablePtrExpr(IExpression Value)
+        {
+            return new ReinterpretCastExpression(
+                Value,
+                PrimitiveTypes.UInt8
+                    .MakePointerType(PointerKind.TransientPointer)
+                    .MakePointerType(PointerKind.TransientPointer));
+        }
+
+        /// <summary>
+        /// Creates a block that gets a pointer to the given value's vtable.
+        /// </summary>
+        /// <param name="Value">The value whose vtable is to be retrieved.</param>
+        /// <returns></returns>
+        public ICodeBlock EmitVTablePtr(ICodeBlock Value)
+        {
+            return EmitTypeBinary(
+                Value,
+                PrimitiveTypes.UInt8
+                    .MakePointerType(PointerKind.TransientPointer)
+                    .MakePointerType(PointerKind.TransientPointer),
+                Operator.ReinterpretCast);
         }
 
         public ICodeBlock EmitNewVector(IType ElementType, IReadOnlyList<int> Dimensions)
@@ -515,7 +548,7 @@ namespace Flame.LLVM.Codegen
             if (fromConstArrMethod == null)
             {
                 throw new NotImplementedException(
-                    "System.String must define 'static string FromConstCharArray(char[])' " + 
+                    "System.String must define 'static string FromConstCharArray(char[])' " +
                     "for string literals to work.");
             }
             throw new NotSupportedException();

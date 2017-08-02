@@ -26,6 +26,7 @@ namespace Flame.LLVM
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
             this.declaredTypeIds = new Dictionary<LLVMType, ulong>();
             this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
+            this.declaredVTables = new Dictionary<LLVMType, LLVMValueRef>();
             this.primeGen = new PrimeNumberGenerator();
         }
 
@@ -37,6 +38,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
         private Dictionary<LLVMType, ulong> declaredTypeIds;
         private Dictionary<LLVMType, ulong> declaredTypePrimes;
+        private Dictionary<LLVMType, LLVMValueRef> declaredVTables;
         private PrimeNumberGenerator primeGen;
 
         /// <summary>
@@ -167,7 +169,7 @@ namespace Flame.LLVM
             {
                 // Declare the global.
                 var abiMangler = LLVMSymbolTypeMember.GetLLVMAbi(Field, assembly).Mangler;
-                result = AddGlobal(module, Declare(Field.FieldType), abiMangler.Mangle(Field));
+                result = DeclareGlobal(Declare(Field.FieldType), abiMangler.Mangle(Field));
 
                 if (Field is LLVMField)
                 {
@@ -193,6 +195,17 @@ namespace Flame.LLVM
                 declaredGlobals[Field] = result;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Declares a global with the given type and name.
+        /// </summary>
+        /// <param name="Type">The global's type.</param>
+        /// <param name="Name">The global's name.</param>
+        /// <returns>The global value.</returns>
+        public LLVMValueRef DeclareGlobal(LLVMTypeRef Type, string Name)
+        {
+            return AddGlobal(module, Type, Name);
         }
 
         /// <summary>
@@ -400,11 +413,16 @@ namespace Flame.LLVM
             //     same level of the tree never have a common descendant, so they
             //     may have identical sub-trees beneath them without a conflict.
 
-
+            var allBasePrimes = Type
+                .GetAllBaseTypes()
+                .Cast<LLVMType>()
+                .Distinct<LLVMType>()
+                .Select<LLVMType, ulong>(GetTypePrime)
+                .ToArray<ulong>();
             ulong id = 1;
-            foreach (var baseType in Type.GetAllBaseTypes().Distinct<IType>())
+            foreach (var basePrime in allBasePrimes)
             {
-                id *= GetTypePrime((LLVMType)baseType);
+                id *= basePrime;
             }
 
             ulong prime = primeGen.Next();
@@ -412,6 +430,22 @@ namespace Flame.LLVM
             id *= prime;
             
             declaredTypeIds[Type] = id;
+        }
+
+        /// <summary>
+        /// Gets the vtable global for the given type.
+        /// </summary>
+        /// <param name="Type">The type to get the vtable of.</param>
+        /// <returns>A vtable global.</returns>
+        public LLVMValueRef GetVTable(LLVMType Type)
+        {
+            LLVMValueRef vtable;
+            if (!declaredVTables.TryGetValue(Type, out vtable))
+            {
+                vtable = Type.DefineVTable(this);
+                declaredVTables[Type] = vtable;
+            }
+            return vtable;
         }
     }
 }

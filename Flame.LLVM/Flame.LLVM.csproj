@@ -68,6 +68,7 @@
     <Compile Include="Codegen\BinaryBlock.cs" />
     <Compile Include="Codegen\BranchBlock.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
+    <Compile Include="Codegen\ComparisonBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
     <Compile Include="Codegen\DefaultStructBlock.cs" />
     <Compile Include="Codegen\DelegateBlock.cs" />
@@ -90,9 +91,9 @@
     <Compile Include="Codegen\StoreBlock.cs" />
     <Compile Include="Codegen\TaggedFlowBlock.cs" />
     <Compile Include="Codegen\TaggedValueBlock.cs" />
+    <Compile Include="Codegen\TypeVTableBlock.cs" />
     <Compile Include="Codegen\UnaryBlock.cs" />
     <Compile Include="Codegen\VoidBlock.cs" />
-    <Compile Include="Codegen\ComparisonBlock.cs" />
     <Compile Include="Passes\StringLiteralPass.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
