@@ -91,6 +91,7 @@
     <Compile Include="Codegen\StoreBlock.cs" />
     <Compile Include="Codegen\TaggedFlowBlock.cs" />
     <Compile Include="Codegen\TaggedValueBlock.cs" />
+    <Compile Include="Codegen\TypeIdBlock.cs" />
     <Compile Include="Codegen\TypeVTableBlock.cs" />
     <Compile Include="Codegen\UnaryBlock.cs" />
     <Compile Include="Codegen\VoidBlock.cs" />

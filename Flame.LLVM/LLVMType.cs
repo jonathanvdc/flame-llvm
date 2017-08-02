@@ -192,6 +192,11 @@ namespace Flame.LLVM
         }
 
         /// <summary>
+        /// The type of a vtable.
+        /// </summary>
+        public static readonly LLVMTypeRef VTableType = StructType(new LLVMTypeRef[] { Int64Type() }, false);
+
+        /// <summary>
         /// Defines the vtable for this type.
         /// </summary>
         /// <param name="Module">The module to define the vtable in.</param>
@@ -199,10 +204,10 @@ namespace Flame.LLVM
         public LLVMValueRef DefineVTable(LLVMModuleBuilder Module)
         {
             var fields = new LLVMValueRef[1];
-            fields[0] = ConstInt(Int64Type(), Module.GetTypeId(this), true);
+            fields[0] = ConstInt(Int64Type(), Module.GetTypeId(this), false);
             var vtableContents = ConstStruct(fields, false);
             var vtable = Module.DeclareGlobal(
-                TypeOf(vtableContents),
+                VTableType,
                 FullName.ToString() + ".vtable");
             vtable.SetGlobalConstant(true);
             vtable.SetLinkage(LLVMLinkage.LLVMInternalLinkage);

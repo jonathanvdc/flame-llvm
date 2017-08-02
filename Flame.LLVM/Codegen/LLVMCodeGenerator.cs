@@ -74,8 +74,18 @@ namespace Flame.LLVM.Codegen
             }
         }
 
+        private static readonly HashSet<Operator> unsupportedOps = new HashSet<Operator>()
+        {
+            Operator.LogicalAnd, Operator.LogicalOr
+        };
+
         public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
         {
+            if (unsupportedOps.Contains(Op))
+            {
+                return null;
+            }
+
             var lhs = (CodeBlock)A;
             var rhs = (CodeBlock)B;
             var lhsType = lhs.Type;
@@ -113,7 +123,12 @@ namespace Flame.LLVM.Codegen
                         lhs.Type);
                 }
             }
-            throw new NotImplementedException();
+            throw new NotImplementedException(
+                string.Format(
+                    "Unsupported binary op: {0} {1} {2}",
+                    lhsType.FullName,
+                    Op.Name,
+                    rhsType.FullName));
         }
 
         private static readonly Dictionary<Operator, BuildLLVMBinary> signedIntBinaries =
@@ -174,6 +189,27 @@ namespace Flame.LLVM.Codegen
             if (Op.Equals(Operator.ReinterpretCast))
             {
                 return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast, ConstPointerCast);
+            }
+            else if (Op.Equals(Operator.IsInstance))
+            {
+                // Rewrite `x is T` as `x != (decltype(x))null && x->vtable.typeid % T.vtable.typeid == 0`
+                var valTmp = DeclareLocal(new UniqueTag("is_tmp"), new TypeVariableMember(valBlock.Type));
+                return EmitSequence(
+                    valTmp.EmitSet(valBlock),
+                    this.EmitLogicalAnd(
+                        EmitBinary(
+                            valTmp.EmitGet(),
+                            EmitTypeBinary(EmitNull(), valBlock.Type, Operator.ReinterpretCast),
+                            Operator.CheckInequality),
+                        EmitBinary(
+                            EmitBinary(
+                                new TypeIdBlock(
+                                    this,
+                                    (CodeBlock)EmitDereferencePointer(EmitVTablePtr(valTmp.EmitGet()))),
+                                new TypeIdBlock(this, new TypeVTableBlock(this, (LLVMType)Type)),
+                                Operator.Remainder),
+                            EmitInteger(new IntegerValue(0UL)),
+                            Operator.CheckEquality)));
             }
             else if (Op.Equals(Operator.StaticCast))
             {
@@ -479,11 +515,11 @@ namespace Flame.LLVM.Codegen
         }
 
         /// <summary>
-        /// Creates an expression that gets a pointer to the given value's vtable.
+        /// Creates an expression that gets a pointer to the given value's vtable field.
         /// </summary>
-        /// <param name="Value">The value whose vtable is to be retrieved.</param>
+        /// <param name="Value">The value whose vtable field is to be addressed.</param>
         /// <returns></returns>
-        public IExpression GetVTablePtrExpr(IExpression Value)
+        public static IExpression GetVTablePtrExpr(IExpression Value)
         {
             return new ReinterpretCastExpression(
                 Value,
@@ -493,13 +529,13 @@ namespace Flame.LLVM.Codegen
         }
 
         /// <summary>
-        /// Creates a block that gets a pointer to the given value's vtable.
+        /// Creates a block that gets a pointer to the given value's vtable field.
         /// </summary>
-        /// <param name="Value">The value whose vtable is to be retrieved.</param>
+        /// <param name="Value">The value whose vtable field is to be addressed.</param>
         /// <returns></returns>
-        public ICodeBlock EmitVTablePtr(ICodeBlock Value)
+        public CodeBlock EmitVTablePtr(ICodeBlock Value)
         {
-            return EmitTypeBinary(
+            return (CodeBlock)EmitTypeBinary(
                 Value,
                 PrimitiveTypes.UInt8
                     .MakePointerType(PointerKind.TransientPointer)
