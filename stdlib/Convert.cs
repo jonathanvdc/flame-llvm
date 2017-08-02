@@ -49,5 +49,15 @@ namespace System
 
             return new String(array);
         }
+
+        /// <summary>
+        /// Converts the given Boolean to a string.
+        /// </summary>
+        /// <param name="value">The Boolean value.</param>
+        /// <returns>A string representation for the Boolean.</returns>
+        public static string ToString(bool value)
+        {
+            return value ? "True" : "False";
+        }
     }
 }

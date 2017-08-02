@@ -36,6 +36,15 @@ namespace System
         }
 
         /// <summary>
+        /// Writes a Boolean to standard output.
+        /// </summary>
+        /// <param name="value">The Boolean to write.</param>
+        public static void Write(bool value)
+        {
+            Write(value.ToString());
+        }
+
+        /// <summary>
         /// Writes an end-of-line sequence to standard output.
         /// </summary>
         public static void WriteLine()
@@ -70,6 +79,16 @@ namespace System
         public static void WriteLine(int i)
         {
             Write(i);
+            WriteLine();
+        }
+
+        /// <summary>
+        /// Writes a Boolean to standard output, followed by an end-of-line sequence.
+        /// </summary>
+        /// <param name="value">The Boolean to write.</param>
+        public static void WriteLine(bool value)
+        {
+            Write(value);
             WriteLine();
         }
     }
