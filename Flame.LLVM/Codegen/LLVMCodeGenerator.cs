@@ -273,6 +273,26 @@ namespace Flame.LLVM.Codegen
                 {
                     return new SimpleCastBlock(this, valBlock, Type, BuildIntToPtr, ConstIntToPtr);
                 }
+                else if (valType.GetIsSignedInteger() && Type.GetIsFloatingPoint())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildSIToFP, ConstSIToFP);
+                }
+                else if (valType.GetIsUnsignedInteger() && Type.GetIsFloatingPoint())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildUIToFP, ConstUIToFP);
+                }
+                else if (valType.GetIsFloatingPoint() && Type.GetIsSignedInteger())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildFPToSI, ConstFPToSI);
+                }
+                else if (valType.GetIsFloatingPoint() && Type.GetIsUnsignedInteger())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildFPToUI, ConstFPToUI);
+                }
+                else if (valType.GetIsFloatingPoint() && Type.GetIsFloatingPoint())
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildFPCast, ConstFPCast);
+                }
             }
             throw new NotImplementedException();
         }
