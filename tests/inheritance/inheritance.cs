@@ -48,7 +48,7 @@ public static class Program
         Console.Write(pt.W);
         Console.Write(' ');
         var pt2 = pt as Point2;
-        var pt3 = pt2 as Point4;
+        var pt3 = (Point4)pt2;
         Console.Write(pt3 is Point2);
         Console.Write(' ');
         Console.Write(pt3 is Point3);

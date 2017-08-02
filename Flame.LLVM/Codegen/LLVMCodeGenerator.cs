@@ -222,6 +222,17 @@ namespace Flame.LLVM.Codegen
                         EmitTypeBinary(valTmp.EmitGet(), Type, Operator.ReinterpretCast),
                         EmitTypeBinary(EmitNull(), Type, Operator.ReinterpretCast)));
             }
+            else if (Op.Equals(Operator.DynamicCast))
+            {
+                // Rewrite `(T)x` as `x is T ? x : unreachable`.
+                var valTmp = DeclareLocal(new UniqueTag("dyn_cast_tmp"), new TypeVariableMember(valBlock.Type));
+                return EmitSequence(
+                    valTmp.EmitSet(valBlock),
+                    EmitIfElse(
+                        EmitTypeBinary(valTmp.EmitGet(), Type, Operator.IsInstance),
+                        EmitTypeBinary(valTmp.EmitGet(), Type, Operator.ReinterpretCast),
+                        new UnreachableBlock(this, Type)));
+            }
             else if (Op.Equals(Operator.StaticCast))
             {
                 var valType = valBlock.Type;
