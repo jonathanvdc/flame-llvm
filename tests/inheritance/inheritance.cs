@@ -47,18 +47,20 @@ public static class Program
         Console.Write(' ');
         Console.Write(pt.W);
         Console.Write(' ');
-        Console.Write(pt is Point2);
+        var pt2 = pt as Point2;
+        var pt3 = pt2 as Point4;
+        Console.Write(pt3 is Point2);
         Console.Write(' ');
-        Console.Write(pt is Point3);
+        Console.Write(pt3 is Point3);
         Console.Write(' ');
-        Console.Write(pt is Point4);
-        var pt2 = new Point2(0, 0);
+        Console.Write(pt3 is Point4);
+        var pt4 = new Point2(0, 0);
         Console.Write(' ');
-        Console.Write(pt2 is Point2);
+        Console.Write(pt4 is Point2);
         Console.Write(' ');
-        Console.Write(pt2 is Point3);
+        Console.Write(pt4 is Point3);
         Console.Write(' ');
-        Console.Write(pt2 is Point4);
+        Console.Write(pt4 is Point4);
         Console.WriteLine();
     }
 }
