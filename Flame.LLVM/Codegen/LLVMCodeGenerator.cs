@@ -74,6 +74,24 @@ namespace Flame.LLVM.Codegen
             }
         }
 
+        private ICodeBlock EmitFloatBinary(
+            CodeBlock A,
+            CodeBlock B,
+            Operator Op,
+            Dictionary<Operator, BuildLLVMBinary> BinaryBuilders,
+            Dictionary<Operator, LLVMRealPredicate> BinaryPredicates)
+        {
+            LLVMRealPredicate pred;
+            if (BinaryPredicates.TryGetValue(Op, out pred))
+            {
+                return new FloatComparisonBlock(this, A, B, pred);
+            }
+            else
+            {
+                return new BinaryBlock(this, A, B, A.Type, BinaryBuilders[Op]);
+            }
+        }
+
         private static readonly HashSet<Operator> unsupportedOps = new HashSet<Operator>()
         {
             Operator.LogicalAnd, Operator.LogicalOr
@@ -97,6 +115,10 @@ namespace Flame.LLVM.Codegen
             else if (lhsType.GetIsUnsignedInteger() && rhsType.GetIsUnsignedInteger())
             {
                 return EmitIntBinary(lhs, rhs, Op, unsignedIntBinaries, unsignedIntPredicates);
+            }
+            else if (lhsType.GetIsFloatingPoint() && rhsType.GetIsFloatingPoint())
+            {
+                return EmitFloatBinary(lhs, rhs, Op, floatBinaries, floatPredicates);
             }
             else if (Operator.IsComparisonOperator(Op)
                 && (lhsType.GetIsPointer() || lhsType.GetIsReferenceType())
@@ -181,6 +203,27 @@ namespace Flame.LLVM.Codegen
             { Operator.CheckGreaterThanOrEqual, LLVMIntPredicate.LLVMIntUGE },
             { Operator.CheckLessThan, LLVMIntPredicate.LLVMIntULT },
             { Operator.CheckLessThanOrEqual, LLVMIntPredicate.LLVMIntULE }
+        };
+
+        private static readonly Dictionary<Operator, BuildLLVMBinary> floatBinaries =
+            new Dictionary<Operator, BuildLLVMBinary>()
+        {
+            { Operator.Add, BuildFAdd },
+            { Operator.Subtract, BuildFSub },
+            { Operator.Multiply, BuildFMul },
+            { Operator.Divide, BuildFDiv },
+            { Operator.Remainder, BuildFRem }
+        };
+
+        private static readonly Dictionary<Operator, LLVMRealPredicate> floatPredicates =
+            new Dictionary<Operator, LLVMRealPredicate>()
+        {
+            { Operator.CheckEquality, LLVMRealPredicate.LLVMRealUEQ },
+            { Operator.CheckInequality, LLVMRealPredicate.LLVMRealUNE },
+            { Operator.CheckGreaterThan, LLVMRealPredicate.LLVMRealUGT },
+            { Operator.CheckGreaterThanOrEqual, LLVMRealPredicate.LLVMRealUGE },
+            { Operator.CheckLessThan, LLVMRealPredicate.LLVMRealULT },
+            { Operator.CheckLessThanOrEqual, LLVMRealPredicate.LLVMRealULE }
         };
 
         public ICodeBlock EmitTypeBinary(ICodeBlock Value, IType Type, Operator Op)

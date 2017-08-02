@@ -44,5 +44,46 @@ namespace Flame.LLVM.Codegen
                     "tmp"));
         }
     }
+
+    public sealed class FloatComparisonBlock : CodeBlock
+    {
+        public FloatComparisonBlock(
+            LLVMCodeGenerator CodeGenerator,
+            CodeBlock Left,
+            CodeBlock Right,
+            LLVMRealPredicate Predicate)
+        {
+            this.codeGen = CodeGenerator;
+            this.lhs = Left;
+            this.rhs = Right;
+            this.predicate = Predicate;
+        }
+
+        private LLVMCodeGenerator codeGen;
+        private LLVMRealPredicate predicate;
+        private CodeBlock lhs;
+        private CodeBlock rhs;
+
+        /// <inheritdoc/>
+        public override ICodeGenerator CodeGenerator => codeGen;
+
+        /// <inheritdoc/>
+        public override IType Type => PrimitiveTypes.Boolean;
+
+        /// <inheritdoc/>
+        public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
+        {
+            var lhsCodegen = lhs.Emit(BasicBlock);
+            var rhsCodegen = rhs.Emit(lhsCodegen.BasicBlock);
+            return new BlockCodegen(
+                rhsCodegen.BasicBlock,
+                LLVMSharp.LLVM.BuildFCmp(
+                    rhsCodegen.BasicBlock.Builder,
+                    predicate,
+                    lhsCodegen.Value,
+                    rhsCodegen.Value,
+                    "tmp"));
+        }
+    }
 }
 
