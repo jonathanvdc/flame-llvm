@@ -24,6 +24,7 @@ runtime: exe
 
 .PHONY: stdlib
 stdlib: exe runtime
+	make -C stdlib-primitives all
 	make -C stdlib all
 
 .PHONY: clean
