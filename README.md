@@ -18,6 +18,7 @@
   - [x] support for strings
   - [x] conservative garbage collection (Boehm-Demers-Weiser GC)
   - [x] inheritance
+  - [x] dynamic casts, `is`, `as`
   - [ ] indirect function calls
   - [ ] `virtual` calls
   - [ ] floating-point arithmetic
