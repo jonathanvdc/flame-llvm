@@ -9,6 +9,7 @@
 `flame-llvm` is very much a work in progress. Here's a list of features and their status.
 
   - [x] integer arithmetic
+  - [x] floating-point arithmetic
   - [x] control flow (`while`, `for`, `if`, `break`, `continue`, etc)
   - [x] direct function calls
   - [x] `extern` functions
@@ -21,5 +22,4 @@
   - [x] dynamic casts, `is`, `as`
   - [ ] indirect function calls
   - [ ] `virtual` calls
-  - [ ] floating-point arithmetic
   - [ ] precise garbage collection
