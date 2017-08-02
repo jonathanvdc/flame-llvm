@@ -50,7 +50,7 @@ namespace Flame.LLVM.Codegen
             else
             {
                 var ret = BuildRet(BasicBlock.Builder, retValCodegen.Value);
-                return new BlockCodegen(BasicBlock, ret);
+                return new BlockCodegen(BasicBlock);
             }
         }
     }
