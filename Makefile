@@ -24,7 +24,7 @@ runtime: exe
 
 .PHONY: stdlib
 stdlib: exe runtime
-	make -C standard-library all
+	make -C stdlib all
 
 .PHONY: clean
 clean:
