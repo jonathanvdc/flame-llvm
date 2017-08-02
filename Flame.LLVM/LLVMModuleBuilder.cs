@@ -24,6 +24,9 @@ namespace Flame.LLVM
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
             this.declaredDataLayouts = new Dictionary<LLVMType, LLVMTypeRef>();
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
+            this.declaredTypeIds = new Dictionary<LLVMType, ulong>();
+            this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
+            this.primeGen = new PrimeNumberGenerator();
         }
 
         private LLVMAssembly assembly;
@@ -32,6 +35,9 @@ namespace Flame.LLVM
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
         private Dictionary<IField, LLVMValueRef> declaredGlobals;
         private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
+        private Dictionary<LLVMType, ulong> declaredTypeIds;
+        private Dictionary<LLVMType, ulong> declaredTypePrimes;
+        private PrimeNumberGenerator primeGen;
 
         /// <summary>
         /// Declares the given method if it was not declared already.
@@ -313,6 +319,99 @@ namespace Flame.LLVM
                 return PointerType(Int8Type(), 0);
             }
             throw new NotImplementedException(string.Format("Type not supported: '{0}'", Type));
+        }
+
+        /// <summary>
+        /// Gets the type ID for the given type.
+        /// </summary>
+        /// <param name="Type">The type for which a type ID is to be found.</param>
+        /// <returns>An type ID.</returns>
+        public ulong GetTypeId(LLVMType Type)
+        {
+            ulong result;
+            if (!declaredTypeIds.TryGetValue(Type, out result))
+            {
+                GenerateTypeId(Type);
+                result = declaredTypeIds[Type];
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the prime number associated with the given type.
+        /// </summary>
+        /// <param name="Type">The type for which a prime number is to be found.</param>
+        /// <returns>A prime number.</returns>
+        public ulong GetTypePrime(LLVMType Type)
+        {
+            ulong result;
+            if (!declaredTypePrimes.TryGetValue(Type, out result))
+            {
+                GenerateTypeId(Type);
+                result = declaredTypePrimes[Type];
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Generates an type ID for the given type.
+        /// </summary>
+        /// <param name="Type">The type for which a type ID is to be generated.</param>
+        /// <returns>An type ID.</returns>
+        private void GenerateTypeId(LLVMType Type)
+        {
+            // The notion of a type ID is based on "Fast Dynamic Casting" by
+            // Michael Gibbs and Bjarne Stroustrup.
+            // (http://www.rajatorrent.com.stroustrup.com/fast_dynamic_casting.pdf)
+            //
+            // The idea is that every type has a unique ID and that this ID is the
+            // product of
+            //
+            //     1. a unique prime number for the type, and
+            //
+            //     2. the prime numbers for all of its base types.
+            //
+            // We can then easily test if a value X is an instance of type T by
+            // checking if
+            //
+            //     typeid(X) % typeid(T) == 0.
+
+            // TODO: be smarter about how type IDs are generated. The paper says
+            //
+            //     There are a number of heuristic methods for keeping the size of the
+            //     type ID to a minimum number of bits. To prevent the type IDs from
+            //     being any larger than necessary, the classes are sorted according
+            //     to priority. The priority for a class is the maximum number of
+            //     ancestors that any of its descendants has. The priority reflects
+            //     the number of prime factors that are multiplied together to form a
+            //     class' type ID. Classes with the highest priority are assigned the
+            //     smallest prime numbers.
+            //
+            //     If we had to assign each class a unique prime number, the type IDs
+            //     would quickly get very large. However, this is not strictly
+            //     necessary. While all classes at the root level (those having no base
+            //     classes) must be assigned globally unique prime numbers, independent
+            //     hierarchies can use the same primes for non-root classes without
+            //     conflict. Two classes with a common descendant then cannot have the
+            //     same prime and none of their children may have the same prime. This
+            //     also implies that no two children of a class may have the same prime.
+            //     In all other cases, the primes can be duplicated across a level of
+            //     the hierarchy. For example, in a tree structure two classes on the
+            //     same level of the tree never have a common descendant, so they
+            //     may have identical sub-trees beneath them without a conflict.
+
+
+            ulong id = 1;
+            foreach (var baseType in Type.GetAllBaseTypes().Distinct<IType>())
+            {
+                id *= GetTypePrime((LLVMType)baseType);
+            }
+
+            ulong prime = primeGen.Next();
+            declaredTypePrimes[Type] = prime;
+            id *= prime;
+            
+            declaredTypeIds[Type] = id;
         }
     }
 }

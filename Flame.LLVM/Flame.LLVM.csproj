@@ -62,6 +62,7 @@
     <Compile Include="LLVMProperty.cs" />
     <Compile Include="LLVMType.cs" />
     <Compile Include="NameMangler.cs" />
+    <Compile Include="PrimeNumberGenerator.cs" />
     <Compile Include="Codegen\AllocaBlock.cs" />
     <Compile Include="Codegen\AtAddressEmitVariable.cs" />
     <Compile Include="Codegen\BinaryBlock.cs" />
