@@ -22,7 +22,7 @@ public unsafe static class Program
         {
             putchar(str.Data[i]);
         }
-        putchar('\n');
+        putchar((byte)'\n');
     }
 
     private static Utf8String firstArg;

@@ -2,7 +2,7 @@ public sealed class Utf8String
 {
     public Utf8String(byte* data)
     {
-        this.Length = strlen(data);
+        this.Length = (int)strlen(data);
         this.data = data;
     }
 

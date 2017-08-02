@@ -24,7 +24,7 @@ public unsafe static class Program
         {
             putchar(data[i]);
         }
-        putchar('\n');
+        putchar((byte)'\n');
     }
 
     public static void Main(int argc, byte* * argv)
