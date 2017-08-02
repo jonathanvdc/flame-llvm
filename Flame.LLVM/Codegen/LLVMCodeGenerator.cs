@@ -192,7 +192,7 @@ namespace Flame.LLVM.Codegen
             }
             else if (Op.Equals(Operator.IsInstance))
             {
-                // Rewrite `x is T` as `x != (decltype(x))null && x->vtable.typeid % T.vtable.typeid == 0`
+                // Rewrite `x is T` as `x != (decltype(x))null && x->vtable.typeid % T.vtable.typeid == 0`.
                 var valTmp = DeclareLocal(new UniqueTag("is_tmp"), new TypeVariableMember(valBlock.Type));
                 return EmitSequence(
                     valTmp.EmitSet(valBlock),
@@ -210,6 +210,17 @@ namespace Flame.LLVM.Codegen
                                 Operator.Remainder),
                             EmitInteger(new IntegerValue(0UL)),
                             Operator.CheckEquality)));
+            }
+            else if (Op.Equals(Operator.AsInstance))
+            {
+                // Rewrite `x as T` as `x is T ? x : null`.
+                var valTmp = DeclareLocal(new UniqueTag("as_tmp"), new TypeVariableMember(valBlock.Type));
+                return EmitSequence(
+                    valTmp.EmitSet(valBlock),
+                    EmitIfElse(
+                        EmitTypeBinary(valTmp.EmitGet(), Type, Operator.IsInstance),
+                        EmitTypeBinary(valTmp.EmitGet(), Type, Operator.ReinterpretCast),
+                        EmitTypeBinary(EmitNull(), Type, Operator.ReinterpretCast)));
             }
             else if (Op.Equals(Operator.StaticCast))
             {
