@@ -49,7 +49,7 @@ namespace System
             // (fortunately, these characters include the ASCII range)
 
             var str = new String();
-            int length = (int)strlen(buffer);
+            int length = (int)CStringHelpers.StringLength(buffer);
             str.data = new char[length];
             for (int i = 0; i < length; i++)
             {
@@ -110,7 +110,5 @@ namespace System
         {
             return String.FromCString(ptr);
         }
-
-        private static unsafe extern ulong strlen(byte* str);
     }
 }
