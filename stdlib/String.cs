@@ -37,6 +37,38 @@ namespace System
         public char this[int i] => data[i];
 
         /// <summary>
+        /// Concatenates two strings.
+        /// </summary>
+        /// <param name="first">The first string.</param>
+        /// <param name="second">The second string.</param>
+        /// <returns>The concatenated string.</returns>
+        public static string Concat(string first, string second)
+        {
+            string result = new String();
+            result.data = new char[first.Length + second.Length];
+            for (int i = 0; i < first.Length; i++)
+            {
+                result.data[i] = first.data[i];
+            }
+            for (int i = 0; i < second.Length; i++)
+            {
+                result.data[i + first.Length] = second.data[i];
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Concatenates two strings.
+        /// </summary>
+        /// <param name="first">The first string.</param>
+        /// <param name="second">The second string.</param>
+        /// <returns>The concatenated string.</returns>
+        public static string operator+(String first, String second)
+        {
+            return Concat(first, second);
+        }
+
+        /// <summary>
         /// Creates a string from the given null-terminated string
         /// of UTF-8 encoded characters.
         /// </summary>
