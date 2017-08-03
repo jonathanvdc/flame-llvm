@@ -54,4 +54,5 @@ tests
     template CheckOutput<static/static.cs, static-test, static-test>;
     template CheckOutput<stdlib-hello-world/stdlib-hello-world.cs, , hi>;
     template CheckOutput<struct/struct.cs, struct-test, struct-test>;
+    template CheckOutput<virtual-calls/virtual-calls.cs, , 28 113 150>;
 }
