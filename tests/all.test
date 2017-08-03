@@ -42,6 +42,7 @@ init
 
 tests
 {
+    template CheckOutput<abstract/abstract.cs, , 111 161>;
     template CheckOutput<array/array.cs, aloha, aloha>;
     template CheckOutput<echo/echo.cs, howdy, howdy>;
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
