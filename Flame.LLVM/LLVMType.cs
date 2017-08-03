@@ -26,6 +26,7 @@ namespace Flame.LLVM
             this.declaredFields = new List<LLVMField>();
             this.fieldCounter = 0;
             this.declaredProperties = new List<LLVMProperty>();
+            this.RelativeVTable = new VTableSlots();
         }
 
         private AttributeMapBuilder attrMap;
@@ -38,6 +39,12 @@ namespace Flame.LLVM
         private List<LLVMField> declaredStaticFields;
         private List<LLVMField> declaredFields;
         private List<LLVMProperty> declaredProperties;
+
+        /// <summary>
+        /// Gets this type's vtable slots for methods that are declared in this type.
+        /// </summary>
+        /// <returns>The vtable slots.</returns>
+        public VTableSlots RelativeVTable { get; private set; }
 
         /// <summary>
         /// Gets this LLVM type's declaring namespace.
@@ -207,11 +214,14 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Module">The module to define the vtable in.</param>
         /// <returns>An LLVM global for this type's vtable.</returns>
-        public LLVMValueRef DefineVTable(LLVMModuleBuilder Module)
+        public VTableInstance DefineVTable(LLVMModuleBuilder Module)
         {
+            var allEntries = new List<LLVMMethod>();
+            GetAllVTableEntries(allEntries);
+
             var fields = new LLVMValueRef[2];
             fields[0] = ConstInt(Int64Type(), Module.GetTypeId(this), false);
-            fields[1] = ConstArray(PointerType(Int8Type(), 0), new LLVMValueRef[] { });
+            fields[1] = ConstArray(PointerType(Int8Type(), 0), GetVTableEntryImpls(Module, allEntries));
             var vtableContents = ConstStruct(fields, false);
             var vtable = Module.DeclareGlobal(
                 VTableType,
@@ -219,7 +229,31 @@ namespace Flame.LLVM
             vtable.SetGlobalConstant(true);
             vtable.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
             vtable.SetInitializer(vtableContents);
-            return vtable;
+            return new VTableInstance(vtable, allEntries);
+        }
+
+        private void GetAllVTableEntries(List<LLVMMethod> Results)
+        {
+            var parent = this.GetParent() as LLVMType;
+            if (parent != null)
+            {
+                parent.GetAllVTableEntries(Results);
+            }
+            Results.AddRange(RelativeVTable.Entries);
+        }
+
+        private LLVMValueRef[] GetVTableEntryImpls(
+            LLVMModuleBuilder Module,
+            List<LLVMMethod> AllEntries)
+        {
+            var allImpls = new LLVMValueRef[AllEntries.Count];
+            for (int i = 0; i < allImpls.Length; i++)
+            {
+                allImpls[i] = ConstBitCast(
+                    Module.Declare(AllEntries[i].GetImplementation(this)),
+                    PointerType(Int8Type(), 0));
+            }
+            return allImpls;
         }
 
         /// <summary>
@@ -241,6 +275,90 @@ namespace Flame.LLVM
         public override string ToString()
         {
             return FullName.ToString();
+        }
+    }
+
+    /// <summary>
+    /// A data structure that manages a type's virtual function table slots.
+    /// </summary>
+    public sealed class VTableSlots
+    {
+        public VTableSlots()
+        {
+            this.slots = new Dictionary<LLVMMethod, int>();
+            this.contents = new List<LLVMMethod>();
+        }
+
+        private Dictionary<LLVMMethod, int> slots;
+        private List<LLVMMethod> contents;
+
+        /// <summary>
+        /// Gets the entries in this vtable.
+        /// </summary>
+        /// <returns>The vtable entries.</returns>
+        public IReadOnlyList<LLVMMethod> Entries => contents;
+
+        /// <summary>
+        /// Creates a relative vtable slot for the given method.
+        /// </summary>
+        /// <param name="Method">The method to create a vtable slot for.</param>
+        /// <returns>A vtable slot.</returns>
+        public int CreateRelativeSlot(LLVMMethod Method)
+        {
+            int slot = contents.Count;
+            contents.Add(Method);
+            slots.Add(Method, slot);
+            return slot;
+        }
+
+        /// <summary>
+        /// Gets the relative vtable slot for the given method.
+        /// </summary>
+        /// <param name="Method">The method to get a vtable slot for.</param>
+        /// <returns>A vtable slot.</returns>
+        public int GetRelativeSlot(LLVMMethod Method)
+        {
+            return slots[Method];
+        }
+    }
+
+    /// <summary>
+    /// Describes a vtable instance: a concrete vtable for a specific class.
+    /// </summary>
+    public sealed class VTableInstance
+    {
+        public VTableInstance(LLVMValueRef Pointer, IReadOnlyList<LLVMMethod> Entries)
+        {
+            this.Pointer = Pointer;
+            this.absSlots = new Dictionary<LLVMMethod, int>();
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                this.absSlots[Entries[i]] = i;
+            }
+        }
+
+        /// <summary>
+        /// Gets a pointer to the vtable.
+        /// </summary>
+        /// <returns>A pointer to the vtable.</returns>
+        public LLVMValueRef Pointer { get; private set; }
+
+        private Dictionary<LLVMMethod, int> absSlots;
+
+        /// <summary>
+        /// Gets the absolute vtable slot for the given method.
+        /// </summary>
+        /// <param name="Method">The method to get the absolute vtable slot for.</param>
+        /// <returns>An absolute vtable slot.</returns>
+        public int GetAbsoluteSlot(LLVMMethod Method)
+        {
+            int slot;
+            if (!absSlots.TryGetValue(Method, out slot))
+            {
+                slot = GetAbsoluteSlot(Method.ParentMethod);
+                absSlots[Method] = slot;
+            }
+            return slot;
         }
     }
 }

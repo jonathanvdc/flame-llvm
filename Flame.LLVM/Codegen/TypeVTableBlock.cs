@@ -43,7 +43,7 @@ namespace Flame.LLVM.Codegen
                 BasicBlock,
                 BuildBitCast(
                     BasicBlock.Builder,
-                    BasicBlock.FunctionBody.Module.GetVTable(VTableType),
+                    BasicBlock.FunctionBody.Module.GetVTable(VTableType).Pointer,
                     PointerType(Int8Type(), 0),
                     "vtable_tmp"));
         }

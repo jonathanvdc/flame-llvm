@@ -30,7 +30,7 @@ namespace Flame.LLVM
         }
 
         /// <summary>
-        /// /// Gets this symbol type member's declaring type as an LLVM type.
+        /// Gets this symbol type member's declaring type as an LLVM type.
         /// </summary>
         /// <returns>The declaring type.</returns>
         public LLVMType ParentType { get; private set; }
@@ -163,6 +163,13 @@ namespace Flame.LLVM
 
         public override UnqualifiedName Name => templateInstance.Name;
 
+        /// <summary>
+        /// Gets this method's parent method: a method defined in a base class
+        /// which is overriden by this method.
+        /// </summary>
+        /// <returns>The parent method.</returns>
+        public LLVMMethod ParentMethod { get; private set; }
+
         public IMethod Build()
         {
             return this;
@@ -175,6 +182,13 @@ namespace Flame.LLVM
 
         public void Initialize()
         {
+            ParentMethod = GetParentMethod(this);
+            if (ParentMethod == this
+                && this.GetIsVirtual()
+                && !DeclaringType.GetIsInterface())
+            {
+                ParentType.RelativeVTable.CreateRelativeSlot(this);
+            }
         }
 
         public void SetMethodBody(ICodeBlock Body)
@@ -198,6 +212,20 @@ namespace Flame.LLVM
                 var codeGen = this.body.Emit(entryPointBuilder);
                 BuildUnreachable(codeGen.BasicBlock.Builder);
             }
+        }
+
+        private static LLVMMethod GetParentMethod(LLVMMethod Method)
+        {
+            var result = Method;
+            foreach (var baseMethod in Method.BaseMethods)
+            {
+                if (baseMethod is LLVMMethod && !baseMethod.DeclaringType.GetIsInterface())
+                {
+                    result = (LLVMMethod)baseMethod;
+                    break;
+                }
+            }
+            return result;
         }
     }
 }

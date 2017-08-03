@@ -26,7 +26,7 @@ namespace Flame.LLVM
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
             this.declaredTypeIds = new Dictionary<LLVMType, ulong>();
             this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
-            this.declaredVTables = new Dictionary<LLVMType, LLVMValueRef>();
+            this.declaredVTables = new Dictionary<LLVMType, VTableInstance>();
             this.primeGen = new PrimeNumberGenerator();
         }
 
@@ -38,7 +38,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
         private Dictionary<LLVMType, ulong> declaredTypeIds;
         private Dictionary<LLVMType, ulong> declaredTypePrimes;
-        private Dictionary<LLVMType, LLVMValueRef> declaredVTables;
+        private Dictionary<LLVMType, VTableInstance> declaredVTables;
         private PrimeNumberGenerator primeGen;
 
         /// <summary>
@@ -437,9 +437,9 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Type">The type to get the vtable of.</param>
         /// <returns>A vtable global.</returns>
-        public LLVMValueRef GetVTable(LLVMType Type)
+        public VTableInstance GetVTable(LLVMType Type)
         {
-            LLVMValueRef vtable;
+            VTableInstance vtable;
             if (!declaredVTables.TryGetValue(Type, out vtable))
             {
                 vtable = Type.DefineVTable(this);
