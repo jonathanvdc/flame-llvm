@@ -126,10 +126,14 @@ namespace Flame.LLVM.Codegen
                     vtablePtr,
                     "vtable_tmp");
 
-                var vtableContentPtr = BuildStructGEP(
+                var vtableContentPtr = BuildBitCast(
                     BasicBlock.Builder,
-                    vtable,
-                    1,
+                    BuildStructGEP(
+                        BasicBlock.Builder,
+                        vtable,
+                        1,
+                        "vtable_method_array_ptr"),
+                    PointerType(PointerType(Int8Type(), 0), 0),
                     "vtable_methods_ptr");
 
                 var vtableSlotPtr = BuildGEP(
