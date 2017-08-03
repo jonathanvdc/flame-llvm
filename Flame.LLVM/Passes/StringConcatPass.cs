@@ -66,13 +66,13 @@ namespace Flame.LLVM.Passes
                 return new StringExpression("");
             }
 
-            var result = Operands[0];
+            var result = Visit(Operands[0]);
             for (int i = 1; i < Operands.Count; i++)
             {
                 result = new InvocationExpression(
                     concatMethod.Value,
                     null,
-                    new IExpression[] { result, Operands[i] });
+                    new IExpression[] { result, Visit(Operands[i]) });
             }
             return result;
         }
@@ -94,7 +94,7 @@ namespace Flame.LLVM.Passes
             }
             else
             {
-                return concatExpr;
+                return concatExpr.Accept(this);
             }
         }
 
