@@ -58,17 +58,6 @@ namespace System
         }
 
         /// <summary>
-        /// Concatenates two strings.
-        /// </summary>
-        /// <param name="first">The first string.</param>
-        /// <param name="second">The second string.</param>
-        /// <returns>The concatenated string.</returns>
-        public static string operator+(String first, String second)
-        {
-            return Concat(first, second);
-        }
-
-        /// <summary>
         /// Creates a string from the given null-terminated string
         /// of UTF-8 encoded characters.
         /// </summary>

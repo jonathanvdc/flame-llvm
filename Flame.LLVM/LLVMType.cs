@@ -224,7 +224,7 @@ namespace Flame.LLVM
             fields[1] = ConstArray(PointerType(Int8Type(), 0), GetVTableEntryImpls(Module, allEntries));
             var vtableContents = ConstStruct(fields, false);
             var vtable = Module.DeclareGlobal(
-                VTableType,
+                vtableContents.TypeOf(),
                 FullName.ToString() + ".vtable");
             vtable.SetGlobalConstant(true);
             vtable.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
@@ -250,7 +250,7 @@ namespace Flame.LLVM
             for (int i = 0; i < allImpls.Length; i++)
             {
                 allImpls[i] = ConstBitCast(
-                    Module.Declare(AllEntries[i].GetImplementation(this)),
+                    Module.Declare(AllEntries[i].GetImplementation(this) ?? AllEntries[i]),
                     PointerType(Int8Type(), 0));
             }
             return allImpls;

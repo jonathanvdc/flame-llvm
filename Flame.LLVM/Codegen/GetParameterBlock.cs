@@ -39,7 +39,13 @@ namespace Flame.LLVM.Codegen
         /// <inheritdoc/>
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            return new BlockCodegen(BasicBlock, GetParam(BasicBlock.FunctionBody.Function, (uint)Index));
+            var result = GetParam(BasicBlock.FunctionBody.Function, (uint)Index);
+            var llvmType = BasicBlock.FunctionBody.Module.Declare(Type);
+            if (result.TypeOf().Pointer != llvmType.Pointer)
+            {
+                result = BuildBitCast(BasicBlock.Builder, result, llvmType, "bitcast_tmp");
+            }
+            return new BlockCodegen(BasicBlock, result);
         }
     }
 }

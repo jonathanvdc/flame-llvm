@@ -53,6 +53,14 @@ namespace Flame.LLVM
 
             var extraPasses = new PassManager();
 
+            // Always use -flower-string-concat to lower string concatenation to calls.
+            extraPasses.RegisterMethodPass(
+                new AtomicPassInfo<BodyPassArgument, IStatement>(
+                    StringConcatPass.Instance,
+                    StringConcatPass.StringConcatPassName));
+
+            extraPasses.RegisterPassCondition(StringConcatPass.StringConcatPassName, UseAlways);
+
             // Always use -flower-string-literals to lower string literals to calls.
             extraPasses.RegisterMethodPass(
                 new AtomicPassInfo<BodyPassArgument, IStatement>(

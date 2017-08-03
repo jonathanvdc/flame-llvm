@@ -21,6 +21,7 @@ namespace Flame.LLVM
             this.assembly = Assembly;
             this.module = Module;
             this.declaredMethods = new Dictionary<IMethod, LLVMValueRef>();
+            this.declaredPrototypes = new Dictionary<IMethod, LLVMTypeRef>();
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
             this.declaredDataLayouts = new Dictionary<LLVMType, LLVMTypeRef>();
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
@@ -33,6 +34,7 @@ namespace Flame.LLVM
         private LLVMAssembly assembly;
         private LLVMModuleRef module;
         private Dictionary<IMethod, LLVMValueRef> declaredMethods;
+        private Dictionary<IMethod, LLVMTypeRef> declaredPrototypes;
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
         private Dictionary<IField, LLVMValueRef> declaredGlobals;
         private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
@@ -55,7 +57,7 @@ namespace Flame.LLVM
                 if (!TryDeclareIntrinsic(Method, out result))
                 {
                     var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
-                    var funcType = DeclareFunctionType(Method);
+                    var funcType = DeclarePrototype(Method);
                     result = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
                 }
                 declaredMethods[Method] = result;
@@ -69,24 +71,31 @@ namespace Flame.LLVM
         /// <param name="Method">The method to find a function type for.</param>
         /// <param name="Module">The module that declares the function.</param>
         /// <returns>A function type.</returns>
-        private LLVMTypeRef DeclareFunctionType(IMethod Method)
+        public LLVMTypeRef DeclarePrototype(IMethod Method)
         {
-            var paramArr = Method.GetParameters();
-            int thisParamCount = Method.IsStatic ? 0 : 1;
-            var extParamTypes = new LLVMTypeRef[paramArr.Length > 0 ? thisParamCount + paramArr.Length : 1];
-            if (!Method.IsStatic)
+            LLVMTypeRef result;
+            if (!declaredPrototypes.TryGetValue(Method, out result))
             {
-                extParamTypes[0] = Declare(ThisVariable.GetThisType(Method.DeclaringType));
+                var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
+                var paramArr = Method.GetParameters();
+                int thisParamCount = Method.IsStatic ? 0 : 1;
+                var extParamTypes = new LLVMTypeRef[paramArr.Length > 0 ? thisParamCount + paramArr.Length : 1];
+                if (!Method.IsStatic)
+                {
+                    extParamTypes[0] = PointerType(Int8Type(), 0);
+                }
+                for (int i = 0; i < paramArr.Length; i++)
+                {
+                    extParamTypes[i + thisParamCount] = Declare(paramArr[i].ParameterType);
+                }
+                result = FunctionType(
+                    Declare(Method.ReturnType),
+                    out extParamTypes[0],
+                    (uint)(paramArr.Length + thisParamCount),
+                    false);
+                declaredPrototypes[Method] = result;
             }
-            for (int i = 0; i < paramArr.Length; i++)
-            {
-                extParamTypes[i + thisParamCount] = Declare(paramArr[i].ParameterType);
-            }
-            return FunctionType(
-                Declare(Method.ReturnType),
-                out extParamTypes[0],
-                (uint)(paramArr.Length + thisParamCount),
-                false);
+            return result;
         }
 
         /// <summary>
@@ -120,7 +129,7 @@ namespace Flame.LLVM
 
             // Declare T[,...].Length.
             var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
-            var funcType = DeclareFunctionType(Method);
+            var funcType = DeclarePrototype(Method);
             var funcDef = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
             funcDef.SetLinkage(LLVMLinkage.LLVMWeakODRLinkage);
 

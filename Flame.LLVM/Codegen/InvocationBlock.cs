@@ -53,17 +53,19 @@ namespace Flame.LLVM.Codegen
 
         private Tuple<LLVMValueRef[], BasicBlockBuilder> EmitArguments(
             BasicBlockBuilder BasicBlock,
-            CodeBlock Target,
+            LLVMValueRef Target,
             IEnumerable<CodeBlock> Arguments)
         {
-            int targetArgCount = Target != null ? 1 : 0;
+            int targetArgCount = Target.Pointer == IntPtr.Zero ? 0 : 1;
             var argArr = Arguments.ToArray<CodeBlock>();
             var allArgs = new LLVMValueRef[targetArgCount + argArr.Length];
-            if (Target != null)
+            if (targetArgCount == 1)
             {
-                var targetResult = Target.Emit(BasicBlock);
-                BasicBlock = targetResult.BasicBlock;
-                allArgs[0] = targetResult.Value;
+                allArgs[0] = BuildBitCast(
+                    BasicBlock.Builder,
+                    Target,
+                    PointerType(Int8Type(), 0),
+                    "this_tmp");
             }
             for (int i = 0; i < argArr.Length; i++)
             {
@@ -75,32 +77,112 @@ namespace Flame.LLVM.Codegen
                 allArgs, BasicBlock);
         }
 
+        private BlockCodegen EmitTarget(BasicBlockBuilder BasicBlock, CodeBlock Target)
+        {
+            if (Target == null)
+            {
+                return new BlockCodegen(BasicBlock);
+            }
+            else
+            {
+                var targetResult = Target.Emit(BasicBlock);
+                BasicBlock = targetResult.BasicBlock;
+                return new BlockCodegen(BasicBlock, targetResult.Value);
+            }
+        }
+
+        private BlockCodegen EmitCallee(
+            BasicBlockBuilder BasicBlock,
+            LLVMValueRef Target,
+            IMethod Callee,
+            Operator Op)
+        {
+            var module = BasicBlock.FunctionBody.Module;
+            if (Op.Equals(Operator.GetDelegate)
+                || Op.Equals(Operator.GetCurriedDelegate))
+            {
+                return new BlockCodegen(BasicBlock, module.Declare(Callee));
+            }
+            else if (Op.Equals(Operator.GetVirtualDelegate))
+            {
+                var method = (LLVMMethod)Callee;
+                if (method.DeclaringType.GetIsInterface())
+                {
+                    throw new NotImplementedException("Interface calls are not supported yet.");
+                }
+
+                var vtableSlot = module
+                    .GetVTable(method.ParentType)
+                    .GetAbsoluteSlot(method);
+
+                var vtablePtr = BuildBitCast(
+                    BasicBlock.Builder,
+                    Target,
+                    PointerType(PointerType(LLVMType.VTableType, 0), 0),
+                    "vtable_ptr_tmp");
+
+                var vtable = BuildLoad(
+                    BasicBlock.Builder,
+                    vtablePtr,
+                    "vtable_tmp");
+
+                var vtableContentPtr = BuildStructGEP(
+                    BasicBlock.Builder,
+                    vtable,
+                    1,
+                    "vtable_methods_ptr");
+
+                var vtableSlotPtr = BuildGEP(
+                    BasicBlock.Builder,
+                    vtableContentPtr,
+                    new LLVMValueRef[] { ConstInt(Int32Type(), (ulong)vtableSlot, false) },
+                    "vtable_slot_ptr");
+
+                var methodImpl = BuildLoad(
+                    BasicBlock.Builder,
+                    BuildBitCast(
+                        BasicBlock.Builder,
+                        vtableSlotPtr,
+                        PointerType(PointerType(module.DeclarePrototype(method), 0), 0),
+                        "method_ptr_field"
+                    ),
+                    "method_ptr");
+
+                return new BlockCodegen(BasicBlock, methodImpl);
+            }
+            else
+            {
+                throw new NotImplementedException(
+                    string.Format("Unsupported call operator: {0}.", Op.Name));
+            }
+        }
+
         /// <inheritdoc/>
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
             if (Callee is DelegateBlock)
             {
                 var deleg = (DelegateBlock)Callee;
-                if (deleg.Op.Equals(Operator.GetDelegate)
-                    || deleg.Op.Equals(Operator.GetCurriedDelegate))
-                {
-                    bool hasVoidRetType = retType == PrimitiveTypes.Void;
-                    var argsAndBlock = EmitArguments(BasicBlock, deleg.Target, Arguments);
-                    BasicBlock = argsAndBlock.Item2;
-                    var callRef = BuildCall(
-                        BasicBlock.Builder,
-                        BasicBlock.FunctionBody.Module.Declare(deleg.Callee),
-                        argsAndBlock.Item1,
-                        hasVoidRetType ? "" : "call_tmp");
 
-                    return hasVoidRetType
-                        ? new BlockCodegen(BasicBlock)
-                        : new BlockCodegen(BasicBlock, callRef);
-                }
-                else
-                {
-                    throw new NotImplementedException("Virtual calls are not supported yet.");
-                }
+                var targetAndBlock = EmitTarget(BasicBlock, deleg.Target);
+                BasicBlock = targetAndBlock.BasicBlock;
+
+                bool hasVoidRetType = retType == PrimitiveTypes.Void;
+                var argsAndBlock = EmitArguments(BasicBlock, targetAndBlock.Value, Arguments);
+                BasicBlock = argsAndBlock.Item2;
+
+                var calleeAndBlock = EmitCallee(BasicBlock, targetAndBlock.Value, deleg.Callee, deleg.Op);
+                BasicBlock = calleeAndBlock.BasicBlock;
+
+                var callRef = BuildCall(
+                    BasicBlock.Builder,
+                    calleeAndBlock.Value,
+                    argsAndBlock.Item1,
+                    hasVoidRetType ? "" : "call_tmp");
+
+                return hasVoidRetType
+                    ? new BlockCodegen(BasicBlock)
+                    : new BlockCodegen(BasicBlock, callRef);
             }
             else
             {
