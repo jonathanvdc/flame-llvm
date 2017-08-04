@@ -48,6 +48,7 @@ tests
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
     template CheckOutput<floating-point/floating-point.cs, , -3628800>;
     template CheckOutput<gc/main.cs, gc, gc>;
+    template CheckOutput<generics/generics.cs, , 14 42>;
     template CheckOutput<hello-world/hello-world.cs, , hi>;
     template CheckOutput<inheritance/inheritance.cs, , 0 -22 45 100 True True True True False False>;
     template CheckOutput<interface/interface.cs, , 2 3>;
