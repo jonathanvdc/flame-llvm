@@ -55,6 +55,12 @@ namespace Flame.LLVM
             return "_Z" + EncodeQualifiedName(Field);
         }
 
+        /// <inheritdoc/>
+        public override string Mangle(IType Type, bool IncludeNamespace)
+        {
+            return EncodeTypeName(Type, IncludeNamespace);
+        }
+
         private static string EncodeFunctionName(IMethod Method)
         {
             var funcName = Method.DeclaringType == null
@@ -89,6 +95,11 @@ namespace Flame.LLVM
 
         private static string EncodeTypeName(IType Type)
         {
+            return EncodeTypeName(Type, true);
+        }
+
+        private static string EncodeTypeName(IType Type, bool IncludeNamespace)
+        {
             string result;
             if (builtinTypeNames.TryGetValue(Type, out result))
             {
@@ -109,11 +120,27 @@ namespace Flame.LLVM
             else if (Type.GetIsArray())
             {
                 var arrayType = Type.AsArrayType();
-                return "UArray" + arrayType.ArrayRank + "D" + EncodeTypeName(arrayType.ElementType);
+                return "U" + EncodeUnqualifiedName("Array" + arrayType.ArrayRank + "D" + EncodeTypeName(arrayType.ElementType));
+            }
+            else if (Type.GetIsGenericInstance())
+            {
+                var builder = new StringBuilder();
+                builder.Append(EncodeTypeName(Type.GetGenericDeclaration(), IncludeNamespace));
+                builder.Append("I");
+                foreach (var arg in Type.GetGenericArguments())
+                {
+                    builder.Append(EncodeTypeName(arg));
+                }
+                builder.Append("E");
+                return builder.ToString();
+            }
+            else if (IncludeNamespace)
+            {
+                return EncodeQualifiedName(Type);
             }
             else
             {
-                return EncodeQualifiedName(Type);
+                return EncodeUnqualifiedName(Type.Name);
             }
         }
 
@@ -124,7 +151,7 @@ namespace Flame.LLVM
                 return EncodeNamespaceName((INamespace)Member);
             }
 
-            var suffix = EncodeUnqualifiedName(Member.Name.ToString());
+            var suffix = EncodeUnqualifiedName(Member.Name);
             var declaringMember = GetDeclaringMember(Member);
             if (declaringMember == null)
             {
@@ -142,12 +169,16 @@ namespace Flame.LLVM
 
         private static string EncodeNamespaceName(INamespace Namespace)
         {
-            var fullName = Namespace.FullName;
+            return EncodeNamespaceName(Namespace.FullName);
+        }
+
+        private static string EncodeNamespaceName(QualifiedName Name)
+        {
             var result = new StringBuilder();
-            while (!fullName.IsEmpty)
+            while (!Name.IsEmpty)
             {
-                result.Append(EncodeUnqualifiedName(fullName.Qualifier.ToString()));
-                fullName = fullName.Name;
+                result.Append(EncodeUnqualifiedName(Name.Qualifier.ToString()));
+                Name = Name.Name;
             }
             return result.ToString();
         }
@@ -159,6 +190,22 @@ namespace Flame.LLVM
                 return Name;
             else
                 return utf8Length.ToString(CultureInfo.InvariantCulture) + Name;
+        }
+
+        private static string EncodeUnqualifiedName(UnqualifiedName Name)
+        {
+            if (Name is SimpleName)
+            {
+                return EncodeUnqualifiedName(((SimpleName)Name).Name);
+            }
+            else if (Name is PreMangledName)
+            {
+                return ((PreMangledName)Name).Name;
+            }
+            else
+            {
+                return EncodeUnqualifiedName(Name.ToString());
+            }
         }
 
         private static IMember GetDeclaringMember(IMember Member)

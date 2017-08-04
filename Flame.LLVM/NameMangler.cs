@@ -18,6 +18,16 @@ namespace Flame.LLVM
         /// <param name="Field">The field whose name is to be mangled.</param>
         /// <returns>The mangled name.</returns>
         public abstract string Mangle(IField Method);
+
+        /// <summary>
+        /// Gets the given type's mangled name.
+        /// </summary>
+        /// <param name="Type">The type whose name is to be mangled.</param>
+        /// <param name="IncludeNamespace">
+        /// Tells the mangler if the type's namespace should be included in the mangled name.
+        /// </param>
+        /// <returns>The mangled name.</returns>
+        public abstract string Mangle(IType Type, bool IncludeNamespace);
     }
 
     /// <summary>
@@ -43,6 +53,19 @@ namespace Flame.LLVM
         public override string Mangle(IField Field)
         {
             return Field.Name.ToString();
+        }
+
+        /// <inheritdoc/>
+        public override string Mangle(IType Type, bool IncludeNamespace)
+        {
+            if (IncludeNamespace)
+            {
+                return Type.FullName.ToString();
+            }
+            else
+            {
+                return Type.Name.ToString();
+            }
         }
     }
 }

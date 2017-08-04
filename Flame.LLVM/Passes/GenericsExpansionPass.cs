@@ -12,12 +12,17 @@ namespace Flame.LLVM.Passes
     /// </summary>
     public sealed class GenericsExpansionPass : IPass<BodyPassArgument, IStatement>
     {
-        private GenericsExpansionPass() { }
+        public GenericsExpansionPass(Func<IType, UnqualifiedName> ExpandedTypeNamer)
+        {
+            this.ExpandedTypeNamer = ExpandedTypeNamer;
+        }
 
         /// <summary>
-        /// An instance of the generics expansion pass.
+        /// Gets the function that takes a generic instance and produces a name for the
+        /// expanded type that is equivalent to that generic instance.
         /// </summary>
-        public static readonly GenericsExpansionPass Instance = new GenericsExpansionPass();
+        /// <returns>A function that maps types to names.</returns>
+        public Func<IType, UnqualifiedName> ExpandedTypeNamer { get; private set; }
 
         /// <summary>
         /// Gets the name of the generics expansion pass.
@@ -39,7 +44,7 @@ namespace Flame.LLVM.Passes
 
             if (expander == null)
             {
-                expander = new GenericsExpander(Argument.PassEnvironment);
+                expander = new GenericsExpander(Argument.PassEnvironment, ExpandedTypeNamer);
                 Argument.Metadata.GlobalMetadata.SetOption<GenericsExpander>(
                     genericsExpanderOption,
                     expander);
@@ -54,9 +59,12 @@ namespace Flame.LLVM.Passes
     /// </summary>
     public sealed class GenericsExpander : TypeTransformerBase
     {
-        public GenericsExpander(IBodyPassEnvironment PassEnvironment)
+        public GenericsExpander(
+            IBodyPassEnvironment PassEnvironment,
+            Func<IType, UnqualifiedName> ExpandedTypeNamer)
         {
             this.PassEnvironment = PassEnvironment;
+            this.ExpandedTypeNamer = ExpandedTypeNamer;
             this.expandedTypes = new Dictionary<IType, IType>();
             this.expandedMethods = new Dictionary<IMethod, IMethod>();
             this.expandedFields = new Dictionary<IField, IField>();
@@ -67,6 +75,13 @@ namespace Flame.LLVM.Passes
         /// </summary>
         /// <returns>The pass environment.</returns>
         public IBodyPassEnvironment PassEnvironment { get; private set; }
+
+        /// <summary>
+        /// Gets the function that takes a generic instance and produces a name for the
+        /// expanded type that is equivalent to that generic instance.
+        /// </summary>
+        /// <returns>A function that maps types to names.</returns>
+        public Func<IType, UnqualifiedName> ExpandedTypeNamer { get; private set; }
 
         private Dictionary<IType, IType> expandedTypes;
         private Dictionary<IMethod, IMethod> expandedMethods;
@@ -123,7 +138,7 @@ namespace Flame.LLVM.Passes
             }
 
             // Define a new type.
-            var expandedType = new DescribedType(Type.Name, expandedDeclNs);
+            var expandedType = new DescribedType(ExpandedTypeNamer(Type), expandedDeclNs);
             expandedTypes[Type] = expandedType;
 
             // Copy the attributes.
