@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Flame.Build;
 using Flame.Compiler;
 using Flame.Compiler.Variables;
 using LLVMSharp;
@@ -29,6 +30,7 @@ namespace Flame.LLVM
             this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
             this.declaredTypeIndices = new Dictionary<LLVMType, ulong>();
             this.declaredVTables = new Dictionary<LLVMType, VTableInstance>();
+            this.interfaceStubs = new Dictionary<LLVMMethod, InterfaceStub>();
             this.primeGen = new PrimeNumberGenerator();
         }
 
@@ -43,6 +45,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, ulong> declaredTypePrimes;
         private Dictionary<LLVMType, ulong> declaredTypeIndices;
         private Dictionary<LLVMType, VTableInstance> declaredVTables;
+        private Dictionary<LLVMMethod, InterfaceStub> interfaceStubs;
         private PrimeNumberGenerator primeGen;
 
         /// <summary>
@@ -473,6 +476,41 @@ namespace Flame.LLVM
                 declaredVTables[Type] = vtable;
             }
             return vtable;
+        }
+
+        /// <summary>
+        /// Gets the interface stub for the given method.
+        /// </summary>
+        /// <param name="Method">The method to get the interface stub of.</param>
+        /// <returns>An interface stub.</returns>
+        public InterfaceStub GetInterfaceStub(LLVMMethod Method)
+        {
+            InterfaceStub stub;
+            if (!interfaceStubs.TryGetValue(Method, out stub))
+            {
+                var retType = PointerType(DeclarePrototype(Method), 0);
+                var paramTypes = new LLVMTypeRef[] { Int64Type() };
+                var stubFunc = AddFunction(
+                    module,
+                    Method.Abi.Mangler.Mangle(Method) + "_stub",
+                    FunctionType(retType, paramTypes, false));
+                stubFunc.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+
+                stub = new InterfaceStub(stubFunc);
+                interfaceStubs[Method] = stub;
+            }
+            return stub;
+        }
+
+        /// <summary>
+        /// Defines the bodies of interface stubs.
+        /// </summary>
+        public void EmitStubs()
+        {
+            foreach (var pair in interfaceStubs)
+            {
+                pair.Value.Emit(this);
+            }
         }
     }
 }

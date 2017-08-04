@@ -133,6 +133,7 @@ namespace Flame.LLVM
         {
             this.templateInstance = new MethodSignatureInstance(Template, this);
             this.codeGenerator = new LLVMCodeGenerator(this);
+            this.allInterfaceImpls = new Lazy<HashSet<LLVMMethod>>(LookupAllInterfaceImpls);
         }
 
         public LLVMMethod(LLVMType DeclaringType, IMethodSignatureTemplate Template, LLVMAbi Abi)
@@ -140,10 +141,12 @@ namespace Flame.LLVM
         {
             this.templateInstance = new MethodSignatureInstance(Template, this);
             this.codeGenerator = new LLVMCodeGenerator(this);
+            this.allInterfaceImpls = new Lazy<HashSet<LLVMMethod>>(LookupAllInterfaceImpls);
         }
 
         private LLVMCodeGenerator codeGenerator;
         private CodeBlock body;
+        private Lazy<HashSet<LLVMMethod>> allInterfaceImpls;
 
         private MethodSignatureInstance templateInstance;
 
@@ -206,12 +209,40 @@ namespace Flame.LLVM
             func.SetLinkage(Linkage);
             if (this.body != null)
             {
+                // Generate the method body.
                 var bodyBuilder = new FunctionBodyBuilder(Module, func);
                 var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
                 entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
                 var codeGen = this.body.Emit(entryPointBuilder);
                 BuildUnreachable(codeGen.BasicBlock.Builder);
             }
+
+            foreach (var iface in allInterfaceImpls.Value)
+            {
+                Module.GetInterfaceStub(iface).Implement(ParentType, this);
+            }
+        }
+
+        private HashSet<LLVMMethod> LookupAllInterfaceImpls()
+        {
+            var results = new HashSet<LLVMMethod>();
+
+            foreach (var baseMethod in BaseMethods)
+            {
+                if (baseMethod is LLVMMethod)
+                {
+                    if (baseMethod.DeclaringType.GetIsInterface())
+                    {
+                        results.Add((LLVMMethod)baseMethod);
+                    }
+                    else
+                    {
+                        results.UnionWith(((LLVMMethod)baseMethod).allInterfaceImpls.Value);
+                    }
+                }
+            }
+
+            return results;
         }
 
         private static LLVMMethod GetParentMethod(LLVMMethod Method)

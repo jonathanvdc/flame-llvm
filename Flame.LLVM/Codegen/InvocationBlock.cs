@@ -106,14 +106,6 @@ namespace Flame.LLVM.Codegen
             else if (Op.Equals(Operator.GetVirtualDelegate))
             {
                 var method = (LLVMMethod)Callee;
-                if (method.DeclaringType.GetIsInterface())
-                {
-                    throw new NotImplementedException("Interface calls are not supported yet.");
-                }
-
-                var vtableSlot = module
-                    .GetVTable(method.ParentType)
-                    .GetAbsoluteSlot(method);
 
                 var vtablePtr = BuildBitCast(
                     BasicBlock.Builder,
@@ -126,33 +118,66 @@ namespace Flame.LLVM.Codegen
                     vtablePtr,
                     "vtable_tmp");
 
-                var vtableContentPtr = BuildBitCast(
-                    BasicBlock.Builder,
-                    BuildStructGEP(
+                if (method.DeclaringType.GetIsInterface())
+                {
+                    // Resolve interface method implementations by calling a stub.
+                    var typeIndexPtr = BuildStructGEP(
                         BasicBlock.Builder,
                         vtable,
-                        2,
-                        "vtable_method_array_ptr"),
-                    PointerType(PointerType(Int8Type(), 0), 0),
-                    "vtable_methods_ptr");
+                        1,
+                        "type_index_ptr");
 
-                var vtableSlotPtr = BuildGEP(
-                    BasicBlock.Builder,
-                    vtableContentPtr,
-                    new LLVMValueRef[] { ConstInt(Int32Type(), (ulong)vtableSlot, false) },
-                    "vtable_slot_ptr");
-
-                var methodImpl = BuildLoad(
-                    BasicBlock.Builder,
-                    BuildBitCast(
+                    var typeIndex = BuildLoad(
                         BasicBlock.Builder,
-                        vtableSlotPtr,
-                        PointerType(PointerType(module.DeclarePrototype(method), 0), 0),
-                        "method_ptr_field"
-                    ),
-                    "method_ptr");
+                        typeIndexPtr,
+                        "type_ptr");
 
-                return new BlockCodegen(BasicBlock, methodImpl);
+                    var stub = module.GetInterfaceStub(method);
+
+                    var methodImpl = BuildCall(
+                        BasicBlock.Builder,
+                        stub.Function,
+                        new LLVMValueRef[] { typeIndex },
+                        "iface_method_ptr");
+
+                    return new BlockCodegen(BasicBlock, methodImpl);
+                }
+                else
+                {
+                    // Resolve virtual/abstract method implementations by performing
+                    // a table lookup.
+                    var vtableSlot = module
+                        .GetVTable(method.ParentType)
+                        .GetAbsoluteSlot(method);
+
+                    var vtableContentPtr = BuildBitCast(
+                        BasicBlock.Builder,
+                        BuildStructGEP(
+                            BasicBlock.Builder,
+                            vtable,
+                            2,
+                            "vtable_method_array_ptr"),
+                        PointerType(PointerType(Int8Type(), 0), 0),
+                        "vtable_methods_ptr");
+
+                    var vtableSlotPtr = BuildGEP(
+                        BasicBlock.Builder,
+                        vtableContentPtr,
+                        new LLVMValueRef[] { ConstInt(Int32Type(), (ulong)vtableSlot, false) },
+                        "vtable_slot_ptr");
+
+                    var methodImpl = BuildLoad(
+                        BasicBlock.Builder,
+                        BuildBitCast(
+                            BasicBlock.Builder,
+                            vtableSlotPtr,
+                            PointerType(PointerType(module.DeclarePrototype(method), 0), 0),
+                            "method_ptr_field"
+                        ),
+                        "method_ptr");
+
+                    return new BlockCodegen(BasicBlock, methodImpl);
+                }
             }
             else
             {

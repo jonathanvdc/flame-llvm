@@ -133,6 +133,7 @@ namespace Flame.LLVM
             {
                 SynthesizeEntryPointThunk(moduleBuilder);
             }
+            moduleBuilder.EmitStubs();
             return module;
         }
 
