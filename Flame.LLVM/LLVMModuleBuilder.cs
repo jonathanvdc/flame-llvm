@@ -63,7 +63,7 @@ namespace Flame.LLVM
                 {
                     var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
                     var funcType = DeclarePrototype(Method);
-                    result = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
+                    result = AddFunction(module, abi.Mangler.Mangle(Method, true), funcType);
                 }
                 declaredMethods[Method] = result;
             }
@@ -135,7 +135,7 @@ namespace Flame.LLVM
             // Declare T[,...].Length.
             var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
             var funcType = DeclarePrototype(Method);
-            var funcDef = AddFunction(module, abi.Mangler.Mangle(Method), funcType);
+            var funcDef = AddFunction(module, abi.Mangler.Mangle(Method, true), funcType);
             funcDef.SetLinkage(LLVMLinkage.LLVMWeakODRLinkage);
 
             // Define T[,...].Length's body.
@@ -183,7 +183,7 @@ namespace Flame.LLVM
             {
                 // Declare the global.
                 var abiMangler = LLVMSymbolTypeMember.GetLLVMAbi(Field, assembly).Mangler;
-                result = DeclareGlobal(Declare(Field.FieldType), abiMangler.Mangle(Field));
+                result = DeclareGlobal(Declare(Field.FieldType), abiMangler.Mangle(Field, true));
 
                 if (Field is LLVMField)
                 {
@@ -492,7 +492,7 @@ namespace Flame.LLVM
                 var paramTypes = new LLVMTypeRef[] { Int64Type() };
                 var stubFunc = AddFunction(
                     module,
-                    Method.Abi.Mangler.Mangle(Method) + "_stub",
+                    Method.Abi.Mangler.Mangle(Method, true) + "_stub",
                     FunctionType(retType, paramTypes, false));
                 stubFunc.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
 

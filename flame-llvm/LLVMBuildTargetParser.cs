@@ -56,7 +56,7 @@ namespace Flame.LLVM
             // Always use -fexpand-generics to expand generic definitions.
             extraPasses.RegisterMethodPass(
                 new AtomicPassInfo<BodyPassArgument, IStatement>(
-                    new GenericsExpansionPass(NameExpandedType),
+                    new GenericsExpansionPass(NameExpandedType, NameExpandedMethod),
                     GenericsExpansionPass.GenericsExpansionPassName));
 
             extraPasses.RegisterPassCondition(GenericsExpansionPass.GenericsExpansionPassName, UseAlways);
@@ -91,6 +91,11 @@ namespace Flame.LLVM
         private static UnqualifiedName NameExpandedType(IType Type)
         {
             return new PreMangledName(ItaniumMangler.Instance.Mangle(Type, false));
+        }
+
+        private static UnqualifiedName NameExpandedMethod(IMethod Method)
+        {
+            return new PreMangledName(ItaniumMangler.Instance.Mangle(Method, false));
         }
     }
 }

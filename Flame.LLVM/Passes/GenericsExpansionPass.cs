@@ -12,9 +12,12 @@ namespace Flame.LLVM.Passes
     /// </summary>
     public sealed class GenericsExpansionPass : IPass<BodyPassArgument, IStatement>
     {
-        public GenericsExpansionPass(Func<IType, UnqualifiedName> ExpandedTypeNamer)
+        public GenericsExpansionPass(
+            Func<IType, UnqualifiedName> ExpandedTypeNamer,
+            Func<IMethod, UnqualifiedName> ExpandedMethodNamer)
         {
             this.ExpandedTypeNamer = ExpandedTypeNamer;
+            this.ExpandedMethodNamer = ExpandedMethodNamer;
         }
 
         /// <summary>
@@ -23,6 +26,13 @@ namespace Flame.LLVM.Passes
         /// </summary>
         /// <returns>A function that maps types to names.</returns>
         public Func<IType, UnqualifiedName> ExpandedTypeNamer { get; private set; }
+
+        /// <summary>
+        /// Gets the function that takes a generic instance and produces a name for the
+        /// expanded method that is equivalent to that generic instance.
+        /// </summary>
+        /// <returns>A function that maps methods to names.</returns>
+        public Func<IMethod, UnqualifiedName> ExpandedMethodNamer { get; private set; }
 
         /// <summary>
         /// Gets the name of the generics expansion pass.
@@ -44,7 +54,11 @@ namespace Flame.LLVM.Passes
 
             if (expander == null)
             {
-                expander = new GenericsExpander(Argument.PassEnvironment, ExpandedTypeNamer);
+                expander = new GenericsExpander(
+                    Argument.PassEnvironment,
+                    ExpandedTypeNamer,
+                    ExpandedMethodNamer);
+
                 Argument.Metadata.GlobalMetadata.SetOption<GenericsExpander>(
                     genericsExpanderOption,
                     expander);
@@ -61,10 +75,12 @@ namespace Flame.LLVM.Passes
     {
         public GenericsExpander(
             IBodyPassEnvironment PassEnvironment,
-            Func<IType, UnqualifiedName> ExpandedTypeNamer)
+            Func<IType, UnqualifiedName> ExpandedTypeNamer,
+            Func<IMethod, UnqualifiedName> ExpandedMethodNamer)
         {
             this.PassEnvironment = PassEnvironment;
             this.ExpandedTypeNamer = ExpandedTypeNamer;
+            this.ExpandedMethodNamer = ExpandedMethodNamer;
             this.expandedTypes = new Dictionary<IType, IType>();
             this.expandedMethods = new Dictionary<IMethod, IMethod>();
             this.expandedFields = new Dictionary<IField, IField>();
@@ -82,6 +98,13 @@ namespace Flame.LLVM.Passes
         /// </summary>
         /// <returns>A function that maps types to names.</returns>
         public Func<IType, UnqualifiedName> ExpandedTypeNamer { get; private set; }
+
+        /// <summary>
+        /// Gets the function that takes a generic instance and produces a name for the
+        /// expanded method that is equivalent to that generic instance.
+        /// </summary>
+        /// <returns>A function that maps methods to names.</returns>
+        public Func<IMethod, UnqualifiedName> ExpandedMethodNamer { get; private set; }
 
         private Dictionary<IType, IType> expandedTypes;
         private Dictionary<IMethod, IMethod> expandedMethods;
@@ -201,7 +224,7 @@ namespace Flame.LLVM.Passes
 
             // Declare a new method.
             var expandedMethod = new DescribedBodyMethod(
-                Method.Name,
+                ExpandedMethodNamer(Method),
                 declaringType);
 
             expandedMethod.IsStatic = Method.IsStatic;

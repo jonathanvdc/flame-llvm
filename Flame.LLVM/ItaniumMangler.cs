@@ -44,28 +44,39 @@ namespace Flame.LLVM
         };
 
         /// <inheritdoc/>
-        public override string Mangle(IMethod Method)
+        public override string Mangle(IMethod Method, bool MangleFullName)
         {
-            return "_Z" + EncodeFunctionName(Method);
+            return MangleFullName ? "_Z" + EncodeFunctionName(Method, true) : EncodeFunctionName(Method, false);
         }
 
         /// <inheritdoc/>
-        public override string Mangle(IField Field)
+        public override string Mangle(IField Field, bool MangleFullName)
         {
-            return "_Z" + EncodeQualifiedName(Field);
+            return MangleFullName ? "_Z" + EncodeQualifiedName(Field) : EncodeUnqualifiedName(Field.Name);
         }
 
         /// <inheritdoc/>
-        public override string Mangle(IType Type, bool IncludeNamespace)
+        public override string Mangle(IType Type, bool MangleFullName)
         {
-            return EncodeTypeName(Type, IncludeNamespace);
+            return EncodeTypeName(Type, MangleFullName);
         }
 
-        private static string EncodeFunctionName(IMethod Method)
+        private static string EncodeFunctionName(IMethod Method, bool IncludeDeclaringType)
         {
+            var unqualName = Method.GetIsGenericInstance()
+                ? EncodeGenericInstanceName(
+                    EncodeUnqualifiedName(Method.GetGenericDeclaration().Name),
+                    Method.GetGenericArguments())
+                : EncodeUnqualifiedName(Method.Name);
+
+            if (!IncludeDeclaringType)
+            {
+                return unqualName;
+            }
+
             var funcName = Method.DeclaringType == null
-                ? EncodeQualifiedName(Method)
-                : "N" + EncodeQualifiedName(Method) + "E";
+                ? unqualName
+                : "N" + EncodeTypeName(Method.DeclaringType) + unqualName + "E";
             return funcName + EncodeBareFunctionType(Method, false);
         }
 
@@ -124,15 +135,9 @@ namespace Flame.LLVM
             }
             else if (Type.GetIsGenericInstance())
             {
-                var builder = new StringBuilder();
-                builder.Append(EncodeTypeName(Type.GetGenericDeclaration(), IncludeNamespace));
-                builder.Append("I");
-                foreach (var arg in Type.GetGenericArguments())
-                {
-                    builder.Append(EncodeTypeName(arg));
-                }
-                builder.Append("E");
-                return builder.ToString();
+                return EncodeGenericInstanceName(
+                    EncodeTypeName(Type.GetGenericDeclaration(), IncludeNamespace),
+                    Type.GetGenericArguments());
             }
             else if (IncludeNamespace)
             {
@@ -142,6 +147,19 @@ namespace Flame.LLVM
             {
                 return EncodeUnqualifiedName(Type.Name);
             }
+        }
+
+        private static string EncodeGenericInstanceName(string GenericName, IEnumerable<IType> Args)
+        {
+            var builder = new StringBuilder();
+            builder.Append(GenericName);
+            builder.Append("I");
+            foreach (var arg in Args)
+            {
+                builder.Append(EncodeTypeName(arg));
+            }
+            builder.Append("E");
+            return builder.ToString();
         }
 
         private static string EncodeQualifiedName(IMember Member)

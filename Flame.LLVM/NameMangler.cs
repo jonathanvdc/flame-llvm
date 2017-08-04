@@ -9,25 +9,34 @@ namespace Flame.LLVM
         /// Gets the given method's mangled name.
         /// </summary>
         /// <param name="Method">The method whose name is to be mangled.</param>
+        /// <param name="MangleFullName">
+        /// If this is <c>true</c>, then the method's full name and signature is
+        /// mangled. Otherwise, only its name is mangled.
+        /// </param>
         /// <returns>The mangled name.</returns>
-        public abstract string Mangle(IMethod Method);
+        public abstract string Mangle(IMethod Method, bool MangleFullName);
 
         /// <summary>
         /// Gets the given field's mangled name.
         /// </summary>
         /// <param name="Field">The field whose name is to be mangled.</param>
+        /// <param name="MangleFullName">
+        /// If this is <c>true</c>, then the field's full name is
+        /// mangled. Otherwise, only its name is mangled.
+        /// </param>
         /// <returns>The mangled name.</returns>
-        public abstract string Mangle(IField Method);
+        public abstract string Mangle(IField Method, bool MangleFullName);
 
         /// <summary>
         /// Gets the given type's mangled name.
         /// </summary>
         /// <param name="Type">The type whose name is to be mangled.</param>
-        /// <param name="IncludeNamespace">
-        /// Tells the mangler if the type's namespace should be included in the mangled name.
+        /// <param name="MangleFullName">
+        /// If this is <c>true</c>, then the type's full name is
+        /// mangled. Otherwise, only its name is mangled.
         /// </param>
         /// <returns>The mangled name.</returns>
-        public abstract string Mangle(IType Type, bool IncludeNamespace);
+        public abstract string Mangle(IType Type, bool MangleFullName);
     }
 
     /// <summary>
@@ -44,21 +53,21 @@ namespace Flame.LLVM
         public static readonly CMangler Instance = new CMangler();
 
         /// <inheritdoc/>
-        public override string Mangle(IMethod Method)
+        public override string Mangle(IMethod Method, bool MangleFullName)
         {
             return Method.Name.ToString();
         }
 
         /// <inheritdoc/>
-        public override string Mangle(IField Field)
+        public override string Mangle(IField Field, bool MangleFullName)
         {
             return Field.Name.ToString();
         }
 
         /// <inheritdoc/>
-        public override string Mangle(IType Type, bool IncludeNamespace)
+        public override string Mangle(IType Type, bool MangleFullName)
         {
-            if (IncludeNamespace)
+            if (MangleFullName)
             {
                 return Type.FullName.ToString();
             }
