@@ -53,6 +53,14 @@ namespace Flame.LLVM
 
             var extraPasses = new PassManager();
 
+            // Always use -fexpand-generics to expand generic definitions.
+            extraPasses.RegisterMethodPass(
+                new AtomicPassInfo<BodyPassArgument, IStatement>(
+                    GenericsExpansionPass.Instance,
+                    GenericsExpansionPass.GenericsExpansionPassName));
+
+            extraPasses.RegisterPassCondition(GenericsExpansionPass.GenericsExpansionPassName, UseAlways);
+
             // Always use -flower-string-concat to lower string concatenation to calls.
             extraPasses.RegisterMethodPass(
                 new AtomicPassInfo<BodyPassArgument, IStatement>(

@@ -97,6 +97,7 @@
     <Compile Include="Codegen\UnaryBlock.cs" />
     <Compile Include="Codegen\UnreachableBlock.cs" />
     <Compile Include="Codegen\VoidBlock.cs" />
+    <Compile Include="Passes\GenericsExpansionPass.cs" />
     <Compile Include="Passes\StringConcatPass.cs" />
     <Compile Include="Passes\StringLiteralPass.cs" />
   </ItemGroup>
