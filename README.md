@@ -22,5 +22,7 @@
   - [x] dynamic casts, `is`, `as`
   - [x] `virtual` calls
   - [x] `interface` calls
+  - [x] generics
+  - [ ] boxing/unboxing
   - [ ] indirect function calls
   - [ ] precise garbage collection
