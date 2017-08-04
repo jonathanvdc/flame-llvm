@@ -20,6 +20,7 @@
   - [x] conservative garbage collection (Boehm-Demers-Weiser GC)
   - [x] inheritance
   - [x] dynamic casts, `is`, `as`
+  - [x] `virtual` calls
+  - [x] `interface` calls
   - [ ] indirect function calls
-  - [ ] `virtual` calls
   - [ ] precise garbage collection
