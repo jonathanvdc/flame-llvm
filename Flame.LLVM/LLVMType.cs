@@ -182,7 +182,9 @@ namespace Flame.LLVM
                 if (baseType == null)
                 {
                     // Type is a root type. Embed a pointer to its vtable.
-                    elementTypes[0] = Module.Declare(PrimitiveTypes.UInt8.MakePointerType(PointerKind.TransientPointer));
+                    elementTypes[0] = Module.Declare(
+                        PrimitiveTypes.UInt8.MakePointerType(
+                            PointerKind.TransientPointer));
                 }
                 else
                 {
@@ -193,7 +195,8 @@ namespace Flame.LLVM
 
             for (int i = 0; i < elementTypes.Length - offset; i++)
             {
-                elementTypes[i + offset] = Module.Declare(declaredInstanceFields[i].FieldType);
+                elementTypes[i + offset] = Module.Declare(
+                    declaredInstanceFields[i].FieldType);
             }
             return StructType(elementTypes, false);
         }
@@ -201,9 +204,22 @@ namespace Flame.LLVM
         /// <summary>
         /// The type of a vtable.
         /// </summary>
+        /// <remarks>
+        /// A vtable consists of the following components:
+        ///     1. The type ID: a unique uint64 that is used for `is`, `as` and
+        ///        dynamic casts.
+        ///
+        ///     2. The type index: a unique uint64 that is used for interface
+        ///        implementation lookups. The range of type indices is dense,
+        ///        so a switch on type indices may be lowered more efficiently
+        ///        than a switch on type IDs.
+        ///
+        ///     3. A list of `virtual` and `abstract` method implementations.
+        /// </remarks>
         public static readonly LLVMTypeRef VTableType = StructType(
             new LLVMTypeRef[]
             {
+                Int64Type(),
                 Int64Type(),
                 ArrayType(PointerType(Int8Type(), 0), 0)
             },
@@ -219,9 +235,10 @@ namespace Flame.LLVM
             var allEntries = new List<LLVMMethod>();
             GetAllVTableEntries(allEntries);
 
-            var fields = new LLVMValueRef[2];
+            var fields = new LLVMValueRef[3];
             fields[0] = ConstInt(Int64Type(), Module.GetTypeId(this), false);
-            fields[1] = ConstArray(PointerType(Int8Type(), 0), GetVTableEntryImpls(Module, allEntries));
+            fields[1] = ConstInt(Int64Type(), Module.GetTypeIndex(this), false);
+            fields[2] = ConstArray(PointerType(Int8Type(), 0), GetVTableEntryImpls(Module, allEntries));
             var vtableContents = ConstStruct(fields, false);
             var vtable = Module.DeclareGlobal(
                 vtableContents.TypeOf(),

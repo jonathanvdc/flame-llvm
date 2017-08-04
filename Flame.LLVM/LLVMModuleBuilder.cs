@@ -27,6 +27,7 @@ namespace Flame.LLVM
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
             this.declaredTypeIds = new Dictionary<LLVMType, ulong>();
             this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
+            this.declaredTypeIndices = new Dictionary<LLVMType, ulong>();
             this.declaredVTables = new Dictionary<LLVMType, VTableInstance>();
             this.primeGen = new PrimeNumberGenerator();
         }
@@ -40,6 +41,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
         private Dictionary<LLVMType, ulong> declaredTypeIds;
         private Dictionary<LLVMType, ulong> declaredTypePrimes;
+        private Dictionary<LLVMType, ulong> declaredTypeIndices;
         private Dictionary<LLVMType, VTableInstance> declaredVTables;
         private PrimeNumberGenerator primeGen;
 
@@ -439,6 +441,22 @@ namespace Flame.LLVM
             id *= prime;
             
             declaredTypeIds[Type] = id;
+        }
+
+        /// <summary>
+        /// Gets the index associated with the given type.
+        /// </summary>
+        /// <param name="Type">The type for which the index is to be found.</param>
+        /// <returns>An integer index.</returns>
+        public ulong GetTypeIndex(LLVMType Type)
+        {
+            ulong result;
+            if (!declaredTypeIndices.TryGetValue(Type, out result))
+            {
+                result = (ulong)declaredTypeIndices.Count + 1;
+                declaredTypeIndices[Type] = result;
+            }
+            return result;
         }
 
         /// <summary>

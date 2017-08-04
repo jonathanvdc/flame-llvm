@@ -131,7 +131,7 @@ namespace Flame.LLVM.Codegen
                     BuildStructGEP(
                         BasicBlock.Builder,
                         vtable,
-                        1,
+                        2,
                         "vtable_method_array_ptr"),
                     PointerType(PointerType(Int8Type(), 0), 0),
                     "vtable_methods_ptr");
