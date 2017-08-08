@@ -97,6 +97,14 @@ namespace Flame.LLVM.Codegen
             Operator.LogicalAnd, Operator.LogicalOr
         };
 
+        private static bool IsIntegral(IType Type)
+        {
+            // This function definition works around a Flame bug.
+            // TODO: delete this function definitions when the Flame packages
+            // are upgraded.
+            return Type.GetIsIntegral() || Type == PrimitiveTypes.Boolean;
+        }
+
         public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
         {
             if (unsupportedOps.Contains(Op))
@@ -112,7 +120,7 @@ namespace Flame.LLVM.Codegen
             {
                 return EmitIntBinary(lhs, rhs, Op, signedIntBinaries, signedIntPredicates);
             }
-            else if (lhsType.GetIsUnsignedInteger() && rhsType.GetIsUnsignedInteger())
+            else if (IsIntegral(lhsType) && IsIntegral(rhsType))
             {
                 return EmitIntBinary(lhs, rhs, Op, unsignedIntBinaries, unsignedIntPredicates);
             }
