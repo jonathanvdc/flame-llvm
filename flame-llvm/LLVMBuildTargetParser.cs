@@ -53,14 +53,6 @@ namespace Flame.LLVM
 
             var extraPasses = new PassManager();
 
-            // Always use -fexpand-generics to expand generic definitions.
-            extraPasses.RegisterMethodPass(
-                new AtomicPassInfo<BodyPassArgument, IStatement>(
-                    new GenericsExpansionPass(NameExpandedType, NameExpandedMethod),
-                    GenericsExpansionPass.GenericsExpansionPassName));
-
-            extraPasses.RegisterPassCondition(GenericsExpansionPass.GenericsExpansionPassName, UseAlways);
-
             // Always use -flower-string-concat to lower string concatenation to calls.
             extraPasses.RegisterMethodPass(
                 new AtomicPassInfo<BodyPassArgument, IStatement>(
@@ -79,6 +71,27 @@ namespace Flame.LLVM
 
             // Always use -flower-new-struct, for correctness reasons.
             extraPasses.RegisterPassCondition(NewValueTypeLoweringPass.NewValueTypeLoweringPassName, UseAlways);
+
+            // Always use -fexpand-generics-llvm to expand generic definitions.
+            extraPasses.RegisterMemberLoweringPass(
+                new AtomicPassInfo<MemberLoweringPassArgument, MemberConverter>(
+                    new GenericsExpansionPass(NameExpandedType, NameExpandedMethod),
+                    GenericsExpansionPass.GenericsExpansionPassName + "-llvm"));
+
+            extraPasses.RegisterPassCondition(
+                GenericsExpansionPass.GenericsExpansionPassName + "-llvm",
+                UseAlways);
+
+            // Use -finternalize-generics to keep generic definitions from creeping
+            // into assemblies that are not compiled with -fwhole-program.
+            extraPasses.RegisterSignaturePass(
+                new AtomicPassInfo<MemberSignaturePassArgument<IMember>, MemberSignaturePassResult>(
+                    GenericsInternalizingPass.Instance,
+                    GenericsInternalizingPass.GenericsInternalizingPassName));
+
+            extraPasses.RegisterPassCondition(
+                GenericsInternalizingPass.GenericsInternalizingPassName,
+                UseAlways);
 
             return new BuildTarget(targetAsm, DependencyBuilder, "ll", true, extraPasses.ToPreferences());
         }
