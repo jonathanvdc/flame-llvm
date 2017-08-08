@@ -3,7 +3,7 @@ namespace System
     /// <summary>
     /// Represents a 32-bit integer.
     /// </summary>
-    public struct Int32
+    public struct Int32 : Object, IEquatable<Int32>
     {
         // Note: integers are equivalent to instances of this data structure because
         // flame-llvm stores the contents of single-field structs as a value of their
@@ -19,6 +19,12 @@ namespace System
         public string ToString()
         {
             return Convert.ToString(value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Int32 other)
+        {
+            return value == other.value;
         }
     }
 }

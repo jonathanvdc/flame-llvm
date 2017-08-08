@@ -3,7 +3,7 @@ namespace System
     /// <summary>
     /// Represents a Boolean value.
     /// </summary>
-    public struct Boolean
+    public struct Boolean : Object, IEquatable<Boolean>
     {
         // Note: Booleans are equivalent to instances of this data structure because
         // flame-llvm stores the contents of single-field structs as a value of their
@@ -19,6 +19,12 @@ namespace System
         public string ToString()
         {
             return Convert.ToString(value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Boolean other)
+        {
+            return value == other.value;
         }
     }
 }
