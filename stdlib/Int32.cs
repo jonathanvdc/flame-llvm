@@ -26,5 +26,11 @@ namespace System
         {
             return value == other.value;
         }
+
+        /// <inheritdoc/>
+        public override bool Equals(Object other)
+        {
+            return other is Int32 && Equals((Int32)other);
+        }
     }
 }
