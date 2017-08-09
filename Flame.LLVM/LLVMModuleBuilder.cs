@@ -324,7 +324,7 @@ namespace Flame.LLVM
             LLVMTypeRef result;
             if (!declaredDataLayouts.TryGetValue(Type, out result))
             {
-                if (Type.GetIsValueType())
+                if (Type.GetIsValueType() || Type.GetIsEnum())
                 {
                     // The layout of value types can be computed naively.
                     result = Type.DefineLayout(this);
@@ -439,7 +439,7 @@ namespace Flame.LLVM
             else if (Type is LLVMType)
             {
                 var llvmType = (LLVMType)Type;
-                if (llvmType.GetIsValueType())
+                if (llvmType.GetIsValueType() || llvmType.GetIsEnum())
                 {
                     return DeclareDataLayout(llvmType);
                 }

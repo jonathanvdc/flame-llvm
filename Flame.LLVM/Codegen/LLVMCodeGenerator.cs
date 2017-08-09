@@ -374,6 +374,14 @@ namespace Flame.LLVM.Codegen
                 {
                     return new SimpleCastBlock(this, valBlock, Type, BuildFPCast, ConstFPCast);
                 }
+                else if (valType.GetIsEnum())
+                {
+                    return EmitTypeBinary(new RetypedBlock(this, valBlock, valType.GetParent()), Type, Op);
+                }
+                else if (Type.GetIsEnum())
+                {
+                    return new RetypedBlock(this, (CodeBlock)EmitTypeBinary(valBlock, Type.GetParent(), Op), Type);
+                }
             }
             throw new NotImplementedException();
         }
@@ -443,7 +451,11 @@ namespace Flame.LLVM.Codegen
             }
             else if (Type.GetIsValueType())
             {
-                return new DefaultStructBlock(this, (LLVMType)Type);
+                var llvmType = (LLVMType)Type;
+                if (llvmType.IsSingleValue)
+                    return EmitDefaultValue(llvmType.InstanceFields[0].FieldType);
+                else
+                    return new DefaultStructBlock(this, llvmType);
             }
             throw new NotImplementedException();
         }

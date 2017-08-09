@@ -167,6 +167,11 @@ namespace Flame.LLVM
         /// <returns>An LLVM type ref for this type's data layout.</returns>
         public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
         {
+            if (this.GetIsEnum())
+            {
+                return Module.Declare(this.GetParent());
+            }
+
             bool isStruct = this.GetIsValueType();
 
             if (isStruct && IsSingleValue)
