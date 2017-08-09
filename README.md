@@ -25,5 +25,6 @@
   - [x] generics
   - [x] boxing/unboxing
   - [ ] indirect function calls (delegates)
+  - [ ] `static` constructors
   - [ ] exception handling (`throw`, `try`, `catch`, `finally`)
   - [ ] precise garbage collection
