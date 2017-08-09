@@ -64,6 +64,7 @@ clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -Wno
   - [x] `extern` functions
   - [x] `struct` values
   - [x] `class` values
+  - [x] `enum` values
   - [x] arrays
   - [x] support for strings
   - [x] conservative garbage collection (Boehm-Demers-Weiser GC)
