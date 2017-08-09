@@ -101,7 +101,7 @@ namespace Flame.LLVM
                     // Create a thunk.
                     result = AddFunction(
                         module,
-                        assembly.Abi.Mangler.Mangle(Method, true) + "_thunk",
+                        assembly.Abi.Mangler.Mangle(Method, true) + "_vthunk",
                         funcType);
 
                     declaredVirtMethods[Method] = result;
