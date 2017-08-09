@@ -25,4 +25,5 @@
   - [x] generics
   - [x] boxing/unboxing
   - [ ] indirect function calls (delegates)
+  - [ ] exception handling (`throw`, `try`, `catch`, `finally`)
   - [ ] precise garbage collection
