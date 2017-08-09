@@ -43,7 +43,7 @@ namespace Flame.LLVM.Codegen
             BasicBlock = vtableCodegen.BasicBlock;
             return new BlockCodegen(
                 BasicBlock,
-                BuildLoad(
+                AtAddressEmitVariable.BuildConstantLoad(
                     BasicBlock.Builder,
                     BuildStructGEP(
                         BasicBlock.Builder,

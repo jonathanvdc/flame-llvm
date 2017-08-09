@@ -255,7 +255,7 @@ namespace Flame.LLVM.Codegen
                             EmitBinary(
                                 new TypeIdBlock(
                                     this,
-                                    (CodeBlock)EmitDereferencePointer(EmitVTablePtr(valTmp.EmitGet()))),
+                                    (CodeBlock)EmitDereferencePointer(EmitVTablePtr(valTmp.EmitGet()), true)),
                                 new TypeIdBlock(this, new TypeVTableBlock(this, (LLVMType)Type)),
                                 Operator.Remainder),
                             EmitInteger(new IntegerValue(0UL)),
@@ -671,7 +671,7 @@ namespace Flame.LLVM.Codegen
         /// Creates a block that gets a pointer to the given value's vtable field.
         /// </summary>
         /// <param name="Value">The value whose vtable field is to be addressed.</param>
-        /// <returns></returns>
+        /// <returns>A pointer to a pointer to a vtable.</returns>
         public CodeBlock EmitVTablePtr(ICodeBlock Value)
         {
             return (CodeBlock)EmitTypeBinary(
@@ -805,7 +805,12 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitDereferencePointer(ICodeBlock Pointer)
         {
-            return new AtAddressEmitVariable((CodeBlock)Pointer).EmitGet();
+            return EmitDereferencePointer(Pointer, false);
+        }
+
+        public ICodeBlock EmitDereferencePointer(ICodeBlock Pointer, bool IsConst)
+        {
+            return new AtAddressEmitVariable((CodeBlock)Pointer, IsConst).EmitGet();
         }
 
         public ICodeBlock EmitStoreAtAddress(ICodeBlock Pointer, ICodeBlock Value)

@@ -113,7 +113,7 @@ namespace Flame.LLVM.Codegen
                     PointerType(PointerType(LLVMType.VTableType, 0), 0),
                     "vtable_ptr_tmp");
 
-                var vtable = BuildLoad(
+                var vtable = AtAddressEmitVariable.BuildConstantLoad(
                     BasicBlock.Builder,
                     vtablePtr,
                     "vtable_tmp");
@@ -127,7 +127,7 @@ namespace Flame.LLVM.Codegen
                         1,
                         "type_index_ptr");
 
-                    var typeIndex = BuildLoad(
+                    var typeIndex = AtAddressEmitVariable.BuildConstantLoad(
                         BasicBlock.Builder,
                         typeIndexPtr,
                         "type_ptr");
@@ -166,7 +166,7 @@ namespace Flame.LLVM.Codegen
                         new LLVMValueRef[] { ConstInt(Int32Type(), (ulong)vtableSlot, false) },
                         "vtable_slot_ptr");
 
-                    var methodImpl = BuildLoad(
+                    var methodImpl = AtAddressEmitVariable.BuildConstantLoad(
                         BasicBlock.Builder,
                         BuildBitCast(
                             BasicBlock.Builder,
