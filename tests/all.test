@@ -44,6 +44,7 @@ tests
 {
     template CheckOutput<abstract/abstract.cs, , 111 161>;
     template CheckOutput<array/array.cs, aloha, aloha>;
+    template CheckOutput<boxing/boxing.cs, , False True False 1>;
     template CheckOutput<echo/echo.cs, howdy, howdy>;
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
     template CheckOutput<floating-point/floating-point.cs, , -3628800>;
