@@ -23,6 +23,6 @@
   - [x] `virtual` calls
   - [x] `interface` calls
   - [x] generics
-  - [ ] boxing/unboxing
-  - [ ] indirect function calls
+  - [x] boxing/unboxing
+  - [ ] indirect function calls (delegates)
   - [ ] precise garbage collection
