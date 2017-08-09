@@ -33,16 +33,16 @@
       <HintPath>..\libs\LLVMSharp.dll</HintPath>
     </Reference>
     <Reference Include="Flame">
-      <HintPath>..\packages\Flame.Compiler.0.9.16\lib\net45\Flame.dll</HintPath>
+      <HintPath>..\packages\Flame.Compiler.0.9.17\lib\net45\Flame.dll</HintPath>
     </Reference>
     <Reference Include="Flame.Compiler">
-      <HintPath>..\packages\Flame.Compiler.0.9.16\lib\net45\Flame.Compiler.dll</HintPath>
+      <HintPath>..\packages\Flame.Compiler.0.9.17\lib\net45\Flame.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="Pixie">
-      <HintPath>..\packages\Flame.Compiler.0.9.16\lib\net45\Pixie.dll</HintPath>
+      <HintPath>..\packages\Flame.Compiler.0.9.17\lib\net45\Pixie.dll</HintPath>
     </Reference>
     <Reference Include="Flame.Optimization">
-      <HintPath>..\packages\Flame.Optimization.0.9.16\lib\net45\Flame.Optimization.dll</HintPath>
+      <HintPath>..\packages\Flame.Optimization.0.9.17\lib\net45\Flame.Optimization.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -96,8 +96,10 @@
     <Compile Include="Codegen\TypeIdBlock.cs" />
     <Compile Include="Codegen\TypeVTableBlock.cs" />
     <Compile Include="Codegen\UnaryBlock.cs" />
+    <Compile Include="Codegen\UnboxBlock.cs" />
     <Compile Include="Codegen\UnreachableBlock.cs" />
     <Compile Include="Codegen\VoidBlock.cs" />
+    <Compile Include="Passes\BoxUnboxTypePass.cs" />
     <Compile Include="Passes\GenericsInternalizingPass.cs" />
     <Compile Include="Passes\StringConcatPass.cs" />
     <Compile Include="Passes\StringLiteralPass.cs" />

@@ -22,6 +22,7 @@ namespace Flame.LLVM
             this.assembly = Assembly;
             this.module = Module;
             this.declaredMethods = new Dictionary<IMethod, LLVMValueRef>();
+            this.declaredVirtMethods = new Dictionary<IMethod, LLVMValueRef>();
             this.declaredPrototypes = new Dictionary<IMethod, LLVMTypeRef>();
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
             this.declaredDataLayouts = new Dictionary<LLVMType, LLVMTypeRef>();
@@ -37,6 +38,7 @@ namespace Flame.LLVM
         private LLVMAssembly assembly;
         private LLVMModuleRef module;
         private Dictionary<IMethod, LLVMValueRef> declaredMethods;
+        private Dictionary<IMethod, LLVMValueRef> declaredVirtMethods;
         private Dictionary<IMethod, LLVMTypeRef> declaredPrototypes;
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
         private Dictionary<IField, LLVMValueRef> declaredGlobals;
@@ -66,6 +68,95 @@ namespace Flame.LLVM
                     result = AddFunction(module, abi.Mangler.Mangle(Method, true), funcType);
                 }
                 declaredMethods[Method] = result;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Declares the given method if it was not declared already.
+        /// A function pointer is returned that can be used for virtual
+        /// function calls.
+        /// </summary>
+        /// <param name="Method">The method to declare.</param>
+        /// <returns>An LLVM function.</returns>
+        public LLVMValueRef DeclareVirtual(IMethod Method)
+        {
+            LLVMValueRef result;
+            if (!declaredVirtMethods.TryGetValue(Method, out result))
+            {
+                var declMethod = Declare(Method);
+                if (Method.DeclaringType.GetIsValueType())
+                {
+                    // Boxed value types are represented as `{ byte*, T }` structs, but
+                    // T's methods expect a `T*` as first parameter. So we can't fill
+                    // T's vtable/interface stubs with T's methods, because a method
+                    // from a vtable/interface stub will be called on a boxed value.
+                    //
+                    // Instead, we'll create a bunch of thunks and store those in the
+                    // vtable. These thunks simply unbox a boxed value and then call a
+                    // method on the unboxed pointer.
+
+                    var funcType = declMethod.TypeOf().GetElementType();
+
+                    // Create a thunk.
+                    result = AddFunction(
+                        module,
+                        assembly.Abi.Mangler.Mangle(Method, true) + "_thunk",
+                        funcType);
+
+                    declaredVirtMethods[Method] = result;
+
+                    // Make it internal.
+                    result.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+
+                    // Write its function body.
+                    var entryBlock = result.AppendBasicBlock("entry");
+                    var builder = CreateBuilder();
+                    PositionBuilderAtEnd(builder, entryBlock);
+
+                    var boxPtr = BuildBitCast(
+                        builder,
+                        GetParam(result, 0),
+                        Declare(Method.DeclaringType.MakePointerType(PointerKind.BoxPointer)),
+                        "box_ptr");
+
+                    var unboxedPtr = BuildStructGEP(
+                        builder,
+                        boxPtr,
+                        1,
+                        "unboxed_ptr");
+
+                    var paramTypes = funcType.GetParamTypes();
+                    var args = new LLVMValueRef[paramTypes.Length];
+                    args[0] = BuildBitCast(
+                        builder,
+                        unboxedPtr,
+                        paramTypes[0],
+                        "this_ptr");
+
+                    for (uint i = 1; i < args.Length; i++)
+                    {
+                        args[i] = GetParam(result, i);
+                    }
+
+                    bool returnsVoid = Method.ReturnType == PrimitiveTypes.Void;
+                    var callVal = BuildCall(builder, declMethod, args, returnsVoid ? null : "call_tmp");
+                    if (returnsVoid)
+                    {
+                        BuildRetVoid(builder);
+                    }
+                    else
+                    {
+                        BuildRet(builder, callVal);
+                    }
+
+                    DisposeBuilder(builder);
+                }
+                else
+                {
+                    result = declMethod;
+                    declaredVirtMethods[Method] = result;
+                }
             }
             return result;
         }
@@ -275,11 +366,29 @@ namespace Flame.LLVM
         {
             if (Type.GetIsPointer())
             {
-                var elemType = Type.AsPointerType().ElementType;
+                var ptrType = Type.AsPointerType();
+                var elemType = ptrType.ElementType;
                 if (elemType == PrimitiveTypes.Void)
-                    return LLVMSharp.LLVM.PointerType(IntType(8), 0);
+                {
+                    return LLVMSharp.LLVM.PointerType(Int8Type(), 0);
+                }
+                else if (ptrType.PointerKind.Equals(PointerKind.BoxPointer))
+                {
+                    // A boxed T is represented as a `{ byte*, T }*`.
+                    return LLVMSharp.LLVM.PointerType(
+                        StructType(
+                            new LLVMTypeRef[]
+                            {
+                                LLVMSharp.LLVM.PointerType(Int8Type(), 0),
+                                Declare(elemType)
+                            },
+                            false),
+                        0);
+                }
                 else
+                {
                     return LLVMSharp.LLVM.PointerType(Declare(elemType), 0);
+                }
             }
             else if (Type.GetIsArray())
             {
@@ -442,7 +551,7 @@ namespace Flame.LLVM
             ulong prime = primeGen.Next();
             declaredTypePrimes[Type] = prime;
             id *= prime;
-            
+
             declaredTypeIds[Type] = id;
         }
 

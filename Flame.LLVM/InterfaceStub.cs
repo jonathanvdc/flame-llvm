@@ -54,7 +54,7 @@ namespace Flame.LLVM
             LLVMMethod Implementation,
             LLVMModuleBuilder Module)
         {
-            return WriteReturnBlock(Type.Name.ToString(), Module.Declare(Implementation));
+            return WriteReturnBlock(Type.Name.ToString(), Module.DeclareVirtual(Implementation));
         }
 
         /// <summary>

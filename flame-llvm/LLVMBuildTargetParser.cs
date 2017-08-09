@@ -53,6 +53,14 @@ namespace Flame.LLVM
 
             var extraPasses = new PassManager();
 
+            // Always use -flower-box-unbox-types to lower box/unbox.
+            extraPasses.RegisterMethodPass(
+                new AtomicPassInfo<BodyPassArgument, IStatement>(
+                    BoxUnboxTypePass.Instance,
+                    BoxUnboxTypePass.BoxUnboxTypePassName));
+
+            extraPasses.RegisterPassCondition(BoxUnboxTypePass.BoxUnboxTypePassName, UseAlways);
+
             // Always use -flower-string-concat to lower string concatenation to calls.
             extraPasses.RegisterMethodPass(
                 new AtomicPassInfo<BodyPassArgument, IStatement>(

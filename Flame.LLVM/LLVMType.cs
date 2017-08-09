@@ -267,7 +267,7 @@ namespace Flame.LLVM
             for (int i = 0; i < allImpls.Length; i++)
             {
                 allImpls[i] = ConstBitCast(
-                    Module.Declare(AllEntries[i].GetImplementation(this) ?? AllEntries[i]),
+                    Module.DeclareVirtual(AllEntries[i].GetImplementation(this) ?? AllEntries[i]),
                     PointerType(Int8Type(), 0));
             }
             return allImpls;

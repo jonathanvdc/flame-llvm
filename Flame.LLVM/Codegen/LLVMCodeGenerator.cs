@@ -97,14 +97,6 @@ namespace Flame.LLVM.Codegen
             Operator.LogicalAnd, Operator.LogicalOr
         };
 
-        private static bool IsIntegral(IType Type)
-        {
-            // This function definition works around a Flame bug.
-            // TODO: delete this function definitions when the Flame packages
-            // are upgraded.
-            return Type.GetIsIntegral() || Type == PrimitiveTypes.Boolean;
-        }
-
         public ICodeBlock EmitBinary(ICodeBlock A, ICodeBlock B, Operator Op)
         {
             if (unsupportedOps.Contains(Op))
@@ -120,7 +112,7 @@ namespace Flame.LLVM.Codegen
             {
                 return EmitIntBinary(lhs, rhs, Op, signedIntBinaries, signedIntPredicates);
             }
-            else if (IsIntegral(lhsType) && IsIntegral(rhsType))
+            else if (lhsType.GetIsIntegral() && rhsType.GetIsIntegral())
             {
                 return EmitIntBinary(lhs, rhs, Op, unsignedIntBinaries, unsignedIntPredicates);
             }
@@ -239,7 +231,14 @@ namespace Flame.LLVM.Codegen
             var valBlock = (CodeBlock)Value;
             if (Op.Equals(Operator.ReinterpretCast))
             {
-                return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast, ConstPointerCast);
+                if (valBlock.Type.GetIsValueType() && Type.GetIsValueType())
+                {
+                    return new RetypedBlock(this, valBlock, Type);
+                }
+                else
+                {
+                    return new SimpleCastBlock(this, valBlock, Type, BuildPointerCast, ConstPointerCast);
+                }
             }
             else if (Op.Equals(Operator.IsInstance))
             {
@@ -275,14 +274,45 @@ namespace Flame.LLVM.Codegen
             }
             else if (Op.Equals(Operator.DynamicCast))
             {
-                // Rewrite `(T)x` as `x is T ? x : unreachable`.
+                // Rewrite `(T)x` as `x is T ? x : invalid-cast(T)`.
                 var valTmp = DeclareLocal(new UniqueTag("dyn_cast_tmp"), new TypeVariableMember(valBlock.Type));
                 return EmitSequence(
                     valTmp.EmitSet(valBlock),
                     EmitIfElse(
                         EmitTypeBinary(valTmp.EmitGet(), Type, Operator.IsInstance),
                         EmitTypeBinary(valTmp.EmitGet(), Type, Operator.ReinterpretCast),
-                        new UnreachableBlock(this, Type)));
+                        EmitThrowInvalidCast((CodeBlock)valTmp.EmitGet(), Type, Type)));
+            }
+            else if (Op.Equals(Operator.UnboxReference))
+            {
+                // Rewrite `#unbox_ref(x, T*)` as `x is T ? &x->value : invalid-cast(T)`.
+                var elemType = Type.AsPointerType().ElementType;
+                var valTmp = DeclareLocal(new UniqueTag("unbox_ref_tmp"), new TypeVariableMember(valBlock.Type));
+                return EmitSequence(
+                    valTmp.EmitSet(valBlock),
+                    EmitIfElse(
+                        EmitTypeBinary(valTmp.EmitGet(), elemType, Operator.IsInstance),
+                        new UnboxBlock(this, (CodeBlock)valTmp.EmitGet(), elemType),
+                        EmitThrowInvalidCast((CodeBlock)valTmp.EmitGet(), elemType, Type)));
+            }
+            else if (Op.Equals(Operator.UnboxValue))
+            {
+                if (Type.GetIsValueType())
+                {
+                    // If `T` is a `struct`, then `#unbox_val(x, T)` is equivalent to
+                    // `*#unbox_ref(x, T*)`.
+                    return EmitDereferencePointer(
+                        EmitTypeBinary(
+                            valBlock,
+                            Type.MakePointerType(PointerKind.TransientPointer),
+                            Operator.UnboxReference));
+                }
+                else
+                {
+                    // If `T` is a `class`, then `#unbox_val(x, T)` is equivalent to
+                    // `#dynamic_cast(x, T)`.
+                    return EmitTypeBinary(valBlock, Type, Operator.DynamicCast);
+                }
             }
             else if (Op.Equals(Operator.StaticCast))
             {
@@ -346,6 +376,22 @@ namespace Flame.LLVM.Codegen
                 }
             }
             throw new NotImplementedException();
+        }
+
+        private CodeBlock EmitThrowInvalidCast(
+            CodeBlock Value,
+            IType CastType,
+            IType ResultType)
+        {
+            // TODO: in debug mode, make this do something along the lines of
+            //
+            //     throw new InvalidCastException(
+            //         string.Format(
+            //             "An instance of '{0}' cannot be cast to type '{1}'",
+            //             Value.GetType().FullName.ToString(),
+            //             CastType.FullName.ToString()));
+            //
+            return new UnreachableBlock(this, ResultType);
         }
 
         public ICodeBlock EmitBit(BitValue Value)
@@ -636,6 +682,16 @@ namespace Flame.LLVM.Codegen
                 Operator.ReinterpretCast);
         }
 
+        /// <summary>
+        /// Creates an expression that unboxes a value.
+        /// </summary>
+        /// <param name="Value">The value to unbox.</param>
+        /// <returns></returns>
+        public IExpression CreateUnboxExpr(IExpression Value, IType ElementType)
+        {
+            return ToExpression(new UnboxBlock(this, (CodeBlock)Value.Emit(this), ElementType));
+        }
+
         public ICodeBlock EmitNewVector(IType ElementType, IReadOnlyList<int> Dimensions)
         {
             throw new NotImplementedException();
@@ -702,7 +758,44 @@ namespace Flame.LLVM.Codegen
                     return new UnaryBlock(this, valBlock, valType, BuildNeg, ConstNeg);
                 }
             }
-            throw new NotImplementedException();
+            else if (Op.Equals(Operator.Box))
+            {
+                // To box a value x, we create a struct `{ typeof(x).vtable, x }`
+                // and store it in the heap.
+                // So we basically want to do this:
+                //
+                //     var ptr = gcalloc(sizeof({ byte*, typeof(x) }));
+                //     ptr->vtable = (byte*)T.vtable;
+                //     ptr->value = x;
+                //     ptr
+                //
+                var constructedType = valType.MakePointerType(PointerKind.BoxPointer);
+                var tmp = new SSAVariable("box_tmp", constructedType);
+                var expr = new InitializedExpression(
+                    new BlockStatement(new IStatement[]
+                    {
+                        tmp.CreateSetStatement(
+                            Allocate(
+                                ToExpression(new SizeOfBlock(this, constructedType, false)),
+                                constructedType)),
+                        new StoreAtAddressStatement(
+                            GetVTablePtrExpr(tmp.CreateGetExpression()),
+                            ToExpression(new TypeVTableBlock(this, (LLVMType)valType))),
+                        new StoreAtAddressStatement(
+                            CreateUnboxExpr(tmp.CreateGetExpression(), valType),
+                            ToExpression(valBlock))
+                    }),
+                    tmp.CreateGetExpression());
+                return expr.Emit(this);
+            }
+            else
+            {
+                throw new NotImplementedException(
+                    string.Format(
+                        "Unsupported unary op: {0} {1}",
+                        Op.Name,
+                        valType.FullName));
+            }
         }
 
         public ICodeBlock EmitVoid()
