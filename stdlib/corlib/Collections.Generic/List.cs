@@ -28,7 +28,7 @@ namespace System.Collections.Generic
         public int Count => size;
 
         /// <summary>
-        /// Gets the nth element in this list.
+        /// Gets or sets the nth element in this list.
         /// </summary>
         public T this[int index]
         {
