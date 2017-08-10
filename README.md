@@ -43,10 +43,10 @@ Compiling a program with `flame-llvm` consists of multiple steps so it's kind of
 
 ```bash
 # First, compile the source code to Flame IR.
-ecsc program.cs --platform ir -Wno-build --rt-libs /path/to/flame-llvm-repo/stdlib/bin/flo/stdlib.flo -o program.flo
+ecsc program.cs --platform ir -Wno-build --rt-libs /path/to/flame-llvm-repo/stdlib/bin/flo/corlib.flo -o program.flo
 
-# Compile the Flame IR to LLVM IR, linking in the standard library.
-flame-llvm program.flo /path/to/flame-llvm-repo/stdlib/flo/stdlib.flo --platform llvm -Wno-build --rt-libs /path/to/flame-llvm-repo/runtime/bin/flo/runtime.flo
+# Compile the Flame IR to LLVM IR, linking in the core library.
+flame-llvm program.flo /path/to/flame-llvm-repo/stdlib/flo/corlib.flo --platform llvm -Wno-build --rt-libs /path/to/flame-llvm-repo/runtime/bin/flo/runtime.flo
 -o program.ll
 
 # Compile the LLVM IR to an executable. Link in the runtime and libgc.
