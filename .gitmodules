@@ -1,3 +1,6 @@
 [submodule "LLVMSharp"]
 	path = LLVMSharp
 	url = https://github.com/Microsoft/LLVMSharp
+[submodule "flame-make-scripts"]
+	path = flame-make-scripts
+	url = https://github.com/jonathanvdc/flame-make-scripts

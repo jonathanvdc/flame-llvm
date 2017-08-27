@@ -22,6 +22,7 @@ native-libs = \
 
 common-options = -asm-name=flame-llvm -asm-version=0.1.0.0
 
+.PHONY: all exe flo clean
 all: exe flo
 
 exe: bin/clr/flame-llvm.exe
@@ -31,9 +32,11 @@ clean:
 	rm -rf bin/
 	rm -rf obj/
 
-bin/clr/flame-llvm.exe: $(files) $(libs) $(native-libs)
-	ecsc $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
+include ../flame-make-scripts/use-ecsc.mk
+
+bin/clr/flame-llvm.exe: $(files) $(libs) $(native-libs) | ecsc
+	$(ECSC) $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
 	if [ ! -z $(native-libs) ]; then cp $(native-libs) bin/clr/; fi
 
-bin/flo/flame-llvm.flo: $(files) $(libs) $(native-libs)
-	ecsc $(files) -platform ir -runtime clr -o $@ $(common-options) --libs $(libs)
+bin/flo/flame-llvm.flo: $(files) $(libs) $(native-libs) | ecsc
+	$(ECSC) $(files) -platform ir -runtime clr -o $@ $(common-options) --libs $(libs)

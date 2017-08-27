@@ -3,6 +3,7 @@ files = \
 
 common-options = -asm-name=runtime -asm-version=0.1.0.0
 
+.PHONY: all flo native clean
 all: flo native
 
 flo: bin/flo/runtime.flo
@@ -11,8 +12,10 @@ native: bin/native/runtime.o
 clean:
 	rm -rf bin/
 
-bin/flo/runtime.flo: $(files)
-	ecsc $(files) -platform ir -Wno-build -o $@ $(common-options)
+include ../flame-make-scripts/use-ecsc.mk
+
+bin/flo/runtime.flo: $(files) | ecsc
+	$(ECSC) $(files) -platform ir -Wno-build -o $@ $(common-options)
 
 bin/native/runtime.ll: bin/flo/runtime.flo
 	flame-llvm bin/flo/runtime.flo -platform llvm -Wno-build -fintegrated-runtime -o $@

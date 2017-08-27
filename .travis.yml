@@ -33,25 +33,6 @@ install:
       export libllvm_path="/usr/lib/llvm-3.8/lib/libLLVM.so";
     fi
 
-  # Clone, build and install ecsc
-  - git clone --depth=5 https://github.com/jonathanvdc/ecsc
-  - nuget restore ecsc/src/ecsc.sln
-  - msbuild /p:Configuration=Release /verbosity:quiet ecsc/src/ecsc.sln
-  - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.exe
-  - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/*.dll
-  - wget https://gist.githubusercontent.com/jonathanvdc/f2fa3b5f8d5ece27b877fae439d944d0/raw/c812414ac5c54aefddf990dee1085550eb3976ea/mono-ln.sh
-  - chmod +x mono-ln.sh
-  - ./mono-ln.sh ecsc.exe $(pwd)/ecsc/src/ecsc/bin/Release/ecsc $readlink_name
-  - chmod +x $(pwd)/ecsc/src/ecsc/bin/Release/ecsc
-  - export PATH=$PATH:$(pwd)/ecsc/src/ecsc/bin/Release
-
-  # Grab a compiled version of compare-test and install it.
-  - wget https://github.com/jonathanvdc/compare-test/releases/download/v0.1.5/compare-test.zip
-  - unzip -d compare-test compare-test.zip
-  - ./mono-ln.sh compare-test.exe $(pwd)/compare-test/compare-test $readlink_name
-  - chmod +x $(pwd)/compare-test/compare-test
-  - export PATH=$PATH:$(pwd)/compare-test
-
   # Compile LLVMSharp
   - ./build-libs.sh $libllvm_path
 script:
@@ -61,11 +42,6 @@ script:
   - msbuild /p:Configuration=Release flame-llvm.sln
   # Build the project with ecsc
   - make all
-
-  # Add flame-llvm to the PATH variable
-  - ./mono-ln.sh flame-llvm.exe $(pwd)/flame-llvm/bin/clr/flame-llvm $readlink_name
-  - chmod +x $(pwd)/flame-llvm/bin/clr/flame-llvm
-  - export PATH=$PATH:$(pwd)/flame-llvm/bin/clr
 
   # Build the runtime and stdlib
   - make stdlib

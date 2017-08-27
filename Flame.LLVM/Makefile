@@ -11,6 +11,7 @@ libs = \
 
 common-options = -asm-name=Flame.LLVM -asm-version=0.1.0.0
 
+.PHONY: all dll flo clean
 all: dll flo
 
 dll: bin/clr/Flame.LLVM.dll
@@ -20,8 +21,10 @@ clean:
 	rm -rf bin/
 	rm -rf obj/
 
-bin/clr/Flame.LLVM.dll: $(files) $(libs) $(native-libs)
-	ecsc $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
+include ../flame-make-scripts/use-ecsc.mk
 
-bin/flo/Flame.LLVM.flo: $(files) $(libs) $(native-libs)
-	ecsc $(files) -platform ir -runtime clr -o $@ $(common-options) --libs $(libs)
+bin/clr/Flame.LLVM.dll: $(files) $(libs) $(native-libs) | ecsc
+	$(ECSC) $(files) -platform clr -o $@ -O3 $(common-options) --libs $(libs)
+
+bin/flo/Flame.LLVM.flo: $(files) $(libs) $(native-libs) | ecsc
+	$(ECSC) $(files) -platform ir -runtime clr -o $@ $(common-options) --libs $(libs)
