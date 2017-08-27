@@ -40,5 +40,5 @@ test: exe runtime stdlib | compare-test ecsc
 	--ecsc '$(ECSC)' \
 	-j
 
-include ../flame-make-scripts/use-ecsc.mk
-include ../flame-make-scripts/use-compare-test.mk
+include flame-make-scripts/use-ecsc.mk
+include flame-make-scripts/use-compare-test.mk
