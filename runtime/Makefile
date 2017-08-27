@@ -18,7 +18,7 @@ bin/flo/runtime.flo: $(files) | ecsc
 	$(ECSC) $(files) -platform ir -Wno-build -o $@ $(common-options)
 
 bin/native/runtime.ll: bin/flo/runtime.flo
-	flame-llvm bin/flo/runtime.flo -platform llvm -Wno-build -fintegrated-runtime -o $@
+	mono ../flame-llvm/bin/clr/flame-llvm.exe bin/flo/runtime.flo -platform llvm -Wno-build -fintegrated-runtime -o $@
 
 bin/native/runtime-opt.ll: bin/native/runtime.ll
 	opt-3.8 bin/native/runtime.ll -O3 -S -o $@
