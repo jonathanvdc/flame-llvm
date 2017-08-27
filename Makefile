@@ -27,6 +27,10 @@ stdlib: exe runtime
 	make -C stdlib-primitives all
 	make -C stdlib all
 
+.PHONY: nuget
+nuget:
+	nuget restore flame-llvm.sln -Verbosity quiet
+
 .PHONY: clean
 clean: clean-compare-test clean-ecsc
 	make -C Flame.LLVM clean
