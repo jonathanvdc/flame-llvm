@@ -203,6 +203,11 @@ namespace Flame.LLVM.Codegen
             PositionBuilderAtEnd(Builder, Block);
         }
 
+        ~BasicBlockBuilder()
+        {
+            DisposeBuilder(Builder);
+        }
+
         /// <summary>
         /// Gets the function body that defines this basic block.
         /// </summary>
