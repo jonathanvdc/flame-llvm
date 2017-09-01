@@ -445,7 +445,7 @@ namespace Flame.LLVM.Codegen
             {
                 return EmitBoolean(default(bool));
             }
-            else if (Type.GetIsPointer())
+            else if (Type.GetIsPointer() || Type.GetIsReferenceType())
             {
                 return EmitTypeBinary(EmitNull(), Type, Operator.ReinterpretCast);
             }
