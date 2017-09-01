@@ -10,12 +10,14 @@ namespace System.Collections.Generic
         /// </summary>
         public List()
         {
-            this.contents = new T[4];
+            this.contents = new T[initialCapacity];
             this.size = 0;
         }
 
         private T[] contents;
         private int size;
+
+        private const int initialCapacity = 4;
 
         /// <summary>
         /// Gets the list's capacity.
