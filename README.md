@@ -13,7 +13,7 @@ To use `flame-llvm`, you'll need to have the following installed:
   * `clang`,
   * [`ecsc`](https://github.com/jonathanvdc/ecsc) (in your `$PATH`),
   * the Boehm-Demers-Weiser GC (Debian package: `libgc-dev`), and
-  * **LLVM 3.8**'s `libLLVM.(so|dll|dylib)`, whichever is appropriate for your platform. It doesn't really matter where you/an installer/your package manager put it; we'll copy it to the output directory.
+  * **LLVM 3.9+**'s `libLLVM.(so|dll|dylib)`, whichever is appropriate for your platform. It doesn't really matter where you/an installer/your package manager put it; we'll copy it to the output directory.
 
 Clone `flame-llvm`, including its submodules, like so
 
