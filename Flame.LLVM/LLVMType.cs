@@ -152,11 +152,6 @@ namespace Flame.LLVM
         {
             this.attrMap.AddRange(templateInstance.Attributes.Value);
 
-            if (templateInstance.GenericParameters.Value.Any<IType>())
-            {
-                throw new NotSupportedException("LLVM types do not support generic parameters");
-            }
-
             this.fieldCounter += this.GetIsValueType() ? 0 : 1;
         }
 

@@ -205,6 +205,11 @@ namespace Flame.LLVM
         /// <param name="Module">The module to populate.</param>
         public void Emit(LLVMModuleBuilder Module)
         {
+            if (this.GetRecursiveGenericParameters().Any<IType>())
+            {
+                throw new NotSupportedException("LLVM methods do not support generic parameters");
+            }
+
             var func = Module.Declare(this);
             func.SetLinkage(Linkage);
             if (this.body != null)
