@@ -64,7 +64,10 @@ namespace System.Collections.Generic
         {
             if (Capacity < minCapacity)
             {
-                ResizeCapacity(2 * Capacity);
+                int newCapacity = Math.Max(
+                    Math.Max(initialCapacity, 2 * Capacity),
+                    minCapacity);
+                ResizeCapacity(newCapacity);
             }
         }
 
