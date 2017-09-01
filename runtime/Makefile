@@ -21,7 +21,7 @@ bin/native/runtime.ll: bin/flo/runtime.flo
 	mono ../flame-llvm/bin/clr/flame-llvm.exe bin/flo/runtime.flo -platform llvm -Wno-build -fintegrated-runtime -o $@
 
 bin/native/runtime-opt.ll: bin/native/runtime.ll
-	opt-3.8 bin/native/runtime.ll -O3 -S -o $@
+	opt-4.0 bin/native/runtime.ll -O3 -S -o $@
 
 bin/native/runtime.o: bin/native/runtime-opt.ll
-	llc-3.8 bin/native/runtime-opt.ll -filetype=obj -o bin/native/runtime.o
+	llc-4.0 bin/native/runtime-opt.ll -filetype=obj -o bin/native/runtime.o
