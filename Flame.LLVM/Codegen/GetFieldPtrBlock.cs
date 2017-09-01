@@ -69,6 +69,16 @@ namespace Flame.LLVM.Codegen
         {
             if (AccessesStaticField)
             {
+                // Run the static constructors of a type before accessing
+                // any of its fields.
+                var declType = Field.DeclaringType as LLVMType;
+                if (declType != null)
+                {
+                    if (!CanElideStaticConstructorCall(codeGen.Method, declType))
+                    {
+                        BasicBlock = BasicBlock.FunctionBody.Module.EmitRunStaticConstructors(BasicBlock, declType);
+                    }
+                }
                 return new BlockCodegen(
                     BasicBlock,
                     BasicBlock.FunctionBody.Module.DeclareGlobal(Field));
@@ -90,6 +100,17 @@ namespace Flame.LLVM.Codegen
                         (uint)Field.FieldIndex,
                         "field_ptr_tmp"));
             }
+        }
+
+        private static bool CanElideStaticConstructorCall(
+            IMethod CurrentMethod,
+            IType ConstructedType)
+        {
+            // Static constructors cannot ever call themselves because they only get
+            // called once.
+            return CurrentMethod.IsConstructor
+                && CurrentMethod.IsStatic
+                && object.Equals(CurrentMethod.DeclaringType, ConstructedType);
         }
     }
 }

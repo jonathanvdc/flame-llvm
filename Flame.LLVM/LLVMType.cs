@@ -21,6 +21,7 @@ namespace Flame.LLVM
             this.templateInstance = new TypeSignatureInstance(Template, this);
             this.attrMap = new AttributeMapBuilder();
             this.declaredMethods = new List<LLVMMethod>();
+            this.declaredStaticCtors = new List<LLVMMethod>();
             this.declaredInstanceFields = new List<LLVMField>();
             this.declaredStaticFields = new List<LLVMField>();
             this.declaredFields = new List<LLVMField>();
@@ -34,6 +35,7 @@ namespace Flame.LLVM
         private TypeSignatureInstance templateInstance;
 
         private List<LLVMMethod> declaredMethods;
+        private List<LLVMMethod> declaredStaticCtors;
         private List<LLVMField> declaredInstanceFields;
         private int fieldCounter;
         private List<LLVMField> declaredStaticFields;
@@ -87,6 +89,11 @@ namespace Flame.LLVM
         public IReadOnlyList<LLVMField> InstanceFields => declaredInstanceFields;
 
         /// <summary>
+        /// Gets the list of all static constructors defined by this type.
+        /// </summary>
+        public IReadOnlyList<LLVMMethod> StaticConstructors => declaredStaticCtors;
+
+        /// <summary>
         /// Tests if this type is a value type that is stored as a single value.
         /// The runtime representation of these types is not wrapped in a struct.
         /// </summary>
@@ -133,6 +140,10 @@ namespace Flame.LLVM
         {
             var methodDef = new LLVMMethod(this, Template);
             declaredMethods.Add(methodDef);
+            if (methodDef.IsStatic && methodDef.IsConstructor)
+            {
+                declaredStaticCtors.Add(methodDef);
+            }
             return methodDef;
         }
 

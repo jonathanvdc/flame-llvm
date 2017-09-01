@@ -4,6 +4,7 @@ using System.Linq;
 using Flame.Build;
 using Flame.Compiler;
 using Flame.Compiler.Variables;
+using Flame.LLVM.Codegen;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
 
@@ -33,6 +34,7 @@ namespace Flame.LLVM
             this.declaredVTables = new Dictionary<LLVMType, VTableInstance>();
             this.interfaceStubs = new Dictionary<LLVMMethod, InterfaceStub>();
             this.primeGen = new PrimeNumberGenerator();
+            this.staticConstructorLocks = new Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>>();
         }
 
         private LLVMAssembly assembly;
@@ -49,6 +51,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, VTableInstance> declaredVTables;
         private Dictionary<LLVMMethod, InterfaceStub> interfaceStubs;
         private PrimeNumberGenerator primeGen;
+        private Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>> staticConstructorLocks;
 
         /// <summary>
         /// Declares the given method if it was not declared already.
@@ -620,6 +623,207 @@ namespace Flame.LLVM
             {
                 pair.Value.Emit(this);
             }
+        }
+
+        /// <summary>
+        /// Generates code that runs the given type's static constructors.
+        /// </summary>
+        /// <param name="BasicBlock">The basic block to extend.</param>
+        /// <param name="Type">The type whose static constructors are to be run.</param>
+        /// <returns>A basic block builder.</returns>
+        public BasicBlockBuilder EmitRunStaticConstructors(BasicBlockBuilder BasicBlock, LLVMType Type)
+        {
+            if (Type.StaticConstructors.Count == 0)
+            {
+                return BasicBlock;
+            }
+
+            // Get or create the lock triple for the type. A lock triple consists of:
+            //
+            //     * A global Boolean flag that tells if all static constructors for
+            //       the type have been run.
+            //
+            //     * A global Boolean flag that tells if the static constructors for
+            //       the type are in the process of being run.
+            //
+            //     * A thread-local Boolean flag that tells if the static constructors
+            //       for the type are in the process of being run **by the current
+            //       thread.**
+            //
+            Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef> lockTriple;
+            if (!staticConstructorLocks.TryGetValue(Type, out lockTriple))
+            {
+                string typeName = Type.Namespace.Assembly.Abi.Mangler.Mangle(Type, true);
+
+                var hasRunGlobal = AddGlobal(module, Int8Type(), typeName + "__has_run_cctor");
+                hasRunGlobal.SetInitializer(ConstInt(Int8Type(), 0, false));
+                hasRunGlobal.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+
+                var isRunningGlobal = AddGlobal(module, Int8Type(), typeName + "__is_running_cctor");
+                isRunningGlobal.SetInitializer(ConstInt(Int8Type(), 0, false));
+                isRunningGlobal.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+
+                var isRunningHereGlobal = AddGlobal(module, Int8Type(), typeName + "__is_running_cctor_here");
+                isRunningHereGlobal.SetInitializer(ConstInt(Int8Type(), 0, false));
+                isRunningHereGlobal.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+                isRunningHereGlobal.SetThreadLocal(true);
+
+                lockTriple = new Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>(
+                    hasRunGlobal, isRunningGlobal, isRunningHereGlobal);
+                staticConstructorLocks[Type] = lockTriple;
+            }
+
+            // A type's static constructors need to be run *before* any of its static fields
+            // are accessed. Also, we need to ensure that a type's static constructors are
+            // run only *once* in both single-threaded and multi-threaded environments.
+            //
+            // We'll generate something along the lines of this when a type's static
+            // constructors need to be run:
+            //
+            //     if (!has_run_cctor && !is_running_cctor_here)
+            //     {
+            //         while (!Interlocked.CompareExchange(ref is_running_cctor, false, true)) { }
+            //         if (!has_run_cctor)
+            //         {
+            //             cctor();
+            //             has_run_cctor = true;
+            //         }
+            //         is_running_cctors = false;
+            //     }
+            //
+            // Or, using gotos:
+            //
+            //         if (has_run_cctor) goto after_cctor;
+            //         else goto check_running_cctors_here;
+            //
+            //     check_running_cctor_here:
+            //         if (is_running_cctors_here) goto after_cctor;
+            //         else goto wait_for_cctor_lock;
+            //
+            //     wait_for_cctor_lock:
+            //         is_running_cctors_here = true;
+            //         has_exchanged = Interlocked.CompareExchange(ref is_running_cctos, false, true);
+            //         if (has_exchanged) goto maybe_run_cctor;
+            //         else goto wait_for_cctor_lock;
+            //
+            //     maybe_run_cctor:
+            //         if (has_run_cctor) goto reset_lock;
+            //         else goto run_cctor;
+            //
+            //     run_cctor:
+            //         cctor();
+            //         has_run_cctor = true;
+            //         goto reset_lock;
+            //
+            //     reset_lock:
+            //         is_running_cctors = false;
+            //         goto after_cctor;
+            //
+            //     after_cctor:
+            //         ...
+
+            var hasRunPtr = lockTriple.Item1;
+            var isRunningPtr = lockTriple.Item2;
+            var isRunningHerePtr = lockTriple.Item3;
+
+            var checkRunningHereBlock = BasicBlock.FunctionBody.AppendBasicBlock("check_running_cctor_here");
+            var waitForLockBlock = BasicBlock.FunctionBody.AppendBasicBlock("wait_for_cctor_lock");
+            var maybeRunBlock = BasicBlock.FunctionBody.AppendBasicBlock("maybe_run_cctor");
+            var runBlock = BasicBlock.FunctionBody.AppendBasicBlock("run_cctor");
+            var resetLockBlock = BasicBlock.FunctionBody.AppendBasicBlock("reset_lock");
+            var afterBlock = BasicBlock.FunctionBody.AppendBasicBlock("after_cctor");
+
+            // Implement the entry basic block.
+            BuildCondBr(
+                BasicBlock.Builder,
+                IntToBoolean(
+                    BasicBlock.Builder,
+                    BuildAtomicLoad(BasicBlock.Builder, hasRunPtr, "has_run_cctor")),
+                afterBlock.Block,
+                checkRunningHereBlock.Block);
+
+            // Implement the `check_running_cctor_here` block.
+            BuildCondBr(
+                checkRunningHereBlock.Builder,
+                IntToBoolean(
+                    checkRunningHereBlock.Builder,
+                    BuildLoad(checkRunningHereBlock.Builder, isRunningHerePtr, "is_running_cctor_here")),
+                afterBlock.Block,
+                waitForLockBlock.Block);
+
+            // Implement the `wait_for_cctor_lock` block.
+            BuildStore(waitForLockBlock.Builder, ConstInt(Int8Type(), 1, false), isRunningHerePtr);
+            BuildCondBr(
+                waitForLockBlock.Builder,
+                BuildExtractValue(
+                    waitForLockBlock.Builder,
+                    BuildAtomicCmpXchg(
+                        waitForLockBlock.Builder,
+                        isRunningPtr,
+                        ConstInt(Int8Type(), 0, false),
+                        ConstInt(Int8Type(), 1, false),
+                        LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent,
+                        LLVMAtomicOrdering.LLVMAtomicOrderingMonotonic,
+                        false),
+                    1,
+                    "has_exchanged"),
+                maybeRunBlock.Block,
+                waitForLockBlock.Block);
+
+            // Implement the `maybe_run_cctor` block.
+            BuildCondBr(
+                maybeRunBlock.Builder,
+                IntToBoolean(
+                    maybeRunBlock.Builder,
+                    BuildAtomicLoad(maybeRunBlock.Builder, hasRunPtr, "has_run_cctor")),
+                resetLockBlock.Block,
+                runBlock.Block);
+
+            // Implement the `run_cctor` block.
+            for (int i = 0; i < Type.StaticConstructors.Count; i++)
+            {
+                BuildCall(runBlock.Builder, Declare(Type.StaticConstructors[i]), new LLVMValueRef[] { }, "");
+            }
+            BuildAtomicStore(runBlock.Builder, ConstInt(Int8Type(), 1, false), hasRunPtr);
+            BuildBr(runBlock.Builder, resetLockBlock.Block);
+
+            // Implement the `reset_lock` block.
+            BuildAtomicStore(resetLockBlock.Builder, ConstInt(Int8Type(), 0, false), isRunningPtr);
+            BuildBr(resetLockBlock.Builder, afterBlock.Block);
+
+            return afterBlock;
+        }
+
+        private static LLVMValueRef BuildAtomicLoad(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Pointer,
+            string Name)
+        {
+            var instruction = BuildLoad(Builder, Pointer, Name);
+            SetOrdering(instruction, LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent);
+            SetAlignment(instruction, 1);
+            return instruction;
+        }
+
+        private static LLVMValueRef BuildAtomicStore(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Value,
+            LLVMValueRef Pointer)
+        {
+            var instruction = BuildStore(Builder, Value, Pointer);
+            SetOrdering(instruction, LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent);
+            SetAlignment(instruction, 1);
+            return instruction;
+        }
+
+        private static LLVMValueRef IntToBoolean(LLVMBuilderRef Builder, LLVMValueRef Value)
+        {
+            return BuildICmp(
+                Builder,
+                LLVMIntPredicate.LLVMIntNE,
+                Value,
+                ConstInt(Int8Type(), 0, false),
+                "cmp_result");
         }
     }
 }
