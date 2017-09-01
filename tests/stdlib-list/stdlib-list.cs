@@ -14,5 +14,6 @@ public static class Program
             Console.Write(' ');
             Console.Write(list[i]);
         }
+        Console.WriteLine();
     }
 }
