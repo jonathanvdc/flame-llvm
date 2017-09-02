@@ -74,7 +74,8 @@ clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -Wno
   - [x] `interface` calls
   - [x] generics
   - [x] boxing/unboxing
+  - [x] `static` constructors
+  - [ ] finalizers
   - [ ] indirect function calls (delegates)
-  - [ ] `static` constructors
   - [ ] exception handling (`throw`, `try`, `catch`, `finally`)
   - [ ] precise garbage collection
