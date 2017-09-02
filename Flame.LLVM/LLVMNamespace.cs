@@ -97,13 +97,13 @@ namespace Flame.LLVM
         /// <param name="Module">The module to populate.</param>
         public void Emit(LLVMModuleBuilder Module)
         {
-            foreach (var ns in declaredNamespaces)
+            for (int i = 0; i < declaredNamespaces.Count; i++)
             {
-                ns.Emit(Module);
+                declaredNamespaces[i].Emit(Module);
             }
-            foreach (var type in declaredTypes)
+            for (int i = 0; i < declaredTypes.Count; i++)
             {
-                type.Emit(Module);
+                declaredTypes[i].Emit(Module);
             }
         }
     }
