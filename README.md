@@ -11,7 +11,6 @@ To use `flame-llvm`, you'll need to have the following installed:
   * basic command-line tools like `bash`, `make`, `cp`, etc (in your `$PATH`),
   * a .NET framework implementation (for example, [Mono](http://www.mono-project.com/)),
   * `clang`,
-  * [`ecsc`](https://github.com/jonathanvdc/ecsc) (in your `$PATH`),
   * the Boehm-Demers-Weiser GC (Debian package: `libgc-dev`), and
   * **LLVM 4.0**'s `libLLVM.(so|dll|dylib)`, whichever is appropriate for your platform. It doesn't really matter where you/an installer/your package manager put it; we'll copy it to the output directory.
 
