@@ -32,5 +32,11 @@ namespace System
         {
             return other is Int32 && Equals((Int32)other);
         }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return value;
+        }
     }
 }

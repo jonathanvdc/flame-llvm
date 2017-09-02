@@ -5,7 +5,7 @@ namespace System
     /// <summary>
     /// A character string that uses the UTF-16 encoding.
     /// </summary>
-    public sealed class String : Object
+    public sealed class String : Object, IEquatable<String>
     {
         internal String()
         { }
@@ -35,6 +35,66 @@ namespace System
         /// Gets the character at the given position in this string.
         /// </summary>
         public char this[int i] => data[i];
+
+        /// <summary>
+        /// Checks if this string is equal to the given string.
+        /// </summary>
+        /// <param name="other">The string to compare this string to.</param>
+        /// <returns><c>true</c> if this string is equal to the given string; otherwise, <c>false</c>.</returns>
+        public bool Equals(String other)
+        {
+            if (Length != other.Length)
+            {
+                // Strings of different lengths can't be equal.
+                return false;
+            }
+
+            if (data == other.data)
+            {
+                // Strings that use the same underlying buffer are
+                // always equal.
+                return true;
+            }
+
+            for (int i = 0; i < Length; i++)
+            {
+                if (this[i] != other[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if this string is equal to the given value.
+        /// </summary>
+        /// <param name="other">The value to compare this string to.</param>
+        /// <returns><c>true</c> if this string is equal to the given value; otherwise, <c>false</c>.</returns>
+        public override bool Equals(Object obj)
+        {
+            return obj is String && Equals((String)obj);
+        }
+
+        /// <summary>
+        /// Gets a hash code for this string.
+        /// </summary>
+        /// <returns>A hash code.</returns>
+        public override int GetHashCode()
+        {
+            // This is the `djb2` hash algorithm by Dan Bernstein. It can be
+            // found at http://www.cse.yorku.ca/~oz/hash.html
+
+            int hash = 5381;
+
+            for (int i = 0; i < Length; i++)
+            {
+                hash = ((hash << 5) + hash) + this[i]; /* hash * 33 + c */
+            }
+
+            return hash;
+        }
 
         /// <summary>
         /// Concatenates two strings.
