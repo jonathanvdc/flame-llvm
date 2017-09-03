@@ -41,7 +41,8 @@ namespace Flame.LLVM
                 DependencyBuilder.Environment,
                 new LLVMAbi(
                     ItaniumMangler.Instance,
-                    new ExternalGCDescription(multiBinder, DependencyBuilder.Log)),
+                    new ExternalGCDescription(multiBinder, DependencyBuilder.Log),
+                    ItaniumCxxEHDescription.Instance),
                 AttributeMap.Empty);
 
             // -fintegrated-runtime will look in the compiled assembly for runtime types.

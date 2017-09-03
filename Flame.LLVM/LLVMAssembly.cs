@@ -28,7 +28,7 @@ namespace Flame.LLVM
         {
             this.Name = Name;
             this.Abi = Abi;
-            this.ExternalAbi = new LLVMAbi(CMangler.Instance, Abi.GarbageCollector);
+            this.ExternalAbi = new LLVMAbi(CMangler.Instance, Abi.GarbageCollector, Abi.ExceptionHandling);
             this.AssemblyVersion = AssemblyVersion;
             this.Attributes = Attributes;
             this.Environment = Environment;

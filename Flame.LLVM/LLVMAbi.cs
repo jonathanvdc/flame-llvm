@@ -8,12 +8,16 @@ namespace Flame.LLVM
     public sealed class LLVMAbi
     {
         /// <summary>
-        /// Creates an LLVM ABI from the given name mangler.
+        /// Creates an LLVM ABI.
         /// </summary>
-        public LLVMAbi(NameMangler Mangler, GCDescription GarbageCollector)
+        public LLVMAbi(
+            NameMangler Mangler,
+            GCDescription GarbageCollector,
+            EHDescription ExceptionHandling)
         {
             this.Mangler = Mangler;
             this.GarbageCollector = GarbageCollector;
+            this.ExceptionHandling = ExceptionHandling;
         }
 
         /// <summary>
@@ -27,6 +31,12 @@ namespace Flame.LLVM
         /// </summary>
         /// <returns>The garbage collector interface.</returns>
         public GCDescription GarbageCollector { get; private set; }
+
+        /// <summary>
+        /// Gets the exception handling description for this ABI.
+        /// </summary>
+        /// <returns>The exception handling description.</returns>
+        public EHDescription ExceptionHandling { get; private set; }
 
         private LLVMAbi GetThis()
         {
