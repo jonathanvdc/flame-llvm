@@ -196,27 +196,46 @@ namespace Flame.LLVM.Codegen
                 var targetAndBlock = EmitTarget(BasicBlock, deleg.Target);
                 BasicBlock = targetAndBlock.BasicBlock;
 
-                bool hasVoidRetType = retType == PrimitiveTypes.Void;
                 var argsAndBlock = EmitArguments(BasicBlock, targetAndBlock.Value, Arguments);
                 BasicBlock = argsAndBlock.Item2;
 
                 var calleeAndBlock = EmitCallee(BasicBlock, targetAndBlock.Value, deleg.Callee, deleg.Op);
                 BasicBlock = calleeAndBlock.BasicBlock;
 
-                var callRef = BuildCall(
-                    BasicBlock.Builder,
-                    calleeAndBlock.Value,
-                    argsAndBlock.Item1,
-                    hasVoidRetType ? "" : "call_tmp");
+                return EmitCall(BasicBlock, calleeAndBlock.Value, argsAndBlock.Item1);
+            }
+            else if (Callee is IntrinsicBlock)
+            {
+                var argsAndBlock = EmitArguments(BasicBlock, new LLVMValueRef(IntPtr.Zero), Arguments);
+                BasicBlock = argsAndBlock.Item2;
 
-                return hasVoidRetType
-                    ? new BlockCodegen(BasicBlock)
-                    : new BlockCodegen(BasicBlock, callRef);
+                var intrinsicAndBlock = Callee.Emit(BasicBlock);
+                BasicBlock = intrinsicAndBlock.BasicBlock;
+
+                return EmitCall(BasicBlock, intrinsicAndBlock.Value, argsAndBlock.Item1);
             }
             else
             {
                 throw new NotImplementedException("Indirect calls are not supported yet.");
             }
+        }
+
+        private BlockCodegen EmitCall(
+            BasicBlockBuilder BasicBlock,
+            LLVMValueRef Callee,
+            LLVMValueRef[] Arguments)
+        {
+            bool hasVoidRetType = retType == PrimitiveTypes.Void;
+
+            var callRef = BuildCall(
+                BasicBlock.Builder,
+                Callee,
+                Arguments,
+                hasVoidRetType ? "" : "call_tmp");
+
+            return hasVoidRetType
+                ? new BlockCodegen(BasicBlock)
+                : new BlockCodegen(BasicBlock, callRef);
         }
     }
 }

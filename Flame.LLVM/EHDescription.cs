@@ -1,5 +1,6 @@
 using System;
 using Flame.Compiler;
+using Flame.Compiler.Emit;
 using Flame.Compiler.Expressions;
 using Flame.LLVM.Codegen;
 
@@ -36,7 +37,69 @@ namespace Flame.LLVM
         /// <inheritdoc/>
         public override CodeBlock EmitThrow(LLVMCodeGenerator CodeGenerator, CodeBlock Exception)
         {
-            throw new NotImplementedException();
+            // Generate something more or less like this:
+            //
+            //     %1 = call i8* @__cxa_allocate_exception(i64 <sizeof(value-to-throw)>)
+            //     %2 = bitcast i8* %1 to <typeof(value-to-throw)>*
+            //     store i8* <value-to-throw>, <typeof(value-to-throw)>* %2
+            //     call void @__cxa_throw(i8* %1, i8* bitcast (i8** @_ZTIPv to i8*), i8* null)
+            //     unreachable
+            //
+
+            var exceptionType = Exception.Type;
+
+            var exceptionStorageSpec = new DescribedVariableMember(
+                "exception_storage",
+                PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer));
+
+            var exceptionStorage = CodeGenerator.DeclareLocal(
+                new UniqueTag(exceptionStorageSpec.Name.ToString()),
+                exceptionStorageSpec);
+
+            var allocStmt = exceptionStorage.EmitSet(
+                new InvocationBlock(
+                    CodeGenerator,
+                    new IntrinsicBlock(CodeGenerator, IntrinsicValue.CxaAllocateException),
+                    new CodeBlock[] 
+                    {
+                        (CodeBlock)CodeGenerator.EmitTypeBinary(
+                            CodeGenerator.EmitSizeOf(exceptionType),
+                            MethodType
+                                .GetMethod(IntrinsicValue.CxaAllocateException.Type)
+                                .GetParameters()[0].ParameterType,
+                            Operator.StaticCast)
+                    }));
+
+            var storeStmt = CodeGenerator.EmitStoreAtAddress(
+                CodeGenerator.EmitTypeBinary(
+                    exceptionStorage.EmitGet(),
+                    exceptionType.MakePointerType(PointerKind.TransientPointer),
+                    Operator.ReinterpretCast),
+                Exception);
+
+            var throwStmt = new InvocationBlock(
+                CodeGenerator,
+                new IntrinsicBlock(CodeGenerator, IntrinsicValue.CxaThrow),
+                new CodeBlock[]
+                {
+                    (CodeBlock)exceptionStorage.EmitGet(),
+                    (CodeBlock)CodeGenerator.EmitTypeBinary(
+                        new IntrinsicBlock(CodeGenerator, IntrinsicValue.CxaVoidPointerRtti),
+                        PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
+                        Operator.ReinterpretCast),
+                    (CodeBlock)CodeGenerator.EmitTypeBinary(
+                        CodeGenerator.EmitNull(),
+                        PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
+                        Operator.ReinterpretCast)
+                });
+
+            return (CodeBlock)CodeGenerator.EmitSequence(
+                allocStmt,
+                CodeGenerator.EmitSequence(
+                    storeStmt,
+                    CodeGenerator.EmitSequence(
+                        throwStmt,
+                        new UnreachableBlock(CodeGenerator, PrimitiveTypes.Void))));
         }
     }
 }

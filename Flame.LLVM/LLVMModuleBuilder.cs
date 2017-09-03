@@ -472,7 +472,7 @@ namespace Flame.LLVM
             LLVMValueRef result;
             if (!declaredIntrinsics.TryGetValue(Intrinsic, out result))
             {
-                result = Intrinsic.Declare(module);
+                result = Intrinsic.Declare(this, module);
                 declaredIntrinsics[Intrinsic] = result;
             }
             return result;
