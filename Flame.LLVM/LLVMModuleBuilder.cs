@@ -32,6 +32,7 @@ namespace Flame.LLVM
             this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
             this.declaredTypeIndices = new Dictionary<LLVMType, ulong>();
             this.declaredVTables = new Dictionary<LLVMType, VTableInstance>();
+            this.declaredIntrinsics = new Dictionary<IntrinsicValue, LLVMValueRef>();
             this.interfaceStubs = new Dictionary<LLVMMethod, InterfaceStub>();
             this.primeGen = new PrimeNumberGenerator();
             this.staticConstructorLocks = new Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>>();
@@ -50,6 +51,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, ulong> declaredTypeIndices;
         private Dictionary<LLVMType, VTableInstance> declaredVTables;
         private Dictionary<LLVMMethod, InterfaceStub> interfaceStubs;
+        private Dictionary<IntrinsicValue, LLVMValueRef> declaredIntrinsics;
         private PrimeNumberGenerator primeGen;
         private Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>> staticConstructorLocks;
 
@@ -458,6 +460,22 @@ namespace Flame.LLVM
                 return PointerType(Int8Type(), 0);
             }
             throw new NotImplementedException(string.Format("Type not supported: '{0}'", Type));
+        }
+
+        /// <summary>
+        /// Declares the given intrinsic if it was not declared already.
+        /// </summary>
+        /// <param name="Intrinsic">The intrinsic to declare.</param>
+        /// <returns>The intrinsic's declaration.</returns>
+        public LLVMValueRef Declare(IntrinsicValue Intrinsic)
+        {
+            LLVMValueRef result;
+            if (!declaredIntrinsics.TryGetValue(Intrinsic, out result))
+            {
+                result = Intrinsic.Declare(module);
+                declaredIntrinsics[Intrinsic] = result;
+            }
+            return result;
         }
 
         /// <summary>

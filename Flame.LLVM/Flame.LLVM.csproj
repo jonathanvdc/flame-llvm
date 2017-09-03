@@ -50,8 +50,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="EHDescription.cs" />
     <Compile Include="GCDescription.cs" />
     <Compile Include="InterfaceStub.cs" />
+    <Compile Include="IntrinsicValue.cs" />
     <Compile Include="ItaniumMangler.cs" />
     <Compile Include="LLVMAbi.cs" />
     <Compile Include="LLVMAccessor.cs" />
@@ -81,6 +83,7 @@
     <Compile Include="Codegen\GetFieldPtrBlock.cs" />
     <Compile Include="Codegen\GetParameterBlock.cs" />
     <Compile Include="Codegen\IfElseBlock.cs" />
+    <Compile Include="Codegen\IntrinsicBlock.cs" />
     <Compile Include="Codegen\InvocationBlock.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
     <Compile Include="Codegen\PopBlock.cs" />
