@@ -744,12 +744,12 @@ namespace Flame.LLVM
             var isRunningPtr = lockTriple.Item2;
             var isRunningHerePtr = lockTriple.Item3;
 
-            var checkRunningHereBlock = BasicBlock.FunctionBody.AppendBasicBlock("check_running_cctor_here");
-            var waitForLockBlock = BasicBlock.FunctionBody.AppendBasicBlock("wait_for_cctor_lock");
-            var maybeRunBlock = BasicBlock.FunctionBody.AppendBasicBlock("maybe_run_cctor");
-            var runBlock = BasicBlock.FunctionBody.AppendBasicBlock("run_cctor");
-            var resetLockBlock = BasicBlock.FunctionBody.AppendBasicBlock("reset_lock");
-            var afterBlock = BasicBlock.FunctionBody.AppendBasicBlock("after_cctor");
+            var checkRunningHereBlock = BasicBlock.CreateChildBlock("check_running_cctor_here");
+            var waitForLockBlock = BasicBlock.CreateChildBlock("wait_for_cctor_lock");
+            var maybeRunBlock = BasicBlock.CreateChildBlock("maybe_run_cctor");
+            var runBlock = BasicBlock.CreateChildBlock("run_cctor");
+            var resetLockBlock = BasicBlock.CreateChildBlock("reset_lock");
+            var afterBlock = BasicBlock.CreateChildBlock("after_cctor");
 
             // Implement the entry basic block.
             BuildCondBr(

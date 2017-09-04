@@ -36,7 +36,7 @@ namespace Flame.LLVM.Codegen
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
             BuildUnreachable(BasicBlock.Builder);
-            var newBlock = BasicBlock.FunctionBody.AppendBasicBlock("post_unreachable");
+            var newBlock = BasicBlock.CreateChildBlock("post_unreachable");
             return new BlockCodegen(
                 newBlock,
                 PrimitiveTypes.Void == Type

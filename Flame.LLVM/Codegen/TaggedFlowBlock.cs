@@ -50,8 +50,8 @@ namespace Flame.LLVM.Codegen
         /// <inheritdoc/>
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            var continueBlock = BasicBlock.FunctionBody.AppendBasicBlock("continue_block");
-            var breakBlock = BasicBlock.FunctionBody.AppendBasicBlock("break_block");
+            var continueBlock = BasicBlock.CreateChildBlock("continue_block");
+            var breakBlock = BasicBlock.CreateChildBlock("break_block");
             BasicBlock.FunctionBody.TagFlowBlock(Tag, breakBlock.Block, continueBlock.Block);
 
             BuildBr(BasicBlock.Builder, continueBlock.Block);

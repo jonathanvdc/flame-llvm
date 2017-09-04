@@ -67,7 +67,7 @@ namespace Flame.LLVM.Codegen
         {
             if (Body != null)
             {
-                ClauseBlock = MergeBlock.FunctionBody.AppendBasicBlock(Name);
+                ClauseBlock = MergeBlock.CreateChildBlock(Name);
                 var clauseResult = Body.Emit(ClauseBlock);
                 BuildBr(clauseResult.BasicBlock.Builder, MergeBlock.Block);
                 return clauseResult;
@@ -84,7 +84,7 @@ namespace Flame.LLVM.Codegen
         {
             var conditionResult = Condition.Emit(BasicBlock);
             BasicBlock = conditionResult.BasicBlock;
-            var mergeBlock = BasicBlock.FunctionBody.AppendBasicBlock("if_else_merge");
+            var mergeBlock = BasicBlock.CreateChildBlock("if_else_merge");
 
             BasicBlockBuilder ifBlock;
             BasicBlockBuilder elseBlock;

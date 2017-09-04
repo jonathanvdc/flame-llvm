@@ -68,7 +68,7 @@ namespace Flame.LLVM.Codegen
                 : BasicBlock.FunctionBody.GetContinueBlock(Tag);
 
             BuildBr(BasicBlock.Builder, targetBlock);
-            return new BlockCodegen(BasicBlock.FunctionBody.AppendBasicBlock());
+            return new BlockCodegen(BasicBlock.CreateChildBlock());
         }
     }
 }

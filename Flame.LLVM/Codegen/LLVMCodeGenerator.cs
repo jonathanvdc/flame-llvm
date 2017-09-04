@@ -512,7 +512,8 @@ namespace Flame.LLVM.Codegen
             return new InvocationBlock(
                 this,
                 (CodeBlock)Method,
-                Arguments.Cast<CodeBlock>());
+                Arguments.Cast<CodeBlock>(),
+                true);
         }
 
         public ICodeBlock EmitMethod(IMethod Method, ICodeBlock Caller, Operator Op)

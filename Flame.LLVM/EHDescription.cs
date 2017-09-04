@@ -83,7 +83,8 @@ namespace Flame.LLVM
                                 .GetMethod(IntrinsicValue.CxaAllocateException.Type)
                                 .GetParameters()[0].ParameterType,
                             Operator.StaticCast)
-                    }));
+                    },
+                    false));
 
             var storeStmt = CodeGenerator.EmitStoreAtAddress(
                 CodeGenerator.EmitTypeBinary(
@@ -106,7 +107,8 @@ namespace Flame.LLVM
                         CodeGenerator.EmitNull(),
                         PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
                         Operator.ReinterpretCast)
-                });
+                },
+                false);
 
             return (CodeBlock)CodeGenerator.EmitSequence(
                 allocStmt,
@@ -124,7 +126,7 @@ namespace Flame.LLVM
             CodeBlock FinallyBody,
             IReadOnlyList<CatchClause> CatchClauses)
         {
-            throw new NotImplementedException();
+            return new ItaniumCxxTryBlock(CodeGenerator, TryBody, FinallyBody, CatchClauses);
         }
     }
 }

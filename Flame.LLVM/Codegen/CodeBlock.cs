@@ -81,6 +81,7 @@ namespace Flame.LLVM.Codegen
             this.taggedValues = new Dictionary<UniqueTag, LLVMValueRef>();
             this.breakBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
             this.continueBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
+            this.ExceptionTupleStorage = new Lazy<LLVMValueRef>(CreateExceptionTupleStorage);
         }
 
         /// <summary>
@@ -96,6 +97,12 @@ namespace Flame.LLVM.Codegen
         /// <returns>The LLVM function.</returns>
         public LLVMValueRef Function { get; private set; }
 
+        /// <summary>
+        /// Gets the storage location for the current exception.
+        /// </summary>
+        /// <returns>The storage location for the current exception.</returns>
+        public Lazy<LLVMValueRef> ExceptionTupleStorage { get; private set; }
+
         private Dictionary<UniqueTag, LLVMValueRef> taggedValues;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> breakBlocks;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> continueBlocks;
@@ -105,6 +112,19 @@ namespace Flame.LLVM.Codegen
         private string Id(string Value)
         {
             return Value;
+        }
+
+        private LLVMValueRef CreateExceptionTupleStorage()
+        {
+            var entry = Function.GetEntryBasicBlock();
+            var builder = CreateBuilder();
+            PositionBuilderBefore(builder, entry.GetFirstInstruction());
+            var result = BuildAlloca(
+                builder,
+                StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false),
+                "exception_tuple_alloca");
+            DisposeBuilder(builder);
+            return result;
         }
 
         /// <summary>
@@ -225,6 +245,61 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         /// <returns>The LLVM builder for the basic block.</returns>
         public LLVMBuilderRef Builder { get; private set; }
+
+        /// <summary>
+        /// Gets the basic block to which 'invoke' instructions in this block
+        /// should unwind.
+        /// </summary>
+        /// <returns>The unwind target.</returns>
+        public LLVMBasicBlockRef UnwindTarget { get; private set; }
+
+        /// <summary>
+        /// Tests if this code block has an unwind target.
+        /// </summary>
+        public bool HasUnwindTarget => UnwindTarget.Pointer != IntPtr.Zero;
+
+        /// <summary>
+        /// Creates a child block from this basic block.
+        /// </summary>
+        /// <param name="Name">The child block's name.</param>
+        /// <returns>A child block.</returns>
+        public BasicBlockBuilder CreateChildBlock(string Name)
+        {
+            return FunctionBody.AppendBasicBlock(Name).WithUnwindTarget(UnwindTarget);
+        }
+
+        /// <summary>
+        /// Creates a child block from this basic block.
+        /// </summary>
+        /// <returns>A child block.</returns>
+        public BasicBlockBuilder CreateChildBlock()
+        {
+            return FunctionBody.AppendBasicBlock().WithUnwindTarget(UnwindTarget);
+        }
+
+        /// <summary>
+        /// Creates a new basic block builder that appends instructions to
+        /// this block, but with a different unwind target.
+        /// </summary>
+        /// <param name="Target">The new unwind target.</param>
+        /// <returns>A new basic block builder for the same basic block.</returns>
+        public BasicBlockBuilder WithUnwindTarget(LLVMBasicBlockRef Target)
+        {
+            var result = new BasicBlockBuilder(FunctionBody, Block);
+            result.UnwindTarget = Target;
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a new basic block builder that appends instructions to
+        /// this block, but with a different unwind target.
+        /// </summary>
+        /// <param name="Target">The new unwind target.</param>
+        /// <returns>A new basic block builder for the same basic block.</returns>
+        public BasicBlockBuilder WithUnwindTarget(BasicBlockBuilder Target)
+        {
+            return WithUnwindTarget(Target.Block);
+        }
     }
 }
 

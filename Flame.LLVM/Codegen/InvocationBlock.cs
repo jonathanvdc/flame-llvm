@@ -18,15 +18,18 @@ namespace Flame.LLVM.Codegen
         /// <param name="CodeGenerator">The code generator that creates this block.</param>
         /// <param name="Callee">The delegate to call.</param>
         /// <param name="Arguments">The argument list for the call.</param>
+        /// <param name="CanThrow">Tells if the invocation can throw an exception.</param>
         public InvocationBlock(
             ICodeGenerator CodeGenerator,
             CodeBlock Callee,
-            IEnumerable<CodeBlock> Arguments)
+            IEnumerable<CodeBlock> Arguments,
+            bool CanThrow)
         {
             this.codeGen = CodeGenerator;
             this.Callee = Callee;
             this.Arguments = Arguments;
             this.retType = MethodType.GetMethod(Callee.Type).ReturnType;
+            this.CanThrow = CanThrow;
         }
 
         /// <summary>
@@ -40,6 +43,12 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         /// <returns>The argument list.</returns>
         public IEnumerable<CodeBlock> Arguments { get; private set; }
+
+        /// <summary>
+        /// Tells if the invocation can throw an exception.
+        /// </summary>
+        /// <returns><c>true</c> if the invocation can throw; otherwise, <c>false</c>.</returns>
+        public bool CanThrow { get; private set; }
 
         private ICodeGenerator codeGen;
 
