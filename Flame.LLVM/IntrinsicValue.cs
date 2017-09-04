@@ -76,6 +76,23 @@ namespace Flame.LLVM
         }
 
         /// <summary>
+        /// An intrinsic that represents the '__gxx_personality_v0' C++ ABI function.
+        /// </summary>
+        /// <remarks>
+        /// Signature: @__gxx_personality_v0 = external constant i8*
+        /// </remarks>
+        public static readonly IntrinsicValue GxxPersonalityV0;
+
+        private static LLVMValueRef DeclareGxxPersonalityV0(
+            LLVMModuleBuilder ModuleBuilder, LLVMModuleRef LLVMModule)
+        {
+            var type = PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer);
+            var result = ModuleBuilder.DeclareGlobal(ModuleBuilder.Declare(type), "__gxx_personality_v0");
+            result.SetGlobalConstant(true);
+            return result;
+        }
+
+        /// <summary>
         /// An intrinsic that represents the 'void*' C++ RTTI ('_ZTIPv').
         /// </summary>
         /// <remarks>
@@ -133,6 +150,11 @@ namespace Flame.LLVM
             CxaThrow = new IntrinsicValue(
                 MethodType.Create(CxaThrowSignature),
                 DeclareCxaThrow);
+
+            // Signature: @__gxx_personality_v0 = external constant i8*
+            GxxPersonalityV0 = new IntrinsicValue(
+                PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
+                DeclareGxxPersonalityV0);
 
             // Signature: @_ZTIPv = external constant i8*
             CxaVoidPointerRtti = new IntrinsicValue(

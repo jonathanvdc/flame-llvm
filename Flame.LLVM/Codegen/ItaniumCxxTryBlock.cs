@@ -58,6 +58,7 @@ namespace Flame.LLVM.Codegen
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
             var catchBlock = BasicBlock.CreateChildBlock("catch");
+            var catchCleanupBlock = BasicBlock.CreateChildBlock("catch_cleanup");
             var finallyBlock = BasicBlock.CreateChildBlock("finally");
             var leaveBlock = BasicBlock.CreateChildBlock("leave");
 
@@ -74,27 +75,22 @@ namespace Flame.LLVM.Codegen
             //
             // finally:
             //     <finally body>
-            //     if (exception == null)
+            //     if (exception_val == null)
             //     {
             //         goto leave_try;
             //     }
             //     else
             //     {
             //         static if (is_top_level_try)
-            //             resume exception;
+            //             resume exception_data;
             //         else
             //             goto next_unwind_target;
             //     }
 
             var finallyTail = FinallyBody.Emit(finallyBlock).BasicBlock;
-            var exceptionTuple = BuildLoad(
+            var exceptionVal = BuildLoad(
                 finallyTail.Builder,
-                finallyBlock.FunctionBody.ExceptionTupleStorage.Value,
-                "exception_tuple");
-            var exceptionVal = BuildExtractValue(
-                finallyTail.Builder,
-                exceptionTuple,
-                0,
+                finallyTail.FunctionBody.ExceptionValueStorage.Value,
                 "exception_val");
 
             LLVMBasicBlockRef propagateExceptionBlock;
@@ -105,6 +101,10 @@ namespace Flame.LLVM.Codegen
             else
             {
                 var resumeBlock = finallyTail.CreateChildBlock("resume");
+                var exceptionTuple = BuildLoad(
+                    resumeBlock.Builder,
+                    resumeBlock.FunctionBody.ExceptionDataStorage.Value,
+                    "exception_tuple");
                 BuildResume(resumeBlock.Builder, exceptionTuple);
                 propagateExceptionBlock = resumeBlock.Block;
             }
@@ -119,6 +119,37 @@ namespace Flame.LLVM.Codegen
                     "has_no_exception"),
                 leaveBlock.Block,
                 propagateExceptionBlock);
+
+            // For the catch clauses, we'll create a catch-everything block and then
+            // filter on exception types. A catch block's header looks like this:
+            //
+            // catch:
+            //     %exception_data = { i8*, i32 } landingpad cleanup
+            //     store { i8*, i32 } %exception_data, { i8*, i32 }* %exception_data_alloca
+            //     %exception_obj = extractvalue { i8*, i32 } %exception_data, 0
+            //     %exception = call i8* @__cxa_begin_catch(i8* %exception_obj)
+            //     store i8* %exception, i8** %exception_alloca
+            //
+
+            var exceptionDataType = StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false);
+            var exceptionData = BuildLandingPad(
+                catchBlock.Builder,
+                exceptionDataType,
+                BasicBlock.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0),
+                0,
+                "exception_data");
+            exceptionData.SetCleanup(true);
+
+            BuildStore(
+                catchBlock.Builder,
+                exceptionData,
+                catchBlock.FunctionBody.ExceptionDataStorage.Value);
+
+            var exceptionObj = BuildExtractValue(
+                catchBlock.Builder,
+                exceptionData,
+                0,
+                "exception_obj");
 
             throw new System.NotImplementedException();
         }

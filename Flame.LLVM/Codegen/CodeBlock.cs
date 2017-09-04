@@ -81,7 +81,8 @@ namespace Flame.LLVM.Codegen
             this.taggedValues = new Dictionary<UniqueTag, LLVMValueRef>();
             this.breakBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
             this.continueBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
-            this.ExceptionTupleStorage = new Lazy<LLVMValueRef>(CreateExceptionTupleStorage);
+            this.ExceptionDataStorage = new Lazy<LLVMValueRef>(CreateExceptionDataStorage);
+            this.ExceptionValueStorage = new Lazy<LLVMValueRef>(CreateExceptionValueStorage);
         }
 
         /// <summary>
@@ -98,10 +99,16 @@ namespace Flame.LLVM.Codegen
         public LLVMValueRef Function { get; private set; }
 
         /// <summary>
-        /// Gets the storage location for the current exception.
+        /// Gets the storage location for the current exception's data.
         /// </summary>
-        /// <returns>The storage location for the current exception.</returns>
-        public Lazy<LLVMValueRef> ExceptionTupleStorage { get; private set; }
+        /// <returns>The storage location for the current exception's data.</returns>
+        public Lazy<LLVMValueRef> ExceptionDataStorage { get; private set; }
+
+        /// <summary>
+        /// Gets the storage location for the current exception's value.
+        /// </summary>
+        /// <returns>The storage location for the current exception's value.</returns>
+        public Lazy<LLVMValueRef> ExceptionValueStorage { get; private set; }
 
         private Dictionary<UniqueTag, LLVMValueRef> taggedValues;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> breakBlocks;
@@ -114,17 +121,28 @@ namespace Flame.LLVM.Codegen
             return Value;
         }
 
-        private LLVMValueRef CreateExceptionTupleStorage()
+        private LLVMValueRef CreateEntryPointAlloca(LLVMTypeRef Type, string Name)
         {
             var entry = Function.GetEntryBasicBlock();
             var builder = CreateBuilder();
             PositionBuilderBefore(builder, entry.GetFirstInstruction());
-            var result = BuildAlloca(
-                builder,
-                StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false),
-                "exception_tuple_alloca");
+            var result = BuildAlloca(builder, Type, Name);
             DisposeBuilder(builder);
             return result;
+        }
+
+        private LLVMValueRef CreateExceptionDataStorage()
+        {
+            return CreateEntryPointAlloca(
+                StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false),
+                "exception_tuple_alloca");
+        }
+
+        private LLVMValueRef CreateExceptionValueStorage()
+        {
+            return CreateEntryPointAlloca(
+                PointerType(Int8Type(), 0),
+                "exception_value_alloca");
         }
 
         /// <summary>
