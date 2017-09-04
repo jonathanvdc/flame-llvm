@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Flame.Compiler;
 using Flame.Compiler.Emit;
 using Flame.Compiler.Expressions;
@@ -18,6 +19,20 @@ namespace Flame.LLVM
         /// <param name="Exception">The exception to throw.</param>
         /// <returns>A code block that throws the given exception object.</returns>
         public abstract CodeBlock EmitThrow(LLVMCodeGenerator CodeGenerator, CodeBlock Exception);
+
+        /// <summary>
+        /// Creates a try-catch-finally block.
+        /// </summary>
+        /// <param name="CodeGenerator">The code generator.</param>
+        /// <param name="TryBody">The try block's body.</param>
+        /// <param name="FinallyBody">The finally block's body.</param>
+        /// <param name="CatchClauses">The catch clauses.</param>
+        /// <returns>A try-catch-finally block.</returns>
+        public abstract CodeBlock EmitTryCatchFinally(
+            LLVMCodeGenerator CodeGenerator,
+            CodeBlock TryBody,
+            CodeBlock FinallyBody,
+            IReadOnlyList<CatchClause> CatchClauses);
     }
 
     /// <summary>
@@ -100,6 +115,16 @@ namespace Flame.LLVM
                     CodeGenerator.EmitSequence(
                         throwStmt,
                         new UnreachableBlock(CodeGenerator, PrimitiveTypes.Void))));
+        }
+
+        /// <inheritdoc/>
+        public override CodeBlock EmitTryCatchFinally(
+            LLVMCodeGenerator CodeGenerator,
+            CodeBlock TryBody,
+            CodeBlock FinallyBody,
+            IReadOnlyList<CatchClause> CatchClauses)
+        {
+            throw new NotImplementedException();
         }
     }
 }

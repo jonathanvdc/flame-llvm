@@ -999,12 +999,15 @@ namespace Flame.LLVM.Codegen
 
         public ICatchHeader EmitCatchHeader(IVariableMember ExceptionVariable)
         {
-            throw new NotImplementedException();
+            return new CatchHeader(
+                DeclareLocal(
+                    new UniqueTag(ExceptionVariable.Name.ToString()),
+                    ExceptionVariable));
         }
 
         public ICatchClause EmitCatchClause(ICatchHeader Header, ICodeBlock Body)
         {
-            throw new NotImplementedException();
+            return new CatchClause(Header, (CodeBlock)Body);
         }
 
         public ICodeBlock EmitTryBlock(
@@ -1012,7 +1015,11 @@ namespace Flame.LLVM.Codegen
             ICodeBlock FinallyBody,
             IEnumerable<ICatchClause> CatchClauses)
         {
-            throw new NotImplementedException();
+            return ((LLVMMethod)Method).Abi.ExceptionHandling.EmitTryCatchFinally(
+                this,
+                (CodeBlock)TryBody,
+                (CodeBlock)FinallyBody,
+                CatchClauses.Cast<CatchClause>().ToArray<CatchClause>());
         }
 
         #endregion
