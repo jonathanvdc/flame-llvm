@@ -1,5 +1,6 @@
 using System;
 using Flame.Compiler;
+using LLVMSharp;
 using static LLVMSharp.LLVM;
 
 namespace Flame.LLVM.Codegen
@@ -41,11 +42,22 @@ namespace Flame.LLVM.Codegen
         {
             return new BlockCodegen(
                 BasicBlock,
-                BuildBitCast(
-                    BasicBlock.Builder,
-                    BasicBlock.FunctionBody.Module.GetVTable(VTableType).Pointer,
-                    PointerType(Int8Type(), 0),
-                    "vtable_tmp"));
+                BuildTypeVTable(BasicBlock, VTableType));
+        }
+
+        /// <summary>
+        /// Builds a value that computes a pointer to the vtable for the given type.
+        /// </summary>
+        /// <param name="BasicBlock">The basic block to build the instruction in.</param>
+        /// <param name="Type">The type whose vtable pointer is to be computes.</param>
+        /// <returns>A value that computes a vtable pointer.</returns>
+        public static LLVMValueRef BuildTypeVTable(BasicBlockBuilder BasicBlock, LLVMType Type)
+        {
+            return BuildBitCast(
+                BasicBlock.Builder,
+                BasicBlock.FunctionBody.Module.GetVTable(Type).Pointer,
+                PointerType(Int8Type(), 0),
+                "vtable_tmp");
         }
     }
 }

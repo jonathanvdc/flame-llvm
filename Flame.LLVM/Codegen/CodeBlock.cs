@@ -272,6 +272,13 @@ namespace Flame.LLVM.Codegen
         public LLVMBasicBlockRef UnwindTarget { get; private set; }
 
         /// <summary>
+        /// Gets the basic block to which branch instructions should refer if
+        /// they want to manually unwind an exception handling region.
+        /// </summary>
+        /// <returns>The manual unwind target.</returns>
+        public LLVMBasicBlockRef ManualUnwindTarget { get; private set; }
+
+        /// <summary>
         /// Tests if this code block has an unwind target.
         /// </summary>
         public bool HasUnwindTarget => UnwindTarget.Pointer != IntPtr.Zero;
@@ -283,7 +290,10 @@ namespace Flame.LLVM.Codegen
         /// <returns>A child block.</returns>
         public BasicBlockBuilder CreateChildBlock(string Name)
         {
-            return FunctionBody.AppendBasicBlock(Name).WithUnwindTarget(UnwindTarget);
+            var result = FunctionBody.AppendBasicBlock(Name);
+            result.UnwindTarget = UnwindTarget;
+            result.ManualUnwindTarget = ManualUnwindTarget;
+            return result;
         }
 
         /// <summary>
@@ -292,19 +302,9 @@ namespace Flame.LLVM.Codegen
         /// <returns>A child block.</returns>
         public BasicBlockBuilder CreateChildBlock()
         {
-            return FunctionBody.AppendBasicBlock().WithUnwindTarget(UnwindTarget);
-        }
-
-        /// <summary>
-        /// Creates a new basic block builder that appends instructions to
-        /// this block, but with a different unwind target.
-        /// </summary>
-        /// <param name="Target">The new unwind target.</param>
-        /// <returns>A new basic block builder for the same basic block.</returns>
-        public BasicBlockBuilder WithUnwindTarget(LLVMBasicBlockRef Target)
-        {
-            var result = new BasicBlockBuilder(FunctionBody, Block);
-            result.UnwindTarget = Target;
+            var result = FunctionBody.AppendBasicBlock();
+            result.UnwindTarget = UnwindTarget;
+            result.ManualUnwindTarget = ManualUnwindTarget;
             return result;
         }
 
@@ -312,11 +312,39 @@ namespace Flame.LLVM.Codegen
         /// Creates a new basic block builder that appends instructions to
         /// this block, but with a different unwind target.
         /// </summary>
-        /// <param name="Target">The new unwind target.</param>
+        /// <param name="Target">
+        /// The automatic unwind target to which 'invoke' instructions can refer.
+        /// </param>
+        /// <param name="ManualTarget">
+        /// The manual unwind target to which branch instructions can refer.
+        /// </param>
         /// <returns>A new basic block builder for the same basic block.</returns>
-        public BasicBlockBuilder WithUnwindTarget(BasicBlockBuilder Target)
+        public BasicBlockBuilder WithUnwindTarget(
+            LLVMBasicBlockRef Target,
+            LLVMBasicBlockRef ManualTarget)
         {
-            return WithUnwindTarget(Target.Block);
+            var result = new BasicBlockBuilder(FunctionBody, Block);
+            result.UnwindTarget = Target;
+            result.ManualUnwindTarget = ManualTarget;
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a new basic block builder that appends instructions to
+        /// this block, but with a different unwind target.
+        /// </summary>
+        /// <param name="Target">
+        /// The automatic unwind target to which 'invoke' instructions can refer.
+        /// </param>
+        /// <param name="ManualTarget">
+        /// The manual unwind target to which branch instructions can refer.
+        /// </param>
+        /// <returns>A new basic block builder for the same basic block.</returns>
+        public BasicBlockBuilder WithUnwindTarget(
+            BasicBlockBuilder Target,
+            BasicBlockBuilder ManualTarget)
+        {
+            return WithUnwindTarget(Target.Block, ManualTarget.Block);
         }
     }
 }

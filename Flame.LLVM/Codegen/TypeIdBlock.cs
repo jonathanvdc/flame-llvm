@@ -1,5 +1,6 @@
 using System;
 using Flame.Compiler;
+using LLVMSharp;
 using static LLVMSharp.LLVM;
 
 namespace Flame.LLVM.Codegen
@@ -43,18 +44,32 @@ namespace Flame.LLVM.Codegen
             BasicBlock = vtableCodegen.BasicBlock;
             return new BlockCodegen(
                 BasicBlock,
-                AtAddressEmitVariable.BuildConstantLoad(
-                    BasicBlock.Builder,
-                    BuildStructGEP(
-                        BasicBlock.Builder,
-                        BuildBitCast(
-                            BasicBlock.Builder,
-                            vtableCodegen.Value,
-                            PointerType(LLVMType.VTableType, 0),
-                            "vtable_tmp"),
-                        0,
-                        "typeid_ptr_tmp"),
-                    "typeid_tmp"));
+                BuildTypeid(BasicBlock.Builder, vtableCodegen.Value));
+        }
+
+        /// <summary>
+        /// Creates a sequence of instructions that computes the type ID
+        /// for the given VTable pointer.
+        /// </summary>
+        /// <param name="Builder">The builder to create the instructions in.</param>
+        /// <param name="VTablePtr">A pointer to a VTable.</param>
+        /// <returns>A type ID.</returns>
+        public static LLVMValueRef BuildTypeid(
+            LLVMBuilderRef Builder,
+            LLVMValueRef VTablePtr)
+        {
+            return AtAddressEmitVariable.BuildConstantLoad(
+                Builder,
+                BuildStructGEP(
+                    Builder,
+                    BuildBitCast(
+                        Builder,
+                        VTablePtr,
+                        PointerType(LLVMType.VTableType, 0),
+                        "vtable_tmp"),
+                    0,
+                    "typeid_ptr_tmp"),
+                "typeid_tmp");
         }
     }
 }

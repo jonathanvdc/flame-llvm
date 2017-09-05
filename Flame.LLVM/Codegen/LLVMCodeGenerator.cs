@@ -1001,6 +1001,7 @@ namespace Flame.LLVM.Codegen
         public ICatchHeader EmitCatchHeader(IVariableMember ExceptionVariable)
         {
             return new CatchHeader(
+                ExceptionVariable.VariableType,
                 DeclareLocal(
                     new UniqueTag(ExceptionVariable.Name.ToString()),
                     ExceptionVariable));
@@ -1008,7 +1009,7 @@ namespace Flame.LLVM.Codegen
 
         public ICatchClause EmitCatchClause(ICatchHeader Header, ICodeBlock Body)
         {
-            return new CatchClause(Header, (CodeBlock)Body);
+            return new CatchClause((CatchHeader)Header, (CodeBlock)Body);
         }
 
         public ICodeBlock EmitTryBlock(

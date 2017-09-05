@@ -57,21 +57,51 @@ namespace Flame.LLVM.Codegen
         /// <inheritdoc/>
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            var catchBlock = BasicBlock.CreateChildBlock("catch");
-            var catchCleanupBlock = BasicBlock.CreateChildBlock("catch_cleanup");
+            var exceptionDataType = StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false);
+            var personality = BasicBlock.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0);
+
             var finallyBlock = BasicBlock.CreateChildBlock("finally");
+
+            var catchBlock = BasicBlock.CreateChildBlock("catch");
+
+            var catchLandingPadBlock = BasicBlock.CreateChildBlock("catch_landingpad");
+
             var leaveBlock = BasicBlock.CreateChildBlock("leave");
 
             // The try block is a regular block that jumps to the finally block.
             //
             // try:
+            //     store i8* null, i8** %exception_alloca
             //     <try body>
             //     goto finally;
 
-            var tryCodegen = TryBody.Emit(BasicBlock.WithUnwindTarget(catchBlock));
+            BuildStore(
+                BasicBlock.Builder,
+                ConstNull(PointerType(Int8Type(), 0)),
+                BasicBlock.FunctionBody.ExceptionValueStorage.Value);
+            var tryCodegen = TryBody.Emit(BasicBlock.WithUnwindTarget(catchLandingPadBlock, catchBlock));
             BuildBr(tryCodegen.BasicBlock.Builder, finallyBlock.Block);
 
-            // The finally block is just a normal block that does this:
+            PopulateFinallyBlock(finallyBlock, leaveBlock);
+
+            PopulateCatchBlock(catchBlock, finallyBlock);
+            PopulateThunkLandingPadBlock(catchLandingPadBlock, catchBlock);
+
+            return new BlockCodegen(leaveBlock, tryCodegen.Value);
+        }
+
+        /// <summary>
+        /// Populates a 'finally' block with instructions.
+        /// </summary>
+        /// <param name="FinallyBlock">The 'finally' block to populate.</param>
+        /// <param name="LeaveBlock">
+        /// The 'leave' block to which the 'finally' block jumps if no exception was thrown.
+        /// </param>
+        private void PopulateFinallyBlock(
+            BasicBlockBuilder FinallyBlock,
+            BasicBlockBuilder LeaveBlock)
+        {
+            // A finally block is just a normal block that does this:
             //
             // finally:
             //     <finally body>
@@ -87,16 +117,16 @@ namespace Flame.LLVM.Codegen
             //             goto next_unwind_target;
             //     }
 
-            var finallyTail = FinallyBody.Emit(finallyBlock).BasicBlock;
+            var finallyTail = FinallyBody.Emit(FinallyBlock).BasicBlock;
             var exceptionVal = BuildLoad(
                 finallyTail.Builder,
                 finallyTail.FunctionBody.ExceptionValueStorage.Value,
                 "exception_val");
 
             LLVMBasicBlockRef propagateExceptionBlock;
-            if (BasicBlock.HasUnwindTarget)
+            if (FinallyBlock.HasUnwindTarget)
             {
-                propagateExceptionBlock = BasicBlock.UnwindTarget;
+                propagateExceptionBlock = FinallyBlock.ManualUnwindTarget;
             }
             else
             {
@@ -117,41 +147,154 @@ namespace Flame.LLVM.Codegen
                     exceptionVal,
                     ConstNull(exceptionVal.TypeOf()),
                     "has_no_exception"),
-                leaveBlock.Block,
+                LeaveBlock.Block,
                 propagateExceptionBlock);
+        }
 
-            // For the catch clauses, we'll create a catch-everything block and then
-            // filter on exception types. A catch block's header looks like this:
+        /// <summary>
+        /// Populates a thunk landing pad.
+        /// </summary>
+        /// <param name="ThunkLandingPad">The thunk landing pad block to set up.</param>
+        /// <param name="Target">The thunk landing pad block's target.</param>
+        private void PopulateThunkLandingPadBlock(
+            BasicBlockBuilder ThunkLandingPad,
+            BasicBlockBuilder Target)
+        {
+            // A thunk landing pad block is an unwind target that does little more than
+            // branch to its target.
             //
-            // catch:
+            // thunk:
             //     %exception_data = { i8*, i32 } landingpad cleanup
             //     store { i8*, i32 } %exception_data, { i8*, i32 }* %exception_data_alloca
-            //     %exception_obj = extractvalue { i8*, i32 } %exception_data, 0
-            //     %exception = call i8* @__cxa_begin_catch(i8* %exception_obj)
-            //     store i8* %exception, i8** %exception_alloca
-            //
+            //     br %target
 
             var exceptionDataType = StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false);
+            var personality = Target.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0);
+
             var exceptionData = BuildLandingPad(
-                catchBlock.Builder,
+                ThunkLandingPad.Builder,
                 exceptionDataType,
-                BasicBlock.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0),
+                personality,
                 0,
                 "exception_data");
             exceptionData.SetCleanup(true);
 
             BuildStore(
-                catchBlock.Builder,
+                ThunkLandingPad.Builder,
                 exceptionData,
-                catchBlock.FunctionBody.ExceptionDataStorage.Value);
+                ThunkLandingPad.FunctionBody.ExceptionDataStorage.Value);
+
+            BuildBr(ThunkLandingPad.Builder, Target.Block);
+        }
+
+        /// <summary>
+        /// Populates the given 'catch' block.
+        /// </summary>
+        /// <param name="CatchBlock">The 'catch' block to populate.</param>
+        /// <param name="FinallyBlock">The 'finally' block to jump to when the 'catch' is done.</param>
+        private void PopulateCatchBlock(BasicBlockBuilder CatchBlock, BasicBlockBuilder FinallyBlock)
+        {
+            // Before we even get started on the catch block's body, we should first
+            // take the time to ensure that the '__cxa_begin_catch' environment set up
+            // by the catch block is properly terminated by a '__cxa_end_catch' call,
+            // even if an exception is thrown from the catch block itself. We can do
+            // so by creating a 'catch_end' block and a thunk landing pad.
+            var catchEndBlock = CatchBlock.CreateChildBlock("catch_end");
+
+            var catchEndLandingPadBlock = CatchBlock.CreateChildBlock("catch_end_landingpad");
+            PopulateThunkLandingPadBlock(catchEndLandingPadBlock, catchEndBlock);
+
+            CatchBlock = CatchBlock.WithUnwindTarget(catchEndLandingPadBlock, catchEndBlock);
+
+            // The catch block starts like this:
+            //
+            // catch:
+            //     %exception_data = load { i8*, i32 }* %exception_data_alloca
+            //     %exception_obj = extractvalue { i8*, i32 } %exception_data, 0
+            //     %exception_ptr_opaque = call i8* @__cxa_begin_catch(i8* %exception_obj)
+            //     %exception_ptr = bitcast i8* %exception_ptr_opaque to i8**
+            //     %exception = load i8*, i8** %exception_ptr
+            //     store i8* %exception, i8** %exception_alloca
+            //     %exception_vtable_ptr_ptr = bitcast i8* %exception to i8**
+            //     %exception_vtable_ptr = load i8*, i8** %exception_vtable_ptr_ptr
+            //     %exception_typeid = <typeid> i8* %exception_vtable_ptr
+
+            var exceptionData = BuildLoad(
+                CatchBlock.Builder,
+                CatchBlock.FunctionBody.ExceptionDataStorage.Value,
+                "exception_data");
 
             var exceptionObj = BuildExtractValue(
-                catchBlock.Builder,
+                CatchBlock.Builder,
                 exceptionData,
                 0,
                 "exception_obj");
 
-            throw new System.NotImplementedException();
+            var exceptionPtrOpaque = BuildCall(
+                CatchBlock.Builder,
+                CatchBlock.FunctionBody.Module.Declare(IntrinsicValue.CxaBeginCatch),
+                new LLVMValueRef[] { exceptionObj },
+                "exception_ptr_opaque");
+
+            var exceptionPtr = BuildBitCast(
+                CatchBlock.Builder,
+                exceptionPtrOpaque,
+                PointerType(PointerType(Int8Type(), 0), 0),
+                "exception_ptr");
+
+            var exception = BuildLoad(CatchBlock.Builder, exceptionPtr, "exception");
+
+            BuildStore(
+                CatchBlock.Builder,
+                exception,
+                CatchBlock.FunctionBody.ExceptionValueStorage.Value);
+
+            var exceptionVtablePtrPtr = BuildBitCast(
+                CatchBlock.Builder,
+                exceptionPtrOpaque,
+                PointerType(PointerType(Int8Type(), 0), 0),
+                "exception_vtable_ptr_ptr");
+
+            var exceptionVtablePtr = AtAddressEmitVariable.BuildConstantLoad(
+                CatchBlock.Builder,
+                exceptionVtablePtrPtr,
+                "exception_vtable_ptr");
+
+            var exceptionTypeid = TypeIdBlock.BuildTypeid(
+                CatchBlock.Builder,
+                exceptionVtablePtr);
+
+            // Next, we need to figure out if we have a catch block that can handle the
+            // exception we've thrown. We do so by iterating over all catch blocks and
+            // testing if they're a match for the exception's type.
+            var fallthroughBlock = CatchBlock.CreateChildBlock("catch_test");
+            for (int i = 0; i < CatchClauses.Count; i++)
+            {
+                var clause = CatchClauses[i];
+
+                // TODO: type checks, branches to catch clauses
+
+                CatchBlock = fallthroughBlock;
+                fallthroughBlock = CatchBlock.CreateChildBlock("catch_test");
+            }
+
+            // If we didn't match any catch clauses, then we'll just end the 'catch' block
+            // and keep unwinding.
+            BuildBr(fallthroughBlock.Builder, catchEndBlock.Block);
+
+            // The catch end block simply calls '__cxa_end_catch' and jumps to the finally
+            // block, i.e., the manual unwind target of the 'catch' block. Like so:
+            //
+            // catch_end:
+            //     call void @__cxa_end_catch()
+            //     br %finally
+
+            BuildCall(
+                catchEndBlock.Builder,
+                CatchBlock.FunctionBody.Module.Declare(IntrinsicValue.CxaEndCatch),
+                new LLVMValueRef[] { },
+                "");
+            BuildBr(catchEndBlock.Builder, FinallyBlock.Block);
         }
     }
 }

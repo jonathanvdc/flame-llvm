@@ -76,6 +76,38 @@ namespace Flame.LLVM
         }
 
         /// <summary>
+        /// An intrinsic that represents the '__cxa_begin_catch' C++ ABI function.
+        /// </summary>
+        /// <remarks>
+        /// Signature: void* __cxa_begin_catch(void* exception_obj)
+        /// </remarks>
+        public static readonly IntrinsicValue CxaBeginCatch;
+
+        private static readonly DescribedMethod CxaBeginCatchSignature;
+
+        private static LLVMValueRef DeclareCxaBeginCatch(
+            LLVMModuleBuilder ModuleBuilder, LLVMModuleRef LLVMModule)
+        {
+            return DeclareFromSignature(CxaBeginCatchSignature, ModuleBuilder, LLVMModule);
+        }
+
+        /// <summary>
+        /// An intrinsic that represents the '__cxa_end_catch' C++ ABI function.
+        /// </summary>
+        /// <remarks>
+        /// Signature: void __cxa_end_catch()
+        /// </remarks>
+        public static readonly IntrinsicValue CxaEndCatch;
+
+        private static readonly DescribedMethod CxaEndCatchSignature;
+
+        private static LLVMValueRef DeclareCxaEndCatch(
+            LLVMModuleBuilder ModuleBuilder, LLVMModuleRef LLVMModule)
+        {
+            return DeclareFromSignature(CxaEndCatchSignature, ModuleBuilder, LLVMModule);
+        }
+
+        /// <summary>
         /// An intrinsic that represents the '__gxx_personality_v0' C++ ABI function.
         /// </summary>
         /// <remarks>
@@ -150,6 +182,33 @@ namespace Flame.LLVM
             CxaThrow = new IntrinsicValue(
                 MethodType.Create(CxaThrowSignature),
                 DeclareCxaThrow);
+
+            // Signature: void* __cxa_begin_catch(void* exception_obj)
+            CxaBeginCatchSignature = new DescribedMethod(
+                "__cxa_begin_catch",
+                null,
+                PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
+                true);
+
+            CxaBeginCatchSignature.AddParameter(
+                new DescribedParameter(
+                    "exception_obj",
+                    PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer)));
+
+            CxaBeginCatch = new IntrinsicValue(
+                MethodType.Create(CxaBeginCatchSignature),
+                DeclareCxaBeginCatch);
+
+            // Signature: void __cxa_end_catch()
+            CxaEndCatchSignature = new DescribedMethod(
+                "__cxa_end_catch",
+                null,
+                PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
+                true);
+
+            CxaEndCatch = new IntrinsicValue(
+                MethodType.Create(CxaEndCatchSignature),
+                DeclareCxaEndCatch);
 
             // Signature: @__gxx_personality_v0 = external constant i8*
             GxxPersonalityV0 = new IntrinsicValue(
