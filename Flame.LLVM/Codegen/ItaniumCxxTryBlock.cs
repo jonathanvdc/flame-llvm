@@ -61,11 +61,8 @@ namespace Flame.LLVM.Codegen
             var personality = BasicBlock.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0);
 
             var finallyBlock = BasicBlock.CreateChildBlock("finally");
-
             var catchBlock = BasicBlock.CreateChildBlock("catch");
-
             var catchLandingPadBlock = BasicBlock.CreateChildBlock("catch_landingpad");
-
             var leaveBlock = BasicBlock.CreateChildBlock("leave");
 
             // The try block is a regular block that jumps to the finally block.
@@ -217,7 +214,7 @@ namespace Flame.LLVM.Codegen
             //     store i8* %exception, i8** %exception_alloca
             //     %exception_vtable_ptr_ptr = bitcast i8* %exception to i8**
             //     %exception_vtable_ptr = load i8*, i8** %exception_vtable_ptr_ptr
-            //     %exception_typeid = <typeid> i8* %exception_vtable_ptr
+            //     %exception_typeid = <typeid> i64, i8* %exception_vtable_ptr
 
             var exceptionData = BuildLoad(
                 CatchBlock.Builder,
@@ -251,7 +248,7 @@ namespace Flame.LLVM.Codegen
 
             var exceptionVtablePtrPtr = BuildBitCast(
                 CatchBlock.Builder,
-                exceptionPtrOpaque,
+                exception,
                 PointerType(PointerType(Int8Type(), 0), 0),
                 "exception_vtable_ptr_ptr");
 
@@ -272,7 +269,66 @@ namespace Flame.LLVM.Codegen
             {
                 var clause = CatchClauses[i];
 
-                // TODO: type checks, branches to catch clauses
+                var catchBodyBlock = CatchBlock.CreateChildBlock("catch_body");
+                var catchBodyBlockTail = catchBodyBlock;
+
+                // First, emit the catch body. This is just a regular block that
+                // clears the exception value variable when it gets started and
+                // jumps to the 'catch_end' when it's done.
+                //
+                // catch_body:
+                //     store i8* null, i8** %exception_alloca
+                //     %exception_val = bitcast i8* %exception to <clause_type>
+                //     store <clause_type> %exception_val, <clause_type>* %clause_exception_variable_alloca
+                //     <catch clause body>
+                //     br catch_end
+
+                BuildStore(
+                    catchBodyBlockTail.Builder,
+                    ConstNull(PointerType(Int8Type(), 0)),
+                    catchBodyBlockTail.FunctionBody.ExceptionValueStorage.Value);
+
+                var ehVarAddressAndBlock = clause.LLVMHeader
+                    .AtAddressExceptionVariable.Address.Emit(catchBodyBlockTail);
+                catchBodyBlockTail = ehVarAddressAndBlock.BasicBlock;
+
+                BuildStore(
+                    catchBodyBlockTail.Builder,
+                    BuildBitCast(
+                        catchBodyBlockTail.Builder,
+                        exception,
+                        catchBodyBlockTail.FunctionBody.Module.Declare(clause.ExceptionType),
+                        "exception_val"),
+                    ehVarAddressAndBlock.Value);
+
+                catchBodyBlockTail = clause.Body.Emit(catchBodyBlockTail).BasicBlock;
+
+                BuildBr(catchBodyBlockTail.Builder, catchEndBlock.Block);
+
+                // Each clause is implemented as:
+                //
+                // catch_clause:
+                //     %clause_typeid = <typeid> i64, clause-exception-type
+                //     %typeid_rem = urem i64 %exception_typeid_tmp, %clause_typeid
+                //     %is_subtype = cmp eq i64 %typeid_rem, 0
+                //     br i1 %is_subtype, label %catch_body, label %fallthrough
+                //
+                var clauseTypeid = CatchBlock.FunctionBody.Module.GetTypeId((LLVMType)clause.ExceptionType);
+
+                var typeIdRem = BuildURem(
+                    CatchBlock.Builder,
+                    exceptionTypeid,
+                    ConstInt(exceptionTypeid.TypeOf(), clauseTypeid, false),
+                    "typeid_rem");
+                
+                var isSubtype = BuildICmp(
+                    CatchBlock.Builder,
+                    LLVMIntPredicate.LLVMIntEQ,
+                    typeIdRem,
+                    ConstInt(exceptionTypeid.TypeOf(), 0, false),
+                    "is_subtype");
+
+                BuildCondBr(CatchBlock.Builder, isSubtype, catchBodyBlock.Block, fallthroughBlock.Block);
 
                 CatchBlock = fallthroughBlock;
                 fallthroughBlock = CatchBlock.CreateChildBlock("catch_test");
@@ -280,6 +336,7 @@ namespace Flame.LLVM.Codegen
 
             // If we didn't match any catch clauses, then we'll just end the 'catch' block
             // and keep unwinding.
+            BuildBr(CatchBlock.Builder, catchEndBlock.Block);
             BuildBr(fallthroughBlock.Builder, catchEndBlock.Block);
 
             // The catch end block simply calls '__cxa_end_catch' and jumps to the finally

@@ -7,11 +7,13 @@ namespace Flame.LLVM.Codegen
     /// </summary>
     public sealed class CatchHeader : ICatchHeader
     {
-        public CatchHeader(IType ExceptionType, IEmitVariable ExceptionVariable)
+        public CatchHeader(IType ExceptionType, AtAddressEmitVariable ExceptionVariable)
         {
             this.ExceptionType = ExceptionType;
-            this.ExceptionVariable = ExceptionVariable;
+            this.exceptionVar = ExceptionVariable;
         }
+
+        private AtAddressEmitVariable exceptionVar;
 
         /// <summary>
         /// Gets the catch header's exception type.
@@ -23,7 +25,13 @@ namespace Flame.LLVM.Codegen
         /// Gets the catch header's exception variable.
         /// </summary>
         /// <returns>The catch header's exception variable.</returns>
-        public IEmitVariable ExceptionVariable { get; private set; }
+        public IEmitVariable ExceptionVariable => exceptionVar;
+
+        /// <summary>
+        /// Gets the catch header's exception variable, as an at-address variable.
+        /// </summary>
+        /// <returns>The catch header's exception variable.</returns>
+        public AtAddressEmitVariable AtAddressExceptionVariable => exceptionVar;
     }
 
     /// <summary>
@@ -44,6 +52,12 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         /// <returns>The catch header.</returns>
         public ICatchHeader Header => header;
+
+        /// <summary>
+        /// Gets the catch header for this clause, as an LLVM catch header.
+        /// </summary>
+        /// <returns>The catch header.</returns>
+        public CatchHeader LLVMHeader => header;
 
         /// <summary>
         /// Gets the catch clause's exception type.

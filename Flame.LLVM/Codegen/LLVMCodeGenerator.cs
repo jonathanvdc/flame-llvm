@@ -1002,7 +1002,7 @@ namespace Flame.LLVM.Codegen
         {
             return new CatchHeader(
                 ExceptionVariable.VariableType,
-                DeclareLocal(
+                (AtAddressEmitVariable)DeclareLocal(
                     new UniqueTag(ExceptionVariable.Name.ToString()),
                     ExceptionVariable));
         }

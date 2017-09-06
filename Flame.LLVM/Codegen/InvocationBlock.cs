@@ -236,11 +236,27 @@ namespace Flame.LLVM.Codegen
         {
             bool hasVoidRetType = retType == PrimitiveTypes.Void;
 
-            var callRef = BuildCall(
-                BasicBlock.Builder,
-                Callee,
-                Arguments,
-                hasVoidRetType ? "" : "call_tmp");
+            LLVMValueRef callRef;
+            if (CanThrow && BasicBlock.HasUnwindTarget)
+            {
+                var successBlock = BasicBlock.CreateChildBlock("success");
+                callRef = BuildInvoke(
+                    BasicBlock.Builder,
+                    Callee,
+                    Arguments,
+                    successBlock.Block,
+                    BasicBlock.UnwindTarget,
+                    hasVoidRetType ? "" : "call_tmp");
+                BasicBlock = successBlock;
+            }
+            else
+            {
+                callRef = BuildCall(
+                    BasicBlock.Builder,
+                    Callee,
+                    Arguments,
+                    hasVoidRetType ? "" : "call_tmp");
+            }
 
             return hasVoidRetType
                 ? new BlockCodegen(BasicBlock)

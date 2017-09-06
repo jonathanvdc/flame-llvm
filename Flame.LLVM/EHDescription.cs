@@ -108,7 +108,7 @@ namespace Flame.LLVM
                         PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
                         Operator.ReinterpretCast)
                 },
-                false);
+                true);
 
             return (CodeBlock)CodeGenerator.EmitSequence(
                 allocStmt,
