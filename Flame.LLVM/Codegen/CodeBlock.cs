@@ -124,7 +124,15 @@ namespace Flame.LLVM.Codegen
         {
             var entry = Function.GetEntryBasicBlock();
             var builder = CreateBuilder();
-            PositionBuilderBefore(builder, entry.GetFirstInstruction());
+            var firstInstruction = entry.GetFirstInstruction();
+            if (firstInstruction.Pointer == IntPtr.Zero)
+            {
+                PositionBuilderAtEnd(builder, entry);
+            }
+            else
+            {
+                PositionBuilderBefore(builder, firstInstruction);
+            }
             var result = BuildAlloca(builder, Type, Name);
             DisposeBuilder(builder);
             return result;
