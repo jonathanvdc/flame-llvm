@@ -15,6 +15,12 @@ To use `flame-llvm`, you'll need to have the following installed:
   * the `libc++abi` library (or equivalent) and
   * **LLVM 4.0**'s `libLLVM.(so|dll|dylib)`, whichever is appropriate for your platform. It doesn't really matter where you/an installer/your package manager put it; we'll copy it to the output directory.
 
+For Debian-based distributions, the following command should install all dependencies:
+
+```bash
+sudo apt install mono-devel llvm-4.0-dev clang-4.0 libc++abi-dev libgc-dev
+```
+
 Clone `flame-llvm`, including its submodules, like so
 
 ```bash
