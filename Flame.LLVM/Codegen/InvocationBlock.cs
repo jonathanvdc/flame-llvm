@@ -116,6 +116,12 @@ namespace Flame.LLVM.Codegen
             {
                 var method = (LLVMMethod)Callee;
 
+                if (method.DeclaringType.GetIsValueType()
+                    || !method.GetIsVirtual())
+                {
+                    return EmitCallee(BasicBlock, Target, Callee, Operator.GetDelegate);
+                }
+
                 var vtablePtr = BuildBitCast(
                     BasicBlock.Builder,
                     Target,
