@@ -111,16 +111,15 @@ namespace Flame.LLVM
         /// An intrinsic that represents the '__gxx_personality_v0' C++ ABI function.
         /// </summary>
         /// <remarks>
-        /// Signature: @__gxx_personality_v0 = external constant i8
+        /// Signature: declare i32 @__gxx_personality_v0(...)
         /// </remarks>
         public static readonly IntrinsicValue GxxPersonalityV0;
 
         private static LLVMValueRef DeclareGxxPersonalityV0(
             LLVMModuleBuilder ModuleBuilder, LLVMModuleRef LLVMModule)
         {
-            var type = PrimitiveTypes.UInt8;
-            var result = ModuleBuilder.DeclareGlobal(ModuleBuilder.Declare(type), "__gxx_personality_v0");
-            result.SetGlobalConstant(true);
+            var funcType = FunctionType(Int32Type(), new LLVMTypeRef[] { }, true);
+            var result = AddFunction(LLVMModule, "__gxx_personality_v0", funcType);
             return result;
         }
 
@@ -210,9 +209,9 @@ namespace Flame.LLVM
                 MethodType.Create(CxaEndCatchSignature),
                 DeclareCxaEndCatch);
 
-            // Signature: @__gxx_personality_v0 = external constant i8
+            // Signature: declare i32 @__gxx_personality_v0(...)
             GxxPersonalityV0 = new IntrinsicValue(
-                PrimitiveTypes.UInt8,
+                PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer),
                 DeclareGxxPersonalityV0);
 
             // Signature: @_ZTIPv = external constant i8*

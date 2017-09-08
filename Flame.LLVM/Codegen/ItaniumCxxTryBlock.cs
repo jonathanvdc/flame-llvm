@@ -58,7 +58,6 @@ namespace Flame.LLVM.Codegen
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
             var exceptionDataType = StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false);
-            var personality = BasicBlock.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0);
 
             var finallyBlock = BasicBlock.CreateChildBlock("finally");
             var catchBlock = BasicBlock.CreateChildBlock("catch");
@@ -161,20 +160,22 @@ namespace Flame.LLVM.Codegen
             // branch to its target.
             //
             // thunk:
-            //     %exception_data = { i8*, i32 } landingpad cleanup
+            //     %exception_data = { i8*, i32 } landingpad
+            //         catch i8* null
             //     store { i8*, i32 } %exception_data, { i8*, i32 }* %exception_data_alloca
             //     br %target
 
-            var exceptionDataType = StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false);
+            var bytePtr = PointerType(Int8Type(), 0);
+            var exceptionDataType = StructType(new[] { bytePtr, Int32Type() }, false);
             var personality = Target.FunctionBody.Module.Declare(IntrinsicValue.GxxPersonalityV0);
 
             var exceptionData = BuildLandingPad(
                 ThunkLandingPad.Builder,
                 exceptionDataType,
-                personality,
-                0,
+                ConstBitCast(personality, bytePtr),
+                1,
                 "exception_data");
-            exceptionData.SetCleanup(true);
+            exceptionData.AddClause(ConstNull(bytePtr));
 
             BuildStore(
                 ThunkLandingPad.Builder,
