@@ -74,7 +74,8 @@ clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -Wno
   - [x] generics
   - [x] boxing/unboxing
   - [x] `static` constructors
+  - [x] exception handling (`throw`, `try`, `catch`, `finally`)&mdash;Itanium ABI (Linux, Mac OS X) only for now
   - [ ] finalizers
   - [ ] indirect function calls (delegates)
-  - [ ] exception handling (`throw`, `try`, `catch`, `finally`)
+  - [ ] reflection
   - [ ] precise garbage collection
