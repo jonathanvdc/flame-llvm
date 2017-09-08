@@ -72,19 +72,7 @@ namespace Flame.LLVM.Passes
             return new InvocationExpression(
                 fromConstCharArrayMethod.Value,
                 null,
-                new IExpression[] { CreateCharacterArrayExpression(strExpr.Value) });
-        }
-
-        private static IExpression CreateCharacterArrayExpression(string Value)
-        {
-            return new InitializedArrayExpression(
-                PrimitiveTypes.Char,
-                Enumerable.Select<char, IExpression>(Value, CreateCharExpression).ToArray<IExpression>());
-        }
-
-        private static IExpression CreateCharExpression(char Value)
-        {
-            return new CharExpression(Value);
+                new IExpression[] { new ConstCharArrayExpression(strExpr.Value) });
         }
 
         protected override IStatement Transform(IStatement Statement)

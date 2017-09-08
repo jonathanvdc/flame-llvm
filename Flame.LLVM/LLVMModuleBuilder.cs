@@ -36,6 +36,7 @@ namespace Flame.LLVM
             this.interfaceStubs = new Dictionary<LLVMMethod, InterfaceStub>();
             this.primeGen = new PrimeNumberGenerator();
             this.staticConstructorLocks = new Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>>();
+            this.declaredStringChars = new Dictionary<string, LLVMValueRef>();
         }
 
         private LLVMAssembly assembly;
@@ -54,6 +55,7 @@ namespace Flame.LLVM
         private Dictionary<IntrinsicValue, LLVMValueRef> declaredIntrinsics;
         private PrimeNumberGenerator primeGen;
         private Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>> staticConstructorLocks;
+        private Dictionary<string, LLVMValueRef> declaredStringChars;
 
         /// <summary>
         /// Declares the given method if it was not declared already.
@@ -842,6 +844,47 @@ namespace Flame.LLVM
                 Value,
                 ConstInt(Int8Type(), 0, false),
                 "cmp_result");
+        }
+
+        /// <summary>
+        /// Gets a constant global character array for the given string.
+        /// </summary>
+        /// <param name="Value">The string to get a constant global character array for.</param>
+        /// <returns>A constant global character array.</returns>
+        public LLVMValueRef GetConstCharArray(string Value)
+        {
+            LLVMValueRef result;
+            if (!declaredStringChars.TryGetValue(Value, out result))
+            {
+                var data = ConstStruct(
+                    new LLVMValueRef[]
+                    {
+                        ConstInt(Int32Type(), (ulong)Value.Length, true),
+                        ConstArray(
+                            Int16Type(),
+                            Enumerable.Select<char, LLVMValueRef>(Value, ToLLVMValue)
+                                .ToArray<LLVMValueRef>())
+                    },
+                    false);
+                result = DeclareGlobal(data.TypeOf(), "__string_literal." + declaredStringChars.Count);
+                result.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
+                result.SetGlobalConstant(true);
+                result.SetInitializer(data);
+                result = ConstBitCast(
+                    result,
+                    PointerType(
+                        StructType(
+                            new LLVMTypeRef[] { Int32Type(), ArrayType(Int16Type(), 0) },
+                            false),
+                        0));
+                declaredStringChars[Value] = result;
+            }
+            return result;
+        }
+
+        private static LLVMValueRef ToLLVMValue(char value)
+        {
+            return ConstInt(Int16Type(), value, false);
         }
     }
 }

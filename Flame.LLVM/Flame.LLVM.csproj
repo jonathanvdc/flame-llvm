@@ -75,6 +75,7 @@
     <Compile Include="Codegen\CodeBlock.cs" />
     <Compile Include="Codegen\ComparisonBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
+    <Compile Include="Codegen\ConstCharArrayBlock.cs" />
     <Compile Include="Codegen\DefaultStructBlock.cs" />
     <Compile Include="Codegen\DelegateBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
@@ -106,6 +107,7 @@
     <Compile Include="Codegen\UnreachableBlock.cs" />
     <Compile Include="Codegen\VoidBlock.cs" />
     <Compile Include="Passes\BoxUnboxTypePass.cs" />
+    <Compile Include="Passes\ConstCharArrayExpression.cs" />
     <Compile Include="Passes\GenericsInternalizingPass.cs" />
     <Compile Include="Passes\StringConcatPass.cs" />
     <Compile Include="Passes\StringLiteralPass.cs" />
