@@ -7,7 +7,7 @@ namespace System
     {
         public Object()
         {
-            
+
         }
 
         /// <summary>

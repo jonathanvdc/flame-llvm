@@ -36,6 +36,15 @@ namespace System
         }
 
         /// <summary>
+        /// Writes the given value to standard output.
+        /// </summary>
+        /// <param name="value">The value to write.</param>
+        public static void Write(double value)
+        {
+            Write(Convert.ToString(value));
+        }
+
+        /// <summary>
         /// Writes a Boolean to standard output.
         /// </summary>
         /// <param name="value">The Boolean to write.</param>

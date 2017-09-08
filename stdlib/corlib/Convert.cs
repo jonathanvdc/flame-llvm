@@ -61,6 +61,17 @@ namespace System
         }
 
         /// <summary>
+        /// Converts the given 64-bit floating-point number to a string.
+        /// </summary>
+        /// <param name="value">The floating-point number.</param>
+        /// <returns>A string representation for the floating-point number.</returns>
+        public static string ToString(double value)
+        {
+            // FIXME: actually implement this function
+            return ToString((long)value);
+        }
+
+        /// <summary>
         /// Converts the given Boolean to a string.
         /// </summary>
         /// <param name="value">The Boolean value.</param>
