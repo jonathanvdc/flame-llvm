@@ -82,7 +82,6 @@ namespace Flame.LLVM.Codegen
             this.breakBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
             this.continueBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
             this.ExceptionDataStorage = new Lazy<LLVMValueRef>(CreateExceptionDataStorage);
-            this.ExceptionValueStorage = new Lazy<LLVMValueRef>(CreateExceptionValueStorage);
         }
 
         /// <summary>
@@ -104,12 +103,6 @@ namespace Flame.LLVM.Codegen
         /// <returns>The storage location for the current exception's data.</returns>
         public Lazy<LLVMValueRef> ExceptionDataStorage { get; private set; }
 
-        /// <summary>
-        /// Gets the storage location for the current exception's value.
-        /// </summary>
-        /// <returns>The storage location for the current exception's value.</returns>
-        public Lazy<LLVMValueRef> ExceptionValueStorage { get; private set; }
-
         private Dictionary<UniqueTag, LLVMValueRef> taggedValues;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> breakBlocks;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> continueBlocks;
@@ -121,7 +114,13 @@ namespace Flame.LLVM.Codegen
             return Value;
         }
 
-        private LLVMValueRef CreateEntryPointAlloca(LLVMTypeRef Type, string Name)
+        /// <summary>
+        /// Creates an alloca that is inserted at the entry point.
+        /// </summary>
+        /// <param name="Type">The type of storage to allocate.</param>
+        /// <param name="Name">The name of the alloca value.</param>
+        /// <returns>An alloca value.</returns>
+        public LLVMValueRef CreateEntryPointAlloca(LLVMTypeRef Type, string Name)
         {
             var entry = Function.GetEntryBasicBlock();
             var builder = CreateBuilder();
@@ -136,13 +135,6 @@ namespace Flame.LLVM.Codegen
             return CreateEntryPointAlloca(
                 StructType(new[] { PointerType(Int8Type(), 0), Int32Type() }, false),
                 "exception_tuple_alloca");
-        }
-
-        private LLVMValueRef CreateExceptionValueStorage()
-        {
-            return CreateEntryPointAlloca(
-                PointerType(Int8Type(), 0),
-                "exception_value_alloca");
         }
 
         /// <summary>

@@ -126,7 +126,10 @@ namespace Flame.LLVM
             CodeBlock FinallyBody,
             IReadOnlyList<CatchClause> CatchClauses)
         {
-            return new ItaniumCxxTryBlock(CodeGenerator, TryBody, FinallyBody, CatchClauses);
+            return new ItaniumCxxFinallyBlock(
+                CodeGenerator,
+                new ItaniumCxxCatchBlock(CodeGenerator, TryBody, CatchClauses),
+                FinallyBody);
         }
     }
 }

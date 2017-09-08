@@ -76,6 +76,22 @@ namespace Flame.LLVM
         }
 
         /// <summary>
+        /// An intrinsic that represents the '__cxa_rethrow' C++ ABI function.
+        /// </summary>
+        /// <remarks>
+        /// Signature: void __cxa_rethrow()
+        /// </remarks>
+        public static readonly IntrinsicValue CxaRethrow;
+
+        private static readonly DescribedMethod CxaRethrowSignature;
+
+        private static LLVMValueRef DeclareCxaRethrow(
+            LLVMModuleBuilder ModuleBuilder, LLVMModuleRef LLVMModule)
+        {
+            return DeclareFromSignature(CxaRethrowSignature, ModuleBuilder, LLVMModule);
+        }
+
+        /// <summary>
         /// An intrinsic that represents the '__cxa_begin_catch' C++ ABI function.
         /// </summary>
         /// <remarks>
@@ -181,6 +197,17 @@ namespace Flame.LLVM
             CxaThrow = new IntrinsicValue(
                 MethodType.Create(CxaThrowSignature),
                 DeclareCxaThrow);
+
+            // Signature: void __cxa_rethrow()
+            CxaRethrowSignature = new DescribedMethod(
+                "__cxa_rethrow",
+                null,
+                PrimitiveTypes.Void,
+                true);
+
+            CxaRethrow = new IntrinsicValue(
+                MethodType.Create(CxaRethrowSignature),
+                DeclareCxaRethrow);
 
             // Signature: void* __cxa_begin_catch(void* exception_obj)
             CxaBeginCatchSignature = new DescribedMethod(
