@@ -24,7 +24,8 @@ namespace Flame.LLVM
             Version AssemblyVersion,
             IEnvironment Environment,
             LLVMAbi Abi,
-            AttributeMap Attributes)
+            AttributeMap Attributes,
+            bool IsWholeProgram)
         {
             this.Name = Name;
             this.Abi = Abi;
@@ -33,6 +34,7 @@ namespace Flame.LLVM
             this.Attributes = Attributes;
             this.Environment = Environment;
             this.rootNamespace = new LLVMNamespace(new SimpleName(""), default(QualifiedName), this);
+            this.IsWholeProgram = IsWholeProgram;
         }
 
         public Version AssemblyVersion { get; private set; }
@@ -67,6 +69,13 @@ namespace Flame.LLVM
         /// </summary>
         /// <returns>The entry point.</returns>
         public LLVMMethod EntryPoint { get; private set; }
+
+        /// <summary>
+        /// Tells if this assembly is a whole program---its definitions
+        /// will not be used by other programs.
+        /// </summary>
+        /// <returns><c>true</c> if this assembly is a whole program; otherwise, <c>false</c>.</returns>
+        public bool IsWholeProgram { get; private set; }
 
         private LLVMNamespace rootNamespace;
 
@@ -149,6 +158,7 @@ namespace Flame.LLVM
             // public static class __entry_point
             // {
             //     [#builtin_abi("C")]
+            //     [#builtin_llvm_linkage(external)]
             //     public static int main(int argc, byte** argv)
             //     {
             //         return actual_entry_point(...);
@@ -163,6 +173,7 @@ namespace Flame.LLVM
             var epType = new LLVMType(rootNamespace, new TypePrototypeTemplate(epTypeProto));
             var mainProto = new DescribedMethod(
                 new SimpleName("main"), epType, PrimitiveTypes.Int32, true);
+            mainProto.AddAttribute(new LLVMLinkageAttribute(LLVMLinkage.LLVMExternalLinkage));
             mainProto.AddParameter(new DescribedParameter("argc", PrimitiveTypes.Int32));
             mainProto.AddParameter(
                 new DescribedParameter(

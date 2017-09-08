@@ -103,6 +103,12 @@ namespace Flame.LLVM
         {
             get
             {
+                var linkageAttr = this.GetAttribute(LLVMLinkageAttribute.LinkageAttributeType);
+                if (linkageAttr != null)
+                {
+                    return ((LLVMLinkageAttribute)linkageAttr).Linkage;
+                }
+
                 if (this.HasAttribute(
                     PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
                 {
@@ -117,7 +123,9 @@ namespace Flame.LLVM
                     case AccessModifier.ProtectedAndAssembly:
                         return LLVMLinkage.LLVMInternalLinkage;
                     default:
-                        return LLVMLinkage.LLVMExternalLinkage;
+                        return ParentType.Namespace.Assembly.IsWholeProgram
+                            ? LLVMLinkage.LLVMInternalLinkage
+                            : LLVMLinkage.LLVMExternalLinkage;
                 }
             }
         }
@@ -210,16 +218,20 @@ namespace Flame.LLVM
                 throw new NotSupportedException("LLVM methods do not support generic parameters");
             }
 
-            var func = Module.Declare(this);
-            func.SetLinkage(Linkage);
-            if (this.body != null)
+            if (!DeclaringType.GetIsInterface()
+                && !this.GetIsAbstract())
             {
-                // Generate the method body.
-                var bodyBuilder = new FunctionBodyBuilder(Module, func);
-                var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
-                entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
-                var codeGen = this.body.Emit(entryPointBuilder);
-                BuildUnreachable(codeGen.BasicBlock.Builder);
+                var func = Module.Declare(this);
+                func.SetLinkage(Linkage);
+                if (this.body != null)
+                {
+                    // Generate the method body.
+                    var bodyBuilder = new FunctionBodyBuilder(Module, func);
+                    var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
+                    entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
+                    var codeGen = this.body.Emit(entryPointBuilder);
+                    BuildUnreachable(codeGen.BasicBlock.Builder);
+                }
             }
 
             foreach (var iface in allInterfaceImpls.Value)

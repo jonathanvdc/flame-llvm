@@ -8,6 +8,7 @@ using Flame.Front.Target;
 using Flame.Front.Passes;
 using Flame.Optimization;
 using Flame.LLVM.Passes;
+using Flame.Front.Cli;
 
 namespace Flame.LLVM
 {
@@ -35,6 +36,10 @@ namespace Flame.LLVM
             var multiBinder = new MultiBinder(DependencyBuilder.Binder.Environment);
             multiBinder.AddBinder(DependencyBuilder.Binder);
 
+            bool isWholeProgram = DependencyBuilder.Log.Options.GetFlag(
+                Flags.WholeProgramFlagName,
+                Info.IsExecutable);
+
             var targetAsm = new LLVMAssembly(
                 new SimpleName(Info.Name),
                 Info.Version,
@@ -43,7 +48,8 @@ namespace Flame.LLVM
                     ItaniumMangler.Instance,
                     new ExternalGCDescription(multiBinder, DependencyBuilder.Log),
                     ItaniumCxxEHDescription.Instance),
-                AttributeMap.Empty);
+                AttributeMap.Empty,
+                isWholeProgram);
 
             // -fintegrated-runtime will look in the compiled assembly for runtime types.
             // This flag facilitates building the runtime library.

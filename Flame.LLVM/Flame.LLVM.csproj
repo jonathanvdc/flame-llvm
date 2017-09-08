@@ -59,6 +59,7 @@
     <Compile Include="LLVMAccessor.cs" />
     <Compile Include="LLVMAssembly.cs" />
     <Compile Include="LLVMField.cs" />
+    <Compile Include="LLVMLinkageAttribute.cs" />
     <Compile Include="LLVMMethod.cs" />
     <Compile Include="LLVMModuleBuilder.cs" />
     <Compile Include="LLVMNamespace.cs" />
