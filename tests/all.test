@@ -49,6 +49,7 @@ tests
     template CheckOutput<enum/enum.cs, , True>;
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
     template CheckOutput<floating-point/floating-point.cs, , -3628800>;
+    template CheckOutput<fractal/fractal.cs, , Mandelbrot:6839743 Julia:6449238>;
     template CheckOutput<gc/main.cs, gc, gc>;
     template CheckOutput<generics/generics.cs, , 14 42>;
     template CheckOutput<hash-code/hash-code.cs, , False True False True>;
