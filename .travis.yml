@@ -13,6 +13,7 @@ matrix:
             - llvm-4.0-dev
             - clang-4.0
             - libgc-dev
+            - libc++abi-dev
 
     # OS X build won't find libLLVM.dylib for some reason.
     # I'd love to get flame-llvm to work on OS X, but I don't own a computer with
