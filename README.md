@@ -11,7 +11,8 @@ To use `flame-llvm`, you'll need to have the following installed:
   * basic command-line tools like `bash`, `make`, `cp`, etc (in your `$PATH`),
   * a .NET framework implementation (for example, [Mono](http://www.mono-project.com/)),
   * `clang`,
-  * the Boehm-Demers-Weiser GC (Debian package: `libgc-dev`), and
+  * the Boehm-Demers-Weiser GC (Debian package: `libgc-dev`),
+  * the `libc++abi` library (or equivalent) and
   * **LLVM 4.0**'s `libLLVM.(so|dll|dylib)`, whichever is appropriate for your platform. It doesn't really matter where you/an installer/your package manager put it; we'll copy it to the output directory.
 
 Clone `flame-llvm`, including its submodules, like so
@@ -49,7 +50,7 @@ flame-llvm program.flo /path/to/flame-llvm-repo/stdlib/flo/corlib.flo --platform
 -o program.ll
 
 # Compile the LLVM IR to an executable. Link in the runtime and libgc.
-clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -Wno-override-module -o a.out
+clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -lc++abi -Wno-override-module -o a.out
 ```
 
 ## Feature status
