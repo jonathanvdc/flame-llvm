@@ -29,7 +29,7 @@ init
 
             // Compile the LLVM IR to a native executable and link in
             // the C standard library.
-            $clang $ll-filename $rt-obj-filename -lgc -Wno-override-module -o $exe-filename;
+            $clang $ll-filename $rt-obj-filename -lgc -lc++abi -Wno-override-module -o $exe-filename;
         }
 
         init
@@ -62,5 +62,6 @@ tests
     template CheckOutput<stdlib-hello-world/stdlib-hello-world.cs, , hi>;
     template CheckOutput<stdlib-list/stdlib-list.cs, , 10 42>;
     template CheckOutput<struct/struct.cs, struct-test, struct-test>;
+    template CheckOutput<throw/throw.cs, , how are ya>;
     template CheckOutput<virtual-calls/virtual-calls.cs, , 28 113 150>;
 }
