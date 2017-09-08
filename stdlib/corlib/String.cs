@@ -72,7 +72,7 @@ namespace System
         /// </summary>
         /// <param name="other">The value to compare this string to.</param>
         /// <returns><c>true</c> if this string is equal to the given value; otherwise, <c>false</c>.</returns>
-        public override bool Equals(Object obj)
+        public sealed override bool Equals(Object obj)
         {
             return obj is String && Equals((String)obj);
         }
@@ -81,7 +81,7 @@ namespace System
         /// Gets a hash code for this string.
         /// </summary>
         /// <returns>A hash code.</returns>
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
             // This is the `djb2` hash algorithm by Dan Bernstein. It can be
             // found at http://www.cse.yorku.ca/~oz/hash.html
@@ -94,6 +94,12 @@ namespace System
             }
 
             return hash;
+        }
+
+        /// <inheritdoc/>
+        public sealed override string ToString()
+        {
+            return this;
         }
 
         /// <summary>

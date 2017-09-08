@@ -7,7 +7,7 @@ namespace System
     {
         // Note: Booleans are equivalent to instances of this data structure because
         // flame-llvm stores the contents of single-field structs as a value of their
-        // field, rather than as a LLVM struct. So a `bool` and a `System.Boolean`
+        // field, rather than as an LLVM struct. So an `i1` and a `System.Boolean`
         // become the same type. But don't add, remove, or edit the fields in this
         // struct!
         private bool value;
@@ -16,7 +16,7 @@ namespace System
         /// Converts this Boolean to a string representation.
         /// </summary>
         /// <returns>The string representation for the Boolean.</returns>
-        public string ToString()
+        public sealed override string ToString()
         {
             return Convert.ToString(value);
         }
@@ -28,9 +28,15 @@ namespace System
         }
 
         /// <inheritdoc/>
-        public override bool Equals(Object other)
+        public sealed override bool Equals(Object other)
         {
             return other is Boolean && Equals((Boolean)other);
+        }
+
+        /// <inheritdoc/>
+        public sealed override int GetHashCode()
+        {
+            return value ? 1 : 0;
         }
     }
 }

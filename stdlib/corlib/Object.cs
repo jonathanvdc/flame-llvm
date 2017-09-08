@@ -29,6 +29,15 @@ namespace System
             return (int)#builtin_ref_to_ptr(this);
         }
 
+        /// <summary>
+        /// Gets a string representation for this object.
+        /// </summary>
+        /// <returns>A string representation.</returns>
+        public virtual string ToString()
+        {
+            return "<object at " + Convert.ToString((long)#builtin_ref_to_ptr(this)) + ">";
+        }
+
         public static bool ReferenceEquals(Object first, Object second)
         {
             return first == second;
