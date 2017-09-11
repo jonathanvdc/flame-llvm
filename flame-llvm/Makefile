@@ -13,9 +13,9 @@ libs = \
 	../packages/Loyc.Collections.24.3.0/lib/net45/Loyc.Collections.dll \
 	../packages/Loyc.Syntax.24.3.0/lib/net45/Loyc.Syntax.dll \
 	../packages/Loyc.Binary.0.1.8/lib/net45/Loyc.Binary.dll \
-	../packages/Flame.Compiler.0.9.18/lib/net45/*.dll \
-	../packages/Flame.Optimization.0.9.18/lib/net45/*.dll \
-	../packages/Flame.Front.0.9.18/lib/net45/*.dll
+	../packages/Flame.Compiler.0.9.19/lib/net45/*.dll \
+	../packages/Flame.Optimization.0.9.19/lib/net45/*.dll \
+	../packages/Flame.Front.0.9.19/lib/net45/*.dll
 
 native-libs = \
 	$(shell find ../native-libs -type f)
