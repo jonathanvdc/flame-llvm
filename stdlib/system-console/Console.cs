@@ -1,3 +1,8 @@
+// This file makes use of the LeMP 'unroll' macro to avoid copy-pasting code.
+// See http://ecsharp.net/lemp/avoid-tedium-with-LeMP.html for an explanation.
+
+#importMacros(LeMP);
+
 using System.IO;
 
 namespace System
@@ -24,33 +29,6 @@ namespace System
             {
                 Write(str[i]);
             }
-        }
-
-        /// <summary>
-        /// Writes an integer to standard output.
-        /// </summary>
-        /// <param name="i">The integer to write.</param>
-        public static void Write(int i)
-        {
-            Write(i.ToString());
-        }
-
-        /// <summary>
-        /// Writes the given value to standard output.
-        /// </summary>
-        /// <param name="value">The value to write.</param>
-        public static void Write(double value)
-        {
-            Write(Convert.ToString(value));
-        }
-
-        /// <summary>
-        /// Writes a Boolean to standard output.
-        /// </summary>
-        /// <param name="value">The Boolean to write.</param>
-        public static void Write(bool value)
-        {
-            Write(value.ToString());
         }
 
         /// <summary>
@@ -81,24 +59,26 @@ namespace System
             WriteLine();
         }
 
-        /// <summary>
-        /// Writes an integer to standard output, followed by an end-of-line sequence.
-        /// </summary>
-        /// <param name="i">The integer to write.</param>
-        public static void WriteLine(int i)
+        unroll ((TYPE) in (bool, int, long, double))
         {
-            Write(i);
-            WriteLine();
-        }
+            /// <summary>
+            /// Writes the given value to standard output.
+            /// </summary>
+            /// <param name="value">The value to write.</param>
+            public static void Write(TYPE value)
+            {
+                Write(value.ToString());
+            }
 
-        /// <summary>
-        /// Writes a Boolean to standard output, followed by an end-of-line sequence.
-        /// </summary>
-        /// <param name="value">The Boolean to write.</param>
-        public static void WriteLine(bool value)
-        {
-            Write(value);
-            WriteLine();
+            /// <summary>
+            /// Writes the given value to standard output, followed by an end-of-line sequence.
+            /// </summary>
+            /// <param name="value">The value to write.</param>
+            public static void WriteLine(TYPE value)
+            {
+                Write(value);
+                WriteLine();
+            }
         }
     }
 }
