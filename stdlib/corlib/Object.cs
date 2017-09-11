@@ -3,7 +3,7 @@ namespace System
     /// <summary>
     /// The root type in the type system.
     /// </summary>
-    // [#builtin_attribute(RootTypeAttribute)]
+    [#builtin_attribute(RootTypeAttribute)]
     public class Object
     {
         /// <summary>
