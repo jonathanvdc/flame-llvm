@@ -3,9 +3,24 @@ namespace System
     /// <summary>
     /// The root type in the type system.
     /// </summary>
+    // [#builtin_attribute(RootTypeAttribute)]
     public class Object
     {
+        /// <summary>
+        /// Creates an object.
+        /// </summary>
+        [#builtin_attribute(NopAttribute)]
         public Object()
+        {
+
+        }
+
+        /// <summary>
+        /// Releases resources related to this object just before its storage
+        /// is recycled by the garbage collector.
+        /// </summary>
+        [#builtin_attribute(NopAttribute)]
+        protected virtual void Finalize()
         {
 
         }
@@ -38,11 +53,29 @@ namespace System
             return "<object at " + Convert.ToString((long)#builtin_ref_to_ptr(this)) + ">";
         }
 
+        /// <summary>
+        /// Checks if the given objects are the same, i.e., they both
+        /// point to the same storage.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <param name="second">The second object.</param>
+        /// <returns>
+        /// <c>true</c> if both arguments point to the same storage; otherwise, <c>false</c>.
+        /// </returns>
         public static bool ReferenceEquals(Object first, Object second)
         {
             return first == second;
         }
 
+        /// <summary>
+        /// Checks if the given objects are equal.
+        /// </summary>
+        /// <param name="first">The first object.</param>
+        /// <param name="second">The second object.</param>
+        /// <returns>
+        /// <c>true</c> if both arguments point to the same storage or if
+        /// <c>first.Equals(second)</c> evaluates to <c>true</c>;
+        /// otherwise, <c>false</c>.</returns>
         public static bool Equals(Object first, Object second)
         {
             if (first == second)
