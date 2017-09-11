@@ -1,7 +1,7 @@
 namespace System
 {
     /// <summary>
-    /// Represents a 32-bit integer.
+    /// Represents a signed 32-bit integer.
     /// </summary>
     public struct Int32 : Object, IEquatable<Int32>
     {
