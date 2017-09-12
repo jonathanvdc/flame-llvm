@@ -6,16 +6,17 @@
 namespace System
 {
     unroll ((TYPE, NAME, DESCRIPTION) in (
-        (sbyte, SByte, "a signed 8-bit"),
-        (byte, Byte, "an unsigned 8-bit"),
-        (short, Int16, "a signed 16-bit"),
-        (ushort, UInt16, "an unsigned 16-bit"),
-        (int, Int32, "a signed 32-bit"),
-        (uint, UInt32, "an unsigned 32-bit"),
-        (long, Int64, "a signed 64-bit"),
-        (ulong, UInt64, "an unsigned 64-bit")))
+        (sbyte, SByte, "a signed 8-bit integer"),
+        (byte, Byte, "an unsigned 8-bit integer"),
+        (short, Int16, "a signed 16-bit integer"),
+        (ushort, UInt16, "an unsigned 16-bit integer"),
+        (int, Int32, "a signed 32-bit integer"),
+        (uint, UInt32, "an unsigned 32-bit integer"),
+        (long, Int64, "a signed 64-bit integer"),
+        (ulong, UInt64, "an unsigned 64-bit integer"),
+        (char, Char, "a UTF-16 character")))
     {
-        [#trivia_doc_comment("<summary>\nRepresents " + DESCRIPTION + " integer.\n</summary>")]
+        [#trivia_doc_comment("<summary>\nRepresents " + DESCRIPTION + ".\n</summary>")]
         public struct NAME : Object, IEquatable<NAME>
         {
             // Note: integers are equivalent to instances of this data structure because
