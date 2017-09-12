@@ -15,6 +15,6 @@ namespace System.Runtime.InteropServices
         public static ulong StringLength(byte* str)
         {
             return strlen(str);
-        } 
+        }
     }
 }

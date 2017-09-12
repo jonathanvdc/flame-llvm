@@ -134,5 +134,15 @@ namespace System
         {
             return value ? "True" : "False";
         }
+
+        /// <summary>
+        /// Converts the given character to a string.
+        /// </summary>
+        /// <param name="value">The character.</param>
+        /// <returns>A string representation for the character.</returns>
+        public static string ToString(char value)
+        {
+            return new String(new char[] { value });
+        }
     }
 }
