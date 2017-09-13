@@ -46,11 +46,38 @@ namespace System
             {
                 return other is NAME && Equals((NAME)other);
             }
+        }
+    }
 
+    unroll ((NAME) in (
+        SByte,
+        Byte,
+        Int16,
+        UInt16,
+        Int32,
+        UInt32,
+        Char))
+    {
+        public partial struct NAME
+        {
             /// <inheritdoc/>
             public sealed override int GetHashCode()
             {
                 return (int)value;
+            }
+        }
+    }
+
+    unroll ((NAME) in (
+        Int64,
+        UInt64))
+    {
+        public partial struct NAME
+        {
+            /// <inheritdoc/>
+            public sealed override int GetHashCode()
+            {
+                return (int)(value >> 32) ^ (int)value;
             }
         }
     }
