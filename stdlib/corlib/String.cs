@@ -7,7 +7,7 @@ namespace System
     /// </summary>
     public sealed class String : Object, IEquatable<String>
     {
-        internal String()
+        private String()
         { }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace System
             }
         }
 
-        internal char[] data;
+        private char[] data;
 
         /// <summary>
         /// Gets this string's length.
