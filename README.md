@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/jonathanvdc/flame-llvm.svg?branch=master)](https://travis-ci.org/jonathanvdc/flame-llvm)
 
-`flame-llvm` is a tool that compiles [Flame](https://github.com/jonathanvdc/Flame) IR to [LLVM](http://llvm.org) IR using [LLVMSharp](https://github.com/Microsoft/LLVMSharp). Since [`ecsc`](https://github.com/jonathanvdc/ecsc) can compile C# source code to Flame IR, `flame-llvm` can (indirectly) turn C# programs into fast, native binaries.
+`flame-llvm` is a tool that compiles [Flame](https://github.com/jonathanvdc/Flame) IR to [LLVM](http://llvm.org) IR using [LLVMSharp](https://github.com/Microsoft/LLVMSharp). Since [`ecsc`](https://github.com/jonathanvdc/ecsc) can compile C# source code to Flame IR, `flame-llvm` can (indirectly) turn C# programs into fast and small standalone binaries.
+
+This repository also contains an implementation of a small but growing set of functionality from the .NET base class library (BCL) to offer some measure of source-level compatibility with C# code written for traditional CLR implementations.
 
 ## Compiling `flame-llvm`
 
