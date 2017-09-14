@@ -47,9 +47,7 @@ namespace System
         /// <inheritdoc/>
         public sealed override unsafe int GetHashCode()
         {
-            var valPtr = &value;
-            var intVal = *((int*)valPtr);
-            return intVal.GetHashCode();
+            return BitConverter.SingleToInt32Bits(value).GetHashCode();
         }
     }
 
@@ -58,9 +56,7 @@ namespace System
         /// <inheritdoc/>
         public sealed override unsafe int GetHashCode()
         {
-            var valPtr = &value;
-            var longVal = *((long*)valPtr);
-            return longVal.GetHashCode();
+            return BitConverter.DoubleToInt64Bits(value).GetHashCode();
         }
     }
 }
