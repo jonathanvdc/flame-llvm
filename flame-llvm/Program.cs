@@ -104,8 +104,8 @@ namespace Flame.LLVM
                 new DescribedParameter(
                     "argv",
                     PrimitiveTypes.UInt8
-                    .MakePointerType(PointerKind.TransientPointer)
-                    .MakePointerType(PointerKind.TransientPointer)));
+                        .MakePointerType(PointerKind.TransientPointer)
+                        .MakePointerType(PointerKind.TransientPointer)));
 
             if (originalEntryPoint.HasSameSignature(mainThunk))
             {
@@ -114,7 +114,7 @@ namespace Flame.LLVM
                 return MainAndOtherAssemblies;
             }
 
-            var epCall = CreateEntryPointCall(originalEntryPoint, mainThunk);
+            var epCall = CreateEntryPointCall(originalEntryPoint, mainThunk, Binder);
             mainThunk.Body = epCall.Type.GetIsInteger()
                 ? (IStatement)new ReturnStatement(
                     new StaticCastExpression(epCall, PrimitiveTypes.Int32).Simplify())
@@ -137,17 +137,26 @@ namespace Flame.LLVM
         /// Creates a call to the user-defined entry point.
         /// </summary>
         /// <param name="EntryPoint">The entry point to call.</param>
-        /// <param name="Callee">The callee whose parameters are forwarded to the user-defined entry point.</param>
+        /// <param name="Caller">The method whose parameters are forwarded to the user-defined entry point.</param>
+        /// <param name="Binder">A type name binder.</param>
         /// <returns>A call to the user-defined entry point.</returns>
-        private static IExpression CreateEntryPointCall(IMethod EntryPoint, IMethod Callee)
+        private static IExpression CreateEntryPointCall(
+            IMethod EntryPoint,
+            IMethod Caller,
+            IBinder Binder)
         {
+            var initMethod = BindEnvironmentInitializeMethod(Binder, Caller);
+
             var paramTypes = GetParameterTypes(EntryPoint);
-            var thunkParamTypes = GetParameterTypes(Callee);
+            var thunkParamTypes = GetParameterTypes(Caller);
 
             if (paramTypes.Length == 0)
             {
                 // Empty parameter list.
-                return new InvocationExpression(EntryPoint, null, new IExpression[] { });
+                return AfterInitialization(
+                    initMethod,
+                    Caller,
+                    new InvocationExpression(EntryPoint, null, new IExpression[] { }));
             }
             else if (paramTypes.Length == 2
                 && thunkParamTypes.Length == 2
@@ -155,15 +164,21 @@ namespace Flame.LLVM
                 && paramTypes[1].IsEquivalent(thunkParamTypes[1]))
             {
                 // Forward parameters.
-                var thunkParams = Callee.GetParameters();
+                return AfterInitialization(
+                    initMethod,
+                    Caller,
+                    CreateForwardingCall(EntryPoint, Caller));
+            }
+            else if (initMethod != null
+                && paramTypes.Length == 1
+                && paramTypes[0].IsEquivalent(initMethod.ReturnType))
+            {
+                // Forward the return type of the 'Initialize' method
+                // to the entry point.
                 return new InvocationExpression(
                     EntryPoint,
                     null,
-                    new IExpression[]
-                    {
-                        new ArgumentVariable(thunkParams[0], 0).CreateGetExpression(),
-                        new ArgumentVariable(thunkParams[1], 1).CreateGetExpression()
-                    });
+                    new IExpression[] { CreateForwardingCall(initMethod, Caller) });
             }
             else
             {
@@ -172,6 +187,53 @@ namespace Flame.LLVM
                     "signature must be one of: " +
                     "int|void Main(), int|void Main(int, byte**)");
             }
+        }
+
+        private static IExpression AfterInitialization(
+            IMethod InitializationMethod,
+            IMethod Caller,
+            IExpression Expression)
+        {
+            if (InitializationMethod == null)
+            {
+                return Expression;
+            }
+            else
+            {
+                return new InitializedExpression(
+                    new ExpressionStatement(
+                        CreateForwardingCall(InitializationMethod, Caller)),
+                    Expression);
+            }
+        }
+
+        private static IExpression CreateForwardingCall(
+            IMethod Callee,
+            IMethod Caller)
+        {
+            var thunkParams = Caller.GetParameters();
+            var args = new IExpression[thunkParams.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = new ArgumentVariable(thunkParams[i], i).CreateGetExpression();
+            } 
+            return new InvocationExpression(Callee, null, args);
+        }
+
+        private static IMethod BindEnvironmentInitializeMethod(
+            IBinder Binder, IMethod MainThunk)
+        {
+            var envType = Binder.BindType(new SimpleName("Environment").Qualify("System"));
+            if (envType == null)
+            {
+                return null;
+            }
+
+            return envType.GetMethod(
+                new SimpleName("Initialize"),
+                true,
+                PrimitiveTypes.String.MakeArrayType(1),
+                GetParameterTypes(MainThunk));
         }
 
         private static IType[] GetParameterTypes(IMethod Method)
