@@ -60,6 +60,7 @@ tests
     template CheckOutput<property/property.cs, hello, hello>;
     template CheckOutput<static/static.cs, static-test, static-test>;
     template CheckOutput<static-ctor/static-ctor.cs, , hello world>;
+    template CheckOutput<stdlib-echo/stdlib-echo.cs, howdy, howdy>;
     template CheckOutput<stdlib-hello-world/stdlib-hello-world.cs, , hi>;
     template CheckOutput<stdlib-list/stdlib-list.cs, , 10 42>;
     template CheckOutput<struct/struct.cs, struct-test, struct-test>;
