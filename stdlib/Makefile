@@ -13,7 +13,7 @@ system-console-files = \
 
 system-console-libs = $(runtime-lib) bin/flo/corlib.flo
 
-common-options = -asm-name=stdlib -asm-version=0.1.0.0
+common-options = -asm-version=0.1.0.0
 
 .PHONY: all flo clean
 all: flo
@@ -26,7 +26,15 @@ clean:
 include ../flame-make-scripts/use-ecsc.mk
 
 bin/flo/corlib.flo: $(corlib-files) $(corlib-libs) | ecsc
-	$(ECSC) $(corlib-files) -platform ir -environment standalone -Wno-build -rt-libs $(runtime-lib) -o $@ $(common-options)
+	$(ECSC) $(corlib-files) \
+		-platform ir -environment standalone -Wno-build \
+		-rt-libs $(runtime-lib) \
+		-o $@ \
+		$(common-options) -asm-name=stdlib
 
 bin/flo/system-console.flo: $(system-console-files) $(system-console-libs) | ecsc
-	$(ECSC) $(system-console-files) -platform ir -environment standalone -Wno-build -rt-libs $(system-console-libs) -o $@ $(common-options)
+	$(ECSC) $(system-console-files) \
+		-platform ir -environment standalone -Wno-build \
+		-rt-libs $(system-console-libs) \
+		-o $@ \
+		$(common-options) -asm-name=system-console
