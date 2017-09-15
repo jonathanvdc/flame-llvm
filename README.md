@@ -139,3 +139,7 @@ clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -lc+
   - [ ] indirect function calls (delegates)
   - [ ] reflection
   - [ ] precise garbage collection
+
+## Contributing
+
+Your contribution to `flame-llvm` would be most welcome! If you want to help out but have questions, head over to the [CONTRIBUTING.md](CONTRIBUTING.md) file or simply drop me an issue.
