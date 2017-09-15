@@ -15,7 +15,9 @@ For example, suppose that you wanted to re-implement the GNU coreutils. It's bee
   * **small** (e.g., the `echo` command is about 34 KiB) and
   * **standalone** (they don't require a separate virtual machine to be installed before you can run them).
 
-Mono and .NET Core can create standalone applications by bundling a VM with the actual program, but that's rather clumsy because the VM tends to be way bigger than the actual program. And using a VM adds to a program's start-up time regardless of whether you bundle it with the program or ship it separately. I think that's a rather sad state of affairs for an awesome programming language like C#.
+Mono and .NET Core can create standalone applications by bundling a VM with the actual program, but that's rather clumsy because the VM tends to be way bigger than the actual program. And using a VM adds to a program's start-up time regardless of whether you bundle it with the program or ship it separately. And come to think of it, bundling VMs with applications is kind of a weird and inefficient way to create a standalone program.
+
+![Bundled application](doc/bundled-application.svg)
 
 Enter `flame-llvm`, which you can use to compile C# code directly to a native executable. Programs compiled with `flame-llvm` run directly on the metal, and they're generally fast and small, too.
 
