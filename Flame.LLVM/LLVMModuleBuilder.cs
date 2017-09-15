@@ -71,8 +71,21 @@ namespace Flame.LLVM
                 if (!TryDeclareIntrinsic(Method, out result))
                 {
                     var abi = LLVMSymbolTypeMember.GetLLVMAbi(Method, assembly);
-                    var funcType = DeclarePrototype(Method);
-                    result = AddFunction(module, abi.Mangler.Mangle(Method, true), funcType);
+                    string methodName = abi.Mangler.Mangle(Method, true);
+                    result = GetNamedFunction(module, methodName);
+                    if (result.Pointer == IntPtr.Zero
+                        || !Method.HasAttribute(
+                            PrimitiveAttributes.Instance.ImportAttribute.AttributeType))
+                    {
+                        // Only declare imported methods if they haven't been declared
+                        // already.
+                        //
+                        // It's tempting to think that a valid assembly declares
+                        // methods only once, that's not true: sometimes, the same
+                        // function is imported multiple times by different classes.
+                        var funcType = DeclarePrototype(Method);
+                        result = AddFunction(module, methodName, funcType);
+                    }
                 }
                 declaredMethods[Method] = result;
             }
