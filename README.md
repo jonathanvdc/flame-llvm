@@ -6,6 +6,55 @@
 
 This repository also contains an implementation of a small but growing set of functionality from the .NET base class library (BCL) to offer some measure of source-level compatibility with C# code written for traditional CLR implementations.
 
+## The case for `flame-llvm`
+
+Running managed languages in a virtual machine like .NET or Mono works great for a wide class of applications. But for some programs, it just doesn't make sense.
+
+For example, suppose that you wanted to re-implement the GNU coreutils. It's been done in [Go](https://github.com/ericlagergren/go-coreutils), [Rust](https://github.com/uutils/coreutils) and even [Haskell](https://github.com/mrak/coreutils.hs). But creating *a competitive C# version* of the coreutils would be rather tricky because most of the coreutils are:
+  * short-lived applications (so their **start-up time** matters),
+  * **small** (e.g., the `echo` command is about 34 KiB) and
+  * **standalone** (they don't require a separate virtual machine to be installed before you can run them).
+
+Mono and .NET Core can create standalone applications by bundling a VM with the actual program, but that's rather clumsy because the VM tends to be way bigger than the actual program. And using a VM adds to a program's start-up time regardless of whether you bundle it with the program or ship it separately. I think that's a rather sad state of affairs for an awesome programming language like C#.
+
+Enter `flame-llvm`, which you can use to compile C# code directly to a native executable. Programs compiled with `flame-llvm` run directly on the metal, and they're generally fast and small, too.
+
+Here's a head-to-head comparison of `flame-llvm` and Mono's `mkbundle` tool on the `stdlib-echo` test (a simplified version of `echo`).
+
+```bash
+# Follow the build instructions in the `Compiling a C# program`
+# section of the README to compile `stdlib-echo.cs` to `a.out`
+# using `flame-llvm`.
+
+# Use `mkbundle` to create a standalone version of `stdlib-echo.cs`.
+$ mcs stdlib-echo.cs
+$ mkbundle --simple stdlib-echo.exe -o stdlib-echo-mono
+
+$ time ./a.out howdy
+howdy
+
+real 0m0.004s
+user 0m0.004s
+sys  0m0.000s
+
+# a.out is less than 14 KiB
+$ wc -c a.out
+13752 a.out
+
+$ time ./stdlib-echo-mono howdy
+howdy
+
+real 0m0.041s
+user 0m0.028s
+sys  0m0.008s
+
+# stdlib-echo-mono is over 7 MiB
+$ wc -c stdlib-echo-mono
+7827636 stdlib-echo-mono
+```
+
+As you can see, compiling `stdlib-echo.cs` with `flame-llvm` results in an executable that starts up ten times faster and is only one fiftieth in size of the executable produced by `mkbundle`. 
+
 ## Compiling `flame-llvm`
 
 To use `flame-llvm`, you'll need to have the following installed:
