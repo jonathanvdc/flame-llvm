@@ -58,7 +58,22 @@ namespace Flame.LLVM
 
         private static LLVMAbi PickLLVMAbi(ITypeMember Member, LLVMAssembly DeclaringAssembly)
         {
-            if (Member.IsStatic && IsImportedMember(Member))
+            var abiName = LLVMAttributes.GetAbiName(Member);
+            if (abiName != null)
+            {
+                switch (abiName.ToLowerInvariant())
+                {
+                    case "c":
+                        return DeclaringAssembly.ExternalAbi;
+                    case "c++":
+                    case "c#":
+                        return DeclaringAssembly.Abi;
+                    default:
+                        throw new InvalidDataException(
+                            LLVMAttributes.AbiAttributeName + " specified unknown ABI '" + abiName + "'");
+                }
+            }
+            else if (Member.IsStatic && IsImportedMember(Member))
             {
                 return DeclaringAssembly.ExternalAbi;
             }
@@ -140,7 +155,6 @@ namespace Flame.LLVM
             : base(DeclaringType)
         {
             this.templateInstance = new MethodSignatureInstance(Template, this);
-            this.codeGenerator = new LLVMCodeGenerator(this);
             this.allInterfaceImpls = new Lazy<HashSet<LLVMMethod>>(LookupAllInterfaceImpls);
         }
 
@@ -148,7 +162,6 @@ namespace Flame.LLVM
             : base(DeclaringType, Abi)
         {
             this.templateInstance = new MethodSignatureInstance(Template, this);
-            this.codeGenerator = new LLVMCodeGenerator(this);
             this.allInterfaceImpls = new Lazy<HashSet<LLVMMethod>>(LookupAllInterfaceImpls);
         }
 
@@ -193,6 +206,7 @@ namespace Flame.LLVM
 
         public void Initialize()
         {
+            this.codeGenerator = new LLVMCodeGenerator(this);
             ParentMethod = GetParentMethod(this);
             if (ParentMethod == this
                 && this.GetIsVirtual()

@@ -58,6 +58,7 @@
     <Compile Include="LLVMAbi.cs" />
     <Compile Include="LLVMAccessor.cs" />
     <Compile Include="LLVMAssembly.cs" />
+    <Compile Include="LLVMAttributes.cs" />
     <Compile Include="LLVMField.cs" />
     <Compile Include="LLVMLinkageAttribute.cs" />
     <Compile Include="LLVMMethod.cs" />
