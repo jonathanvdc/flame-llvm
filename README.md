@@ -55,7 +55,7 @@ $ wc -c stdlib-echo-mono
 7827636 stdlib-echo-mono
 ```
 
-As you can see, compiling `stdlib-echo.cs` with `flame-llvm` results in an executable that starts up ten times faster and is only one fiftieth in size of the executable produced by `mkbundle`. 
+As you can see, compiling `stdlib-echo.cs` with `flame-llvm` results in an executable that starts up ten times faster and is five hundred times smaller than the executable produced by `mkbundle`. 
 
 ## Compiling `flame-llvm`
 
