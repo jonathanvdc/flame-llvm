@@ -245,19 +245,41 @@ namespace Flame.LLVM
         {
             var allEntries = new List<LLVMMethod>();
             GetAllVTableEntries(allEntries);
+            return new VTableInstance(
+                DefineVTableGlobal(
+                    Module,
+                    this,
+                    GetVTableEntryImpls(Module, allEntries)), allEntries);
+        }
 
+        /// <summary>
+        /// Defines the global variable that backs a vtable.
+        /// </summary>
+        /// <param name="Module">The module to declare the global in.</param>
+        /// <param name="Type">The type that owns the vtable.</param>
+        /// <param name="VTableEntryImpls">
+        /// The list of virtual function pointers in the vtable.
+        /// </param>
+        /// <returns>A vtable global variable.</returns>
+        public static LLVMValueRef DefineVTableGlobal(
+            LLVMModuleBuilder Module,
+            IType Type,
+            LLVMValueRef[] VTableEntryImpls)
+        {
             var fields = new LLVMValueRef[3];
-            fields[0] = ConstInt(Int64Type(), Module.GetTypeId(this), false);
-            fields[1] = ConstInt(Int64Type(), Module.GetTypeIndex(this), false);
-            fields[2] = ConstArray(PointerType(Int8Type(), 0), GetVTableEntryImpls(Module, allEntries));
+            fields[0] = ConstInt(Int64Type(), Module.GetTypeId(Type), false);
+            fields[1] = ConstInt(Int64Type(), Module.GetTypeIndex(Type), false);
+            fields[2] = ConstArray(
+                PointerType(Int8Type(), 0),
+                VTableEntryImpls);
             var vtableContents = ConstStruct(fields, false);
             var vtable = Module.DeclareGlobal(
                 vtableContents.TypeOf(),
-                FullName.ToString() + ".vtable");
+                Type.FullName.ToString() + ".vtable");
             vtable.SetGlobalConstant(true);
             vtable.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
             vtable.SetInitializer(vtableContents);
-            return new VTableInstance(vtable, allEntries);
+            return vtable;
         }
 
         private void GetAllVTableEntries(List<LLVMMethod> Results)

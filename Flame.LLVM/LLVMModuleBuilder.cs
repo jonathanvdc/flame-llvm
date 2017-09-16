@@ -28,10 +28,10 @@ namespace Flame.LLVM
             this.declaredTypes = new Dictionary<IType, LLVMTypeRef>();
             this.declaredDataLayouts = new Dictionary<LLVMType, LLVMTypeRef>();
             this.declaredGlobals = new Dictionary<IField, LLVMValueRef>();
-            this.declaredTypeIds = new Dictionary<LLVMType, ulong>();
-            this.declaredTypePrimes = new Dictionary<LLVMType, ulong>();
-            this.declaredTypeIndices = new Dictionary<LLVMType, ulong>();
-            this.declaredVTables = new Dictionary<LLVMType, VTableInstance>();
+            this.declaredTypeIds = new Dictionary<IType, ulong>();
+            this.declaredTypePrimes = new Dictionary<IType, ulong>();
+            this.declaredTypeIndices = new Dictionary<IType, ulong>();
+            this.declaredVTables = new Dictionary<IType, VTableInstance>();
             this.declaredIntrinsics = new Dictionary<IntrinsicValue, LLVMValueRef>();
             this.interfaceStubs = new Dictionary<LLVMMethod, InterfaceStub>();
             this.primeGen = new PrimeNumberGenerator();
@@ -47,10 +47,10 @@ namespace Flame.LLVM
         private Dictionary<IType, LLVMTypeRef> declaredTypes;
         private Dictionary<IField, LLVMValueRef> declaredGlobals;
         private Dictionary<LLVMType, LLVMTypeRef> declaredDataLayouts;
-        private Dictionary<LLVMType, ulong> declaredTypeIds;
-        private Dictionary<LLVMType, ulong> declaredTypePrimes;
-        private Dictionary<LLVMType, ulong> declaredTypeIndices;
-        private Dictionary<LLVMType, VTableInstance> declaredVTables;
+        private Dictionary<IType, ulong> declaredTypeIds;
+        private Dictionary<IType, ulong> declaredTypePrimes;
+        private Dictionary<IType, ulong> declaredTypeIndices;
+        private Dictionary<IType, VTableInstance> declaredVTables;
         private Dictionary<LLVMMethod, InterfaceStub> interfaceStubs;
         private Dictionary<IntrinsicValue, LLVMValueRef> declaredIntrinsics;
         private PrimeNumberGenerator primeGen;
@@ -468,6 +468,12 @@ namespace Flame.LLVM
                     return PointerType(DeclareDataLayout(llvmType), 0);
                 }
             }
+            else if (Type is MethodType)
+            {
+                return PointerType(
+                    DelegateBlock.GetMethodTypeLayout(MethodType.GetMethod(Type), this),
+                    0);
+            }
             else if (Type.GetIsReferenceType())
             {
                 // We don't know what the reference type's layout is, so the
@@ -498,7 +504,7 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Type">The type for which a type ID is to be found.</param>
         /// <returns>An type ID.</returns>
-        public ulong GetTypeId(LLVMType Type)
+        public ulong GetTypeId(IType Type)
         {
             ulong result;
             if (!declaredTypeIds.TryGetValue(Type, out result))
@@ -514,7 +520,7 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Type">The type for which a prime number is to be found.</param>
         /// <returns>A prime number.</returns>
-        public ulong GetTypePrime(LLVMType Type)
+        public ulong GetTypePrime(IType Type)
         {
             ulong result;
             if (!declaredTypePrimes.TryGetValue(Type, out result))
@@ -530,7 +536,7 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Type">The type for which a type ID is to be generated.</param>
         /// <returns>An type ID.</returns>
-        private void GenerateTypeId(LLVMType Type)
+        private void GenerateTypeId(IType Type)
         {
             // The notion of a type ID is based on "Fast Dynamic Casting" by
             // Michael Gibbs and Bjarne Stroustrup.
@@ -596,7 +602,7 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Type">The type for which the index is to be found.</param>
         /// <returns>An integer index.</returns>
-        public ulong GetTypeIndex(LLVMType Type)
+        public ulong GetTypeIndex(IType Type)
         {
             ulong result;
             if (!declaredTypeIndices.TryGetValue(Type, out result))
@@ -612,12 +618,21 @@ namespace Flame.LLVM
         /// </summary>
         /// <param name="Type">The type to get the vtable of.</param>
         /// <returns>A vtable global.</returns>
-        public VTableInstance GetVTable(LLVMType Type)
+        public VTableInstance GetVTable(IType Type)
         {
             VTableInstance vtable;
             if (!declaredVTables.TryGetValue(Type, out vtable))
             {
-                vtable = Type.DefineVTable(this);
+                if (Type is LLVMType)
+                {
+                    vtable = ((LLVMType)Type).DefineVTable(this);
+                }
+                else
+                {
+                    vtable = new VTableInstance(
+                        LLVMType.DefineVTableGlobal(this, Type, new LLVMValueRef[] { }),
+                        new LLVMMethod[] { });
+                }
                 declaredVTables[Type] = vtable;
             }
             return vtable;

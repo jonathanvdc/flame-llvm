@@ -51,13 +51,11 @@ namespace Flame.LLVM.Codegen
         /// <param name="BasicBlock">The basic block to build the instruction in.</param>
         /// <param name="Type">The type whose vtable pointer is to be computes.</param>
         /// <returns>A value that computes a vtable pointer.</returns>
-        public static LLVMValueRef BuildTypeVTable(BasicBlockBuilder BasicBlock, LLVMType Type)
+        public static LLVMValueRef BuildTypeVTable(BasicBlockBuilder BasicBlock, IType Type)
         {
-            return BuildBitCast(
-                BasicBlock.Builder,
+            return ConstBitCast(
                 BasicBlock.FunctionBody.Module.GetVTable(Type).Pointer,
-                PointerType(Int8Type(), 0),
-                "vtable_tmp");
+                PointerType(Int8Type(), 0));
         }
     }
 }

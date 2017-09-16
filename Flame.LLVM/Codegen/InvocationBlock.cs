@@ -86,7 +86,13 @@ namespace Flame.LLVM.Codegen
                 allArgs, BasicBlock);
         }
 
-        private BlockCodegen EmitTarget(BasicBlockBuilder BasicBlock, CodeBlock Target)
+        /// <summary>
+        /// Generates code for the object that receives a call, if any.
+        /// </summary>
+        /// <param name="BasicBlock">The basic block to generate code in.</param>
+        /// <param name="Target">An object that will receive a call or <c>null</c>.</param>
+        /// <returns>Block codegen.</returns>
+        public static BlockCodegen EmitTarget(BasicBlockBuilder BasicBlock, CodeBlock Target)
         {
             if (Target == null)
             {
@@ -100,7 +106,16 @@ namespace Flame.LLVM.Codegen
             }
         }
 
-        private BlockCodegen EmitCallee(
+        /// <summary>
+        /// Generates code that computes the address of the given callee function's
+        /// implementation.
+        /// </summary>
+        /// <param name="BasicBlock">The basic block to generate code in.</param>
+        /// <param name="Target">The object that receives the call.</param>
+        /// <param name="Callee">The callee method.</param>
+        /// <param name="Op">The call operator.</param>
+        /// <returns>A function pointer.</returns>
+        public static BlockCodegen EmitCallee(
             BasicBlockBuilder BasicBlock,
             LLVMValueRef Target,
             IMethod Callee,

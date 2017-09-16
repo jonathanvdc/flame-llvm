@@ -609,12 +609,24 @@ namespace Flame.LLVM.Codegen
                 arrayTmp.CreateGetExpression().Emit(this));
         }
 
-        private static IExpression ToExpression(CodeBlock Block)
+        /// <summary>
+        /// Creates an expression that acts as a wrapper around the given block.
+        /// </summary>
+        /// <param name="Block">The block to wrap.</param>
+        /// <returns>A wrapper expression.</returns>
+        public static IExpression ToExpression(CodeBlock Block)
         {
             return new CodeBlockExpression(Block, Block.Type);
         }
 
-        private IExpression Allocate(IExpression Size, IType ResultType)
+        /// <summary>
+        /// Creates an expression that uses the garbage collector to allocate
+        /// a chunk of memory.
+        /// </summary>
+        /// <param name="Size">The number of bytes to allocate.</param>
+        /// <param name="ResultType">The type of the resulting pointer.</param>
+        /// <returns>An allocation expression.</returns>
+        public IExpression Allocate(IExpression Size, IType ResultType)
         {
             return new ReinterpretCastExpression(
                 ((LLVMMethod)Method).Abi.GarbageCollector.Allocate(

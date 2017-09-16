@@ -1,5 +1,8 @@
 using System;
 using Flame.Compiler;
+using Flame.Compiler.Expressions;
+using LLVMSharp;
+using static LLVMSharp.LLVM;
 
 namespace Flame.LLVM.Codegen
 {
@@ -17,7 +20,7 @@ namespace Flame.LLVM.Codegen
         /// <param name="Target">The target on which the callee is invoked.</param>
         /// <param name="Op">The type of delegate to create.</param>
         public DelegateBlock(
-            ICodeGenerator CodeGenerator,
+            LLVMCodeGenerator CodeGenerator,
             IMethod Callee,
             CodeBlock Target,
             Operator Op)
@@ -48,7 +51,7 @@ namespace Flame.LLVM.Codegen
         public Operator Op { get; private set; }
 
         /// <inheritdoc/>
-        private ICodeGenerator codeGen;
+        private LLVMCodeGenerator codeGen;
 
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
@@ -56,9 +59,62 @@ namespace Flame.LLVM.Codegen
         /// <inheritdoc/>
         public override IType Type => MethodType.Create(Callee);
 
+        /// <summary>
+        /// Gets the data layout of a method type.
+        /// </summary>
+        public static LLVMTypeRef GetMethodTypeLayout(IMethod Method, LLVMModuleBuilder Module) =>
+            StructType(
+                new LLVMTypeRef[]
+                {
+                    PointerType(Int8Type(), 0),
+                    PointerType(Int8Type(), 0),
+                    PointerType(Module.DeclarePrototype(Method), 0)
+                },
+                false);
+
         public override BlockCodegen Emit(BasicBlockBuilder BasicBlock)
         {
-            throw new NotImplementedException();
+            var targetAndBlock = InvocationBlock.EmitTarget(BasicBlock, Target);
+            BasicBlock = targetAndBlock.BasicBlock;
+
+            var calleeAndBlock = InvocationBlock.EmitCallee(BasicBlock, targetAndBlock.Value, Callee, Op);
+            BasicBlock = calleeAndBlock.BasicBlock;
+
+            var layout = GetMethodTypeLayout(Callee, BasicBlock.FunctionBody.Module);
+
+            var methodTypeAllocBlock = (CodeBlock)codeGen.Allocate(
+                new StaticCastExpression(
+                    LLVMCodeGenerator.ToExpression(
+                        new ConstantBlock(codeGen, PrimitiveTypes.UInt64, SizeOf(layout))),
+                    PrimitiveTypes.UInt64),
+                Type).Emit(codeGen);
+
+            var methodTypeAllocCodegen = methodTypeAllocBlock.Emit(BasicBlock);
+            BasicBlock = methodTypeAllocCodegen.BasicBlock;
+
+            BuildStore(
+                BasicBlock.Builder,
+                TypeVTableBlock.BuildTypeVTable(BasicBlock, Type),
+                BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 0, "vtable_ptr"));
+
+            if (targetAndBlock.Value.Pointer != IntPtr.Zero)
+            {
+                BuildStore(
+                    BasicBlock.Builder,
+                    targetAndBlock.Value,
+                    BuildBitCast(
+                        BasicBlock.Builder,
+                        BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 1, "context_ptr"),
+                        PointerType(targetAndBlock.Value.TypeOf(), 0),
+                        "context_obj"));
+            }
+
+            BuildStore(
+                BasicBlock.Builder,
+                calleeAndBlock.Value,
+                BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 2, "func_ptr"));
+
+            return new BlockCodegen(BasicBlock, methodTypeAllocCodegen.Value);
         }
     }
 }
