@@ -470,9 +470,7 @@ namespace Flame.LLVM
             }
             else if (Type is MethodType)
             {
-                return PointerType(
-                    DelegateBlock.GetMethodTypeLayout(MethodType.GetMethod(Type), this),
-                    0);
+                return PointerType(DelegateBlock.MethodTypeLayout, 0);
             }
             else if (Type.GetIsReferenceType())
             {

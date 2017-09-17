@@ -60,15 +60,16 @@ namespace Flame.LLVM.Codegen
         public override IType Type => MethodType.Create(Callee);
 
         /// <summary>
-        /// Gets the data layout of a method type.
+        /// The data layout of a method type.
         /// </summary>
-        public static LLVMTypeRef GetMethodTypeLayout(IMethod Method, LLVMModuleBuilder Module) =>
+        public static readonly LLVMTypeRef MethodTypeLayout =
             StructType(
                 new LLVMTypeRef[]
                 {
-                    PointerType(Int8Type(), 0),
-                    PointerType(Int8Type(), 0),
-                    PointerType(Module.DeclarePrototype(Method), 0)
+                    PointerType(Int8Type(), 0), // vtable pointer
+                    PointerType(Int8Type(), 0), // context pointer
+                    PointerType(Int8Type(), 0), // function pointer
+                    Int1Type() // context?
                 },
                 false);
 
@@ -80,12 +81,10 @@ namespace Flame.LLVM.Codegen
             var calleeAndBlock = InvocationBlock.EmitCallee(BasicBlock, targetAndBlock.Value, Callee, Op);
             BasicBlock = calleeAndBlock.BasicBlock;
 
-            var layout = GetMethodTypeLayout(Callee, BasicBlock.FunctionBody.Module);
-
             var methodTypeAllocBlock = (CodeBlock)codeGen.Allocate(
                 new StaticCastExpression(
                     LLVMCodeGenerator.ToExpression(
-                        new ConstantBlock(codeGen, PrimitiveTypes.UInt64, SizeOf(layout))),
+                        new ConstantBlock(codeGen, PrimitiveTypes.UInt64, SizeOf(MethodTypeLayout))),
                     PrimitiveTypes.UInt64),
                 Type).Emit(codeGen);
 
@@ -95,26 +94,103 @@ namespace Flame.LLVM.Codegen
             BuildStore(
                 BasicBlock.Builder,
                 TypeVTableBlock.BuildTypeVTable(BasicBlock, Type),
-                BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 0, "vtable_ptr"));
+                BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 0, "vtable_ptr_ptr"));
 
-            if (targetAndBlock.Value.Pointer != IntPtr.Zero)
+            bool hasContext = targetAndBlock.Value.Pointer != IntPtr.Zero;
+            if (hasContext)
             {
                 BuildStore(
                     BasicBlock.Builder,
-                    targetAndBlock.Value,
                     BuildBitCast(
                         BasicBlock.Builder,
-                        BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 1, "context_ptr"),
-                        PointerType(targetAndBlock.Value.TypeOf(), 0),
-                        "context_obj"));
+                        targetAndBlock.Value,
+                        PointerType(Int8Type(), 0),
+                        "context_obj"),
+                    BuildStructGEP(
+                        BasicBlock.Builder,
+                        methodTypeAllocCodegen.Value,
+                        1,
+                        "context_obj_ptr"));
             }
 
             BuildStore(
                 BasicBlock.Builder,
-                calleeAndBlock.Value,
-                BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 2, "func_ptr"));
+                BuildBitCast(
+                    BasicBlock.Builder,
+                    calleeAndBlock.Value,
+                    PointerType(Int8Type(), 0),
+                    "opaque_func_ptr"),
+                BuildStructGEP(
+                    BasicBlock.Builder,
+                    methodTypeAllocCodegen.Value,
+                    2,
+                    "func_ptr_ptr"));
+
+            BuildStore(
+                BasicBlock.Builder,
+                ConstInt(Int1Type(), hasContext ? 1ul : 0ul, false),
+                BuildStructGEP(BasicBlock.Builder, methodTypeAllocCodegen.Value, 3, "has_context_ptr"));
 
             return new BlockCodegen(BasicBlock, methodTypeAllocCodegen.Value);
+        }
+
+        private static LLVMValueRef BuildLoadFieldPointer(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Delegate,
+            uint FieldIndex,
+            string FieldName)
+        {
+            return AtAddressEmitVariable.BuildConstantLoad(
+                Builder,
+                BuildStructGEP(
+                    Builder,
+                    Delegate,
+                    FieldIndex,
+                    FieldName + "_ptr"),
+                FieldName);
+        }
+
+        /// <summary>
+        /// Creates a sequence of instructions that loads a pointer to a
+        /// delegate's context object.
+        /// </summary>
+        /// <param name="Builder">A block builder.</param>
+        /// <param name="Delegate">A pointer to a delegate's data.</param>
+        /// <returns>A pointer to the context object.</returns>
+        public static LLVMValueRef BuildLoadContextObject(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Delegate)
+        {
+            return BuildLoadFieldPointer(Builder, Delegate, 1, "context_obj");
+        }
+
+        /// <summary>
+        /// Creates a sequence of instructions that loads a delegate's function pointer
+        /// as an opaque pointer.
+        /// </summary>
+        /// <param name="Builder">A block builder.</param>
+        /// <param name="Delegate">A pointer to a delegate's data.</param>
+        /// <returns>An opaque pointer to the delegate's function.</returns>
+
+        public static LLVMValueRef BuildLoadFunctionPointer(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Delegate)
+        {
+            return BuildLoadFieldPointer(Builder, Delegate, 2, "function_ptr");
+        }
+
+        /// <summary>
+        /// Creates a sequence of instructions that loads a delegate's has-context
+        /// flag.
+        /// </summary>
+        /// <param name="Builder">A block builder.</param>
+        /// <param name="Delegate">A pointer to a delegate's data.</param>
+        /// <returns>A flag that tells if the delegate has a context value.</returns>
+        public static LLVMValueRef BuildLoadHasContext(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Delegate)
+        {
+            return BuildLoadFieldPointer(Builder, Delegate, 3, "has_context");
         }
     }
 }

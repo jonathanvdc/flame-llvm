@@ -28,7 +28,8 @@ namespace Flame.LLVM.Codegen
             this.codeGen = CodeGenerator;
             this.Callee = Callee;
             this.Arguments = Arguments;
-            this.retType = MethodType.GetMethod(Callee.Type).ReturnType;
+            this.methodSignature = MethodType.GetMethod(Callee.Type);
+            this.retType = methodSignature.ReturnType;
             this.CanThrow = CanThrow;
         }
 
@@ -53,6 +54,8 @@ namespace Flame.LLVM.Codegen
         private ICodeGenerator codeGen;
 
         private IType retType;
+
+        private IMethod methodSignature;
 
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
@@ -246,7 +249,133 @@ namespace Flame.LLVM.Codegen
             }
             else
             {
-                throw new NotImplementedException("Indirect calls are not supported yet.");
+                // To invoke a delegate, we first need to figure out if it includes
+                // a context or not. If so, then we should prepend a context value
+                // to the argument list.
+                //
+                // The code'll look more or less like this:
+                //
+                //     var delegate = ...;
+                //     var args... = ...;
+                //     void* fptr = delegate->fptr;
+                //     if (delegate->has_context)
+                //     {
+                //         void* context = delegate->context;
+                //         result1 = ((TRet(void*, TArgs...)*)fptr)(context, args...);
+                //     }
+                //     else
+                //     {
+                //         result2 = ((TRet(TArgs...)*)fptr)(args...);
+                //     }
+                //     result = phi(result1, result2);
+
+                var delegateAndBlock = Callee.Emit(BasicBlock);
+                BasicBlock = delegateAndBlock.BasicBlock;
+
+                var argsAndBlock = EmitArguments(BasicBlock, default(LLVMValueRef), Arguments);
+                BasicBlock = argsAndBlock.Item2;
+
+                var contextfulCallBlock = BasicBlock.CreateChildBlock("contextful_call");
+                var contextlessCallBlock = BasicBlock.CreateChildBlock("contextless_call");
+                var postCallBlock = BasicBlock.CreateChildBlock("post_call");
+
+                var funcPrototype = BasicBlock.FunctionBody.Module.DeclarePrototype(
+                    methodSignature);
+
+                var contextFuncPrototype =
+                    methodSignature.IsStatic
+                    ? FunctionType(
+                        funcPrototype.GetReturnType(),
+                        new LLVMTypeRef[] { PointerType(Int8Type(), 0) }
+                            .Concat<LLVMTypeRef>(funcPrototype.GetParamTypes())
+                            .ToArray<LLVMTypeRef>(),
+                        funcPrototype.IsFunctionVarArg)
+                    : funcPrototype;
+
+                var contextlessFuncPrototype =
+                    methodSignature.IsStatic
+                    ? funcPrototype
+                    : FunctionType(
+                        funcPrototype.GetReturnType(),
+                        funcPrototype.GetParamTypes()
+                            .Skip<LLVMTypeRef>(1)
+                            .ToArray<LLVMTypeRef>(),
+                        funcPrototype.IsFunctionVarArg);
+
+                var delegatePtr = BuildBitCast(
+                    BasicBlock.Builder,
+                    delegateAndBlock.Value,
+                    PointerType(DelegateBlock.MethodTypeLayout, 0),
+                    "delegate_ptr");
+
+                var funcPtr = DelegateBlock.BuildLoadFunctionPointer(
+                    BasicBlock.Builder, delegatePtr);
+
+                var hasContext = DelegateBlock.BuildLoadHasContext(
+                    BasicBlock.Builder, delegatePtr);
+
+                BuildCondBr(
+                    BasicBlock.Builder,
+                    hasContext,
+                    contextfulCallBlock.Block,
+                    contextlessCallBlock.Block);
+
+                // Write the contextful call block.
+                var contextPtr = DelegateBlock.BuildLoadContextObject(
+                    contextfulCallBlock.Builder, delegatePtr);
+
+                var contextfulCallAndBlock = EmitCall(
+                    contextfulCallBlock,
+                    BuildBitCast(
+                        contextfulCallBlock.Builder,
+                        funcPtr,
+                        PointerType(contextFuncPrototype, 0),
+                        "contextful_fptr"),
+                    new LLVMValueRef[] { contextPtr }
+                        .Concat<LLVMValueRef>(argsAndBlock.Item1)
+                        .ToArray<LLVMValueRef>());
+                contextfulCallBlock = contextfulCallAndBlock.BasicBlock;
+
+                BuildBr(contextfulCallBlock.Builder, postCallBlock.Block);
+
+                // Write the contextless call block.
+                var contextlessCallAndBlock = EmitCall(
+                    contextlessCallBlock,
+                    BuildBitCast(
+                        contextlessCallBlock.Builder,
+                        funcPtr,
+                        PointerType(contextlessFuncPrototype, 0),
+                        "contextless_fptr"),
+                    argsAndBlock.Item1);
+                contextlessCallBlock = contextlessCallAndBlock.BasicBlock;
+
+                BuildBr(contextlessCallBlock.Builder, postCallBlock.Block);
+
+                // Write a phi if the return type is non-void.
+                if (contextfulCallAndBlock.HasValue)
+                {
+                    var resultPhi = BuildPhi(
+                        postCallBlock.Builder,
+                        contextfulCallAndBlock.Value.TypeOf(),
+                        "result_phi");
+                    resultPhi.AddIncoming(
+                        new LLVMValueRef[]
+                        {
+                            contextfulCallAndBlock.Value,
+                            contextlessCallAndBlock.Value
+                        },
+                        new LLVMBasicBlockRef[]
+                        {
+                            contextfulCallAndBlock.BasicBlock.Block,
+                            contextlessCallAndBlock.BasicBlock.Block
+                        },
+                        2);
+                    return new BlockCodegen(postCallBlock, resultPhi);
+                }
+                else
+                {
+                    return new BlockCodegen(postCallBlock);
+                }
             }
         }
 
