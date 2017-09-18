@@ -135,7 +135,7 @@ clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -lc+
   - [x] boxing/unboxing
   - [x] `static` constructors
   - [x] exception handling (`throw`, `try`, `catch`, `finally`)&mdash;Itanium ABI (Linux, Mac OS X) only for now
-  - [x] indirect function calls (delegates)&mdash;only built-in delegate types for now (`#builtin_delegate_type(int, double)` instead of `Func<int, double>`)
+  - [x] indirect function calls (delegates)
   - [ ] finalizers
   - [ ] reflection
   - [ ] precise garbage collection
