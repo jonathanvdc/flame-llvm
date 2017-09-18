@@ -22,7 +22,7 @@ init
             exe-filename = @($create-temp-file exe);
 
             // Compile the C# source code to Flame IR.
-            $ecsc $input-file -platform ir -environment standalone -Wno-build -fignore-main-prototype --rt-libs $stdlib-flo-filename -o $flo-filename;
+            $ecsc $input-file -platform ir -environment llvm -Wno-build -fignore-main-prototype --rt-libs $stdlib-flo-filename -o $flo-filename;
 
             // Compile the Flame IR to LLVM IR.
             $flame-llvm $flo-filename $stdlib-flo-filename -platform llvm -Wno-build -o $ll-filename --rt-libs $rt-flo-filename;
@@ -45,6 +45,7 @@ tests
     template CheckOutput<abstract/abstract.cs, , 111 161>;
     template CheckOutput<array/array.cs, aloha, aloha>;
     template CheckOutput<boxing/boxing.cs, , False True False 1>;
+    template CheckOutput<custom-delegates/custom-delegates.cs, , 100 100>;
     template CheckOutput<delegates/delegates.cs, , 100>;
     template CheckOutput<echo/echo.cs, howdy, howdy>;
     template CheckOutput<enum/enum.cs, , True>;
