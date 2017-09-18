@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Flame.Build;
 using Flame.Compiler.Build;
+using Flame.LLVM.Codegen;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
 
@@ -100,6 +101,17 @@ namespace Flame.LLVM
         /// <returns><c>true</c> if this is a single-value value type; otherwise, <c>false</c>.</returns>
         public bool IsSingleValue => InstanceFields.Count == 1 && this.GetIsValueType();
 
+        /// <summary>
+        /// Checks if this type is a runtime-implemented delegate type. The data layout
+        /// of these types is provided by the runtime instead of user code.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if this is a runtime-implemented delegate type; otherwise, <c>false</c>.
+        /// </returns>
+        public bool IsRuntimeImplementedDelegate =>
+            this.HasAttribute(PrimitiveAttributes.Instance.RuntimeImplementedAttribute.AttributeType)
+            && this.HasAttribute(MethodType.DelegateAttributeType);
+
         public IEnumerable<IMethod> Methods => declaredMethods;
 
         public IEnumerable<IType> BaseTypes => templateInstance.BaseTypes.Value;
@@ -173,6 +185,11 @@ namespace Flame.LLVM
         /// <returns>An LLVM type ref for this type's data layout.</returns>
         public LLVMTypeRef DefineLayout(LLVMModuleBuilder Module)
         {
+            if (IsRuntimeImplementedDelegate)
+            {
+                return DelegateBlock.MethodTypeLayout;
+            }
+
             if (this.GetIsEnum())
             {
                 return Module.Declare(this.GetParent());

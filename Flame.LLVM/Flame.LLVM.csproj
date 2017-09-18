@@ -33,16 +33,16 @@
       <HintPath>..\libs\LLVMSharp.dll</HintPath>
     </Reference>
     <Reference Include="Flame">
-      <HintPath>..\packages\Flame.Compiler.0.9.19\lib\net45\Flame.dll</HintPath>
+      <HintPath>..\packages\Flame.Compiler.0.10.2\lib\net45\Flame.dll</HintPath>
     </Reference>
     <Reference Include="Flame.Compiler">
-      <HintPath>..\packages\Flame.Compiler.0.9.19\lib\net45\Flame.Compiler.dll</HintPath>
+      <HintPath>..\packages\Flame.Compiler.0.10.2\lib\net45\Flame.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="Pixie">
-      <HintPath>..\packages\Flame.Compiler.0.9.19\lib\net45\Pixie.dll</HintPath>
+      <HintPath>..\packages\Flame.Compiler.0.10.2\lib\net45\Pixie.dll</HintPath>
     </Reference>
     <Reference Include="Flame.Optimization">
-      <HintPath>..\packages\Flame.Optimization.0.9.19\lib\net45\Flame.Optimization.dll</HintPath>
+      <HintPath>..\packages\Flame.Optimization.0.10.2\lib\net45\Flame.Optimization.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -80,6 +80,7 @@
     <Compile Include="Codegen\ConstCharArrayBlock.cs" />
     <Compile Include="Codegen\DefaultStructBlock.cs" />
     <Compile Include="Codegen\DelegateBlock.cs" />
+    <Compile Include="Codegen\DelegateCastBlock.cs" />
     <Compile Include="Codegen\DelegatingBlock.cs" />
     <Compile Include="Codegen\GetDataPtrBlock.cs" />
     <Compile Include="Codegen\GetDimensionPtrBlock.cs" />

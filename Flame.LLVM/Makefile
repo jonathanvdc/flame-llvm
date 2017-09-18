@@ -6,8 +6,8 @@ files = \
 
 libs = \
 	../libs/*.dll \
-	../packages/Flame.Compiler.0.9.19/lib/net45/*.dll \
-	../packages/Flame.Optimization.0.9.19/lib/net45/*.dll
+	../packages/Flame.Compiler.0.10.2/lib/net45/*.dll \
+	../packages/Flame.Optimization.0.10.2/lib/net45/*.dll
 
 common-options = -asm-name=Flame.LLVM -asm-version=0.1.0.0
 

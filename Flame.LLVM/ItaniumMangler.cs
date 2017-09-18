@@ -218,7 +218,7 @@ namespace Flame.LLVM
             }
             else if (Name is PreMangledName)
             {
-                return ((PreMangledName)Name).Name;
+                return ((PreMangledName)Name).MangledName;
             }
             else
             {

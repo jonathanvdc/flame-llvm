@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Flame.Attributes;
 using Flame.Build;
 using Flame.Compiler;
 using Flame.Compiler.Build;
+using Flame.Compiler.Expressions;
+using Flame.Compiler.Statements;
+using Flame.Compiler.Variables;
 using Flame.LLVM.Codegen;
 using LLVMSharp;
 using static LLVMSharp.LLVM;
@@ -237,13 +241,24 @@ namespace Flame.LLVM
             {
                 var func = Module.Declare(this);
                 func.SetLinkage(Linkage);
-                if (this.body != null)
+
+                var methodBody = this.body;
+
+                if (methodBody == null
+                    && this.HasAttribute(
+                        PrimitiveAttributes.Instance.RuntimeImplementedAttribute.AttributeType))
+                {
+                    // Auto-implement runtime-implemented methods here.
+                    methodBody = (CodeBlock)AutoImplement().Emit(codeGenerator);
+                }
+
+                if (methodBody != null)
                 {
                     // Generate the method body.
                     var bodyBuilder = new FunctionBodyBuilder(Module, func);
                     var entryPointBuilder = bodyBuilder.AppendBasicBlock("entry");
                     entryPointBuilder = codeGenerator.Prologue.Emit(entryPointBuilder);
-                    var codeGen = this.body.Emit(entryPointBuilder);
+                    var codeGen = methodBody.Emit(entryPointBuilder);
                     BuildUnreachable(codeGen.BasicBlock.Builder);
                 }
             }
@@ -251,6 +266,41 @@ namespace Flame.LLVM
             foreach (var iface in allInterfaceImpls.Value)
             {
                 Module.GetInterfaceStub(iface).Implement(ParentType, this);
+            }
+        }
+
+        /// <summary>
+        /// Auto-implements this method.
+        /// </summary>
+        private IStatement AutoImplement()
+        {
+            var delegateAttribute = ParentType.GetAttribute(
+                MethodType.DelegateAttributeType) as IntrinsicAttribute;
+
+            if (delegateAttribute != null
+                && delegateAttribute.Arguments[0].GetValue<string>() ==
+                    PreMangledName.Unmangle(Name).ToString())
+            {
+                // Implement this method using a simple invocation expression.
+                var parameters = this.GetParameters();
+                var args = new IExpression[parameters.Length];
+                for (int i = 0; i < args.Length; i++)
+                {
+                    args[i] = new ArgumentVariable(parameters[i], i).CreateGetExpression();
+                }
+
+                return new ReturnStatement(
+                    new InvocationExpression(
+                        new ReinterpretCastExpression(
+                            new ThisVariable(DeclaringType).CreateGetExpression(),
+                            MethodType.Create(this)),
+                        args));
+            }
+            else
+            {
+                throw new NotSupportedException(
+                    "Runtime doesn't know how to implement method '" +
+                    this.FullName.ToString() + "'.");
             }
         }
 

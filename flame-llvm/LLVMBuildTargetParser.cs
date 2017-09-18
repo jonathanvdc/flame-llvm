@@ -118,12 +118,12 @@ namespace Flame.LLVM
 
         private static UnqualifiedName NameExpandedType(IType Type)
         {
-            return new PreMangledName(ItaniumMangler.Instance.Mangle(Type, false));
+            return new PreMangledName(ItaniumMangler.Instance.Mangle(Type, false), Type.Name);
         }
 
         private static UnqualifiedName NameExpandedMethod(IMethod Method)
         {
-            return new PreMangledName(ItaniumMangler.Instance.Mangle(Method, false));
+            return new PreMangledName(ItaniumMangler.Instance.Mangle(Method, false), Method.Name);
         }
     }
 }

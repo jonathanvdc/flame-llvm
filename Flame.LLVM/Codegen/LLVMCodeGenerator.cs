@@ -382,8 +382,26 @@ namespace Flame.LLVM.Codegen
                 {
                     return new RetypedBlock(this, (CodeBlock)EmitTypeBinary(valBlock, Type.GetParent(), Op), Type);
                 }
+                else if (IsRuntimeDelegate(valType) && IsRuntimeDelegate(Type))
+                {
+                    if (object.Equals(Type, valType))
+                    {
+                        return valBlock;
+                    }
+                    else
+                    {
+                        return new DelegateCastBlock(this, valBlock, Type);
+                    }
+                }
             }
             throw new NotImplementedException();
+        }
+
+        private static bool IsRuntimeDelegate(IType Type)
+        {
+            return Type is LLVMType
+                ? ((LLVMType)Type).IsRuntimeImplementedDelegate
+                : Type.GetIsDelegate();
         }
 
         private CodeBlock EmitThrowInvalidCast(

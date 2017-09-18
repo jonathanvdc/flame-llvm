@@ -18,12 +18,21 @@ namespace Flame.LLVM
     {
         public static void Main(string[] args)
         {
+            BuildTargetParsers.RegisterEnvironment(
+                "llvm",
+                (Func<ICompilerLog, IEnvironment>)CreateLLVMEnvironment);
+
             BuildTargetParsers.Parser.RegisterParser(new LLVMBuildTargetParser());
             var compiler = new FlameLLVMCompiler(
                 "flame-llvm",
                 "the Flame IR -> LLVM compiler",
                 "https://github.com/jonathanvdc/flame-llvm/releases");
             Environment.Exit(compiler.Compile(args));
+        }
+
+        private static IEnvironment CreateLLVMEnvironment(ICompilerLog Log)
+        {
+            return new StandaloneEnvironment("llvm");
         }
     }
 
