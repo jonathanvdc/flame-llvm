@@ -27,14 +27,14 @@ include ../flame-make-scripts/use-ecsc.mk
 
 bin/flo/corlib.flo: $(corlib-files) $(corlib-libs) | ecsc
 	$(ECSC) $(corlib-files) \
-		-platform ir -environment standalone -Wno-build \
+		-platform ir -environment llvm -Wno-build \
 		-rt-libs $(runtime-lib) \
 		-o $@ \
 		$(common-options) -asm-name=stdlib
 
 bin/flo/system-console.flo: $(system-console-files) $(system-console-libs) | ecsc
 	$(ECSC) $(system-console-files) \
-		-platform ir -environment standalone -Wno-build \
+		-platform ir -environment llvm -Wno-build \
 		-rt-libs $(system-console-libs) \
 		-o $@ \
 		$(common-options) -asm-name=system-console
