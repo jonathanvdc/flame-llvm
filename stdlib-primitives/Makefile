@@ -17,4 +17,4 @@ clean:
 include ../flame-make-scripts/use-ecsc.mk
 
 bin/flo/stdlib-primitives.flo: $(files) $(libs) | ecsc
-	$(ECSC) $(files) -platform ir -Wno-build -rt-libs $(libs) -o $@ $(common-options)
+	$(ECSC) $(files) -platform ir -environment llvm -Wno-build -rt-libs $(libs) -o $@ $(common-options)

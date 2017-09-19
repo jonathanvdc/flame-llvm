@@ -15,7 +15,7 @@ clean:
 include ../flame-make-scripts/use-ecsc.mk
 
 bin/flo/runtime.flo: $(files) | ecsc
-	$(ECSC) $(files) -platform ir -Wno-build -o $@ $(common-options)
+	$(ECSC) $(files) -platform ir -environment llvm -Wno-build -o $@ $(common-options)
 
 bin/native/runtime.ll: bin/flo/runtime.flo
 	mono ../flame-llvm/bin/clr/flame-llvm.exe bin/flo/runtime.flo -platform llvm -Wno-build -fintegrated-runtime -o $@
