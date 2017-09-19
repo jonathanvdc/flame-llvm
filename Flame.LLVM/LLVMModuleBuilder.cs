@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Flame.Attributes;
 using Flame.Build;
 using Flame.Compiler;
 using Flame.Compiler.Variables;
@@ -57,6 +58,12 @@ namespace Flame.LLVM
         private Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>> staticConstructorLocks;
         private Dictionary<string, LLVMValueRef> declaredStringChars;
 
+        private static readonly IntrinsicAttribute NoAliasAttribute =
+            new IntrinsicAttribute("NoAliasAttribute");
+
+        private static readonly IntrinsicAttribute NoThrowAttribute =
+            new IntrinsicAttribute("NoThrowAttribute");
+
         /// <summary>
         /// Declares the given method if it was not declared already.
         /// A value that corresponds to the declaration is returned.
@@ -85,11 +92,31 @@ namespace Flame.LLVM
                         // function is imported multiple times by different classes.
                         var funcType = DeclarePrototype(Method);
                         result = AddFunction(module, methodName, funcType);
+                        if (Method.HasAttribute(NoAliasAttribute.AttributeType))
+                        {
+                            AddAttributeAtIndex(
+                                result,
+                                LLVMAttributeIndex.LLVMAttributeReturnIndex,
+                                CreateEnumAttribute("noalias"));
+                        }
+                        if (Method.HasAttribute(NoThrowAttribute.AttributeType))
+                        {
+                            AddAttributeAtIndex(
+                                result,
+                                LLVMAttributeIndex.LLVMAttributeFunctionIndex,
+                                CreateEnumAttribute("nounwind"));
+                        }
                     }
                 }
                 declaredMethods[Method] = result;
             }
             return result;
+        }
+
+        private LLVMAttributeRef CreateEnumAttribute(string Name)
+        {
+            uint kind = GetEnumAttributeKindForName(Name, new size_t((IntPtr)Name.Length));
+            return LLVMSharp.LLVM.CreateEnumAttribute(LLVMSharp.LLVM.GetModuleContext(module), kind, 0);
         }
 
         /// <summary>
