@@ -64,6 +64,9 @@ namespace Flame.LLVM
         private static readonly IntrinsicAttribute NoThrowAttribute =
             new IntrinsicAttribute("NoThrowAttribute");
 
+        private static readonly IntrinsicAttribute ReadNoneAttribute =
+            new IntrinsicAttribute("ReadNoneAttribute");
+
         /// <summary>
         /// Declares the given method if it was not declared already.
         /// A value that corresponds to the declaration is returned.
@@ -105,6 +108,13 @@ namespace Flame.LLVM
                                 result,
                                 LLVMAttributeIndex.LLVMAttributeFunctionIndex,
                                 CreateEnumAttribute("nounwind"));
+                        }
+                        if (Method.HasAttribute(ReadNoneAttribute.AttributeType))
+                        {
+                            AddAttributeAtIndex(
+                                result,
+                                LLVMAttributeIndex.LLVMAttributeFunctionIndex,
+                                CreateEnumAttribute("readnone"));
                         }
                     }
                 }
