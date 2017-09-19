@@ -388,6 +388,16 @@ namespace Flame.LLVM.Codegen
                     {
                         return valBlock;
                     }
+                    else if (valBlock is DelegateBlock)
+                    {
+                        var delegBlock = (DelegateBlock)valBlock;
+                        return new DelegateBlock(
+                            this,
+                            delegBlock.Callee,
+                            delegBlock.Target,
+                            delegBlock.Op,
+                            Type);
+                    }
                     else
                     {
                         return new DelegateCastBlock(this, valBlock, Type);
@@ -536,7 +546,7 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitMethod(IMethod Method, ICodeBlock Caller, Operator Op)
         {
-            return new DelegateBlock(this, Method, (CodeBlock)Caller, Op);
+            return new DelegateBlock(this, Method, (CodeBlock)Caller, Op, MethodType.Create(Method));
         }
 
         public ICodeBlock EmitProduct(IEnumerable<ICodeBlock> Values)

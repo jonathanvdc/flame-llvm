@@ -12,23 +12,26 @@ namespace Flame.LLVM.Codegen
     public sealed class DelegateBlock : CodeBlock
     {
         /// <summary>
-        /// Creates a delegate block from the given callee, target block
-        /// and operator.
+        /// Creates a delegate block from the given callee, target block,
+        /// operator and delegate type.
         /// </summary>
         /// <param name="CodeGenerator">The code generator that creates this block.</param>
         /// <param name="Callee">The callee.</param>
         /// <param name="Target">The target on which the callee is invoked.</param>
-        /// <param name="Op">The type of delegate to create.</param>
+        /// <param name="Op">The operator to use to create a delegate.</param>
+        /// <param name="Type">The type of delegate to create.</param>
         public DelegateBlock(
             LLVMCodeGenerator CodeGenerator,
             IMethod Callee,
             CodeBlock Target,
-            Operator Op)
+            Operator Op,
+            IType Type)
         {
             this.codeGen = CodeGenerator;
             this.Callee = Callee;
             this.Target = Target;
             this.Op = Op;
+            this.resultType = Type;
         }
 
         /// <summary>
@@ -56,8 +59,10 @@ namespace Flame.LLVM.Codegen
         /// <inheritdoc/>
         public override ICodeGenerator CodeGenerator => codeGen;
 
+        private IType resultType;
+
         /// <inheritdoc/>
-        public override IType Type => MethodType.Create(Callee);
+        public override IType Type => resultType;
 
         /// <summary>
         /// The data layout of a method type.
