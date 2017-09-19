@@ -15,10 +15,19 @@ namespace System
         /// </summary>
         /// <param name="characters">The characters the string is composed of.</param>
         public String(char[] characters)
+            : this(characters, characters.Length)
+        { }
+
+        /// <summary>
+        /// Creates a string from the given sequence of characters.
+        /// </summary>
+        /// <param name="characters">The characters the string is composed of.</param>
+        /// <param name="length">The number of characters to copy from the array.</param>
+        public String(char[] characters, int length)
         {
             // Copy the array to an array of our own.
-            data = new char[characters.Length];
-            for (int i = 0; i < data.Length; i++)
+            data = new char[length];
+            for (int i = 0; i < length; i++)
             {
                 data[i] = characters[i];
             }
@@ -131,18 +140,19 @@ namespace System
         /// <returns>A string.</returns>
         public static unsafe string FromCString(byte* buffer)
         {
-            // TODO: actually implement proper UTF-8 -> UTF-16 conversion.
-            // This naive algorithm only works for some characters.
-            // (fortunately, these characters include the ASCII range)
+            int utf8Length = (int)CStringHelpers.StringLength(buffer);
+            var utf16Buffer = new char[utf8Length];
 
-            var str = new String();
-            int length = (int)CStringHelpers.StringLength(buffer);
-            str.data = new char[length];
-            for (int i = 0; i < length; i++)
+            var bufEnd = buffer + utf8Length;
+            int utf16Length = 0;
+            while (buffer != bufEnd)
             {
-                str.data[i] = (char)buffer[i];
+                utf16Length += UnicodeConverter.WriteUtf16CodePoint(
+                    UnicodeConverter.ReadUtf8CodePoint(ref buffer, bufEnd),
+                    &utf16Buffer[utf16Length]);
             }
-            return str;
+
+            return new String(utf16Buffer, utf16Length);
         }
 
         /// <summary>
