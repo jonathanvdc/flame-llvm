@@ -28,39 +28,32 @@ namespace System
         {
             if (c < ASCII)
             {
-                // printf("%d - ASCII\n", c);
                 return ASCII;
             }
             else if (c < CONT)
             {
-                // printf("%d - CONT\n", c);
                 return CONT;
             }
             else if (c == 192 || c == 193)
             {
                 /* 192 and 193 are invalid 2 byte sequences */
-                // printf("%d - INVALID\n", c);
-                throw new Object();
+                return -1;
             }
             else if (c < LEAD2)
             {
-                // printf("%d - LEAD2\n", c);
                 return LEAD2;
             }
             else if (c < LEAD3)
             {
-                // printf("%d - LEAD3\n", c);
                 return LEAD3;
             }
             else if (c < LEAD4)
             {
-                // printf("%d - LEAD4\n", c);
                 return LEAD4;
             }
             else
             {
-                // printf("%d - INVALID\n", c);
-                throw new Object();
+                return -1;
             }
         }
 
@@ -104,10 +97,9 @@ namespace System
                         default:
                             /* either an unexpected CONT byte showed up
                             * or an invalid byte.
-                            * TODO: Error handling
                             */
-                            // printf("\nInvalid byte or unexpected CONT byte.\n");
-                            throw new Object();
+                            result = BadCodePoint;
+                            break;
                     }
                 }
                 else
@@ -122,10 +114,9 @@ namespace System
                         default:
                             /* There was something other than a CONT byte, either
                             * an invalid byte or an unexpected LEAD or ASCII byte
-                            * TODO: Error handling
                             */
-                            // printf("Invalid byte or unexpected non-CONT byte.\n");
-                            throw new Object();
+                            result = BadCodePoint;
+                            break;
                     }
                 }
 
