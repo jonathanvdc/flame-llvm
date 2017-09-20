@@ -16,7 +16,10 @@ namespace Flame.LLVM.Codegen
     /// <summary>
     /// A code generator implementation that generates LLVM IR.
     /// </summary>
-    public sealed class LLVMCodeGenerator : IUnmanagedCodeGenerator, IExceptionCodeGenerator
+    public sealed class LLVMCodeGenerator :
+        IUnmanagedCodeGenerator,
+        IExceptionCodeGenerator,
+        IBranchingCodeGenerator
     {
         public LLVMCodeGenerator(IMethod Method)
         {
@@ -1062,6 +1065,20 @@ namespace Flame.LLVM.Codegen
                 (CodeBlock)TryBody,
                 (CodeBlock)FinallyBody,
                 CatchClauses.Cast<CatchClause>().ToArray<CatchClause>());
+        }
+
+        #endregion
+
+        #region Labels
+
+        public ICodeBlock EmitMarkLabel(UniqueTag Label)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICodeBlock EmitGotoLabel(UniqueTag Label, ICodeBlock Condition)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -73,6 +73,7 @@
     <Compile Include="Codegen\AtAddressEmitVariable.cs" />
     <Compile Include="Codegen\BinaryBlock.cs" />
     <Compile Include="Codegen\BranchBlock.cs" />
+    <Compile Include="Codegen\BranchLabelBlock.cs" />
     <Compile Include="Codegen\CatchClause.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
     <Compile Include="Codegen\ComparisonBlock.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="Codegen\ItaniumCxxCatchBlock.cs" />
     <Compile Include="Codegen\ItaniumCxxFinallyBlock.cs" />
     <Compile Include="Codegen\LLVMCodeGenerator.cs" />
+    <Compile Include="Codegen\MarkLabelBlock.cs" />
     <Compile Include="Codegen\PopBlock.cs" />
     <Compile Include="Codegen\PrologueSpec.cs" />
     <Compile Include="Codegen\ReturnBlock.cs" />

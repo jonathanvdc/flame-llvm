@@ -81,6 +81,7 @@ namespace Flame.LLVM.Codegen
             this.taggedValues = new Dictionary<UniqueTag, LLVMValueRef>();
             this.breakBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
             this.continueBlocks = new Dictionary<UniqueTag, LLVMBasicBlockRef>();
+            this.labeledBlocks = new Dictionary<UniqueTag, BasicBlockBuilder>();
             this.ExceptionDataStorage = new Lazy<LLVMValueRef>(CreateExceptionDataStorage);
         }
 
@@ -106,6 +107,7 @@ namespace Flame.LLVM.Codegen
         private Dictionary<UniqueTag, LLVMValueRef> taggedValues;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> breakBlocks;
         private Dictionary<UniqueTag, LLVMBasicBlockRef> continueBlocks;
+        private Dictionary<UniqueTag, BasicBlockBuilder> labeledBlocks;
 
         private UniqueNameSet<string> blockNameSet;
 
@@ -198,6 +200,22 @@ namespace Flame.LLVM.Codegen
         public LLVMBasicBlockRef GetContinueBlock(UniqueTag Tag)
         {
             return continueBlocks[Tag];
+        }
+
+        /// <summary>
+        /// Gets or creates the labeled block with the given label.
+        /// </summary>
+        /// <param name="Label">The labeled block's label, as a unique tag.</param>
+        /// <returns>A basic block builder for the labeled block.</returns>
+        public BasicBlockBuilder GetOrCreateLabeledBlock(UniqueTag Label)
+        {
+            BasicBlockBuilder result;
+            if (!labeledBlocks.TryGetValue(Label, out result))
+            {
+                result = AppendBasicBlock(Label.Name);
+                labeledBlocks[Label] = result;
+            }
+            return result;
         }
 
         /// <summary>
