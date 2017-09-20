@@ -3,16 +3,17 @@ namespace System
     /// <summary>
     /// Contains functionality that helps parse UTF-8--encoded text.
     /// </summary>
-    internal static unsafe class UnicodeConverter
+    public static unsafe class UnicodeConverter
     {
         // The UTF-8 decoding logic here is based on the Yuu source
         // code by @proxypoke (https://github.com/proxypoke), licensed
         // under the [WTFPLv2](http://sam.zoy.org/wtfpl/COPYING).
         // Repo URL: https://github.com/proxypoke/yuu
         //
-        // The UTF-16 decoding/encoding logic here is based on Pietro Gagliardi's
-        // utf library (https://github.com/andlabs), licensed under
-        // the MIT license (https://github.com/andlabs/utf/blob/master/LICENSE).
+        // The UTF-8 encoding and UTF-16 decoding/encoding logic here is
+        // based on Pietro Gagliardi's utf library (https://github.com/andlabs),
+        // licensed under the MIT license
+        // (https://github.com/andlabs/utf/blob/master/LICENSE).
         // Repo URL: https://github.com/andlabs/utf
 
         private const int BadCodePoint = 0xFFFD;
@@ -137,6 +138,90 @@ namespace System
         }
 
         /// <summary>
+        /// Writes a code point to a UTF-8--encoded buffer.
+        /// </summary>
+        /// <param name="codePoint">The code point to write.</param>
+        /// <param name="buffer">The buffer to write the code point to.</param>
+        /// <returns>The number of bytes that were written to the buffer.</returns>
+        public static int WriteUtf8CodePoint(uint codePoint, byte* buffer)
+        {
+            byte b = 0, c = 0, d = 0, e = 0;
+            int n = 0;
+            do
+            {
+                // not in the valid range for Unicode
+                if (codePoint > 0x10FFFF)
+                {
+                    codePoint = BadCodePoint;
+                }
+
+                // surrogate code points cannot be encoded
+                if (codePoint >= 0xD800 && codePoint < 0xE000)
+                {
+                    codePoint = BadCodePoint;
+                }
+
+                if (codePoint < 0x80)
+                {
+                    // ASCII bytes represent themselves
+                    b = (byte)(codePoint & 0xFF);
+                    n = 1;
+                    break;
+                }
+
+                if (codePoint < 0x800)
+                {
+                    // two-byte encoding
+                    c = (byte)(codePoint & 0x3F);
+                    c |= 0x80;
+                    codePoint >>= 6;
+                    b = (byte)(codePoint & 0x1F);
+                    b |= 0xC0;
+                    n = 2;
+                    break;
+                }
+
+                if (codePoint < 0x10000)
+                {
+                    // three-byte encoding
+                    d = (byte)(codePoint & 0x3F);
+                    d |= 0x80;
+                    codePoint >>= 6;
+                    c = (byte)(codePoint & 0x3F);
+                    c |= 0x80;
+                    codePoint >>= 6;
+                    b = (byte)(codePoint & 0x0F);
+                    b |= 0xE0;
+                    n = 3;
+                    break;
+                }
+
+                // otherwise use a four-byte encoding
+                e = (byte)(codePoint & 0x3F);
+                e |= 0x80;
+                codePoint >>= 6;
+                d = (byte)(codePoint & 0x3F);
+                d |= 0x80;
+                codePoint >>= 6;
+                c = (byte)(codePoint & 0x3F);
+                c |= 0x80;
+                codePoint >>= 6;
+                b = (byte)(codePoint & 0x07);
+                b |= 0xF0;
+                n = 4;
+            } while (false);
+
+            buffer[0] = b;
+            if (n > 1)
+                buffer[1] = c;
+            if (n > 2)
+                buffer[2] = d;
+            if (n > 3)
+                buffer[3] = e;
+            return n;
+        }
+
+        /// <summary>
         /// Reads a code point from the given UTF-16--encoded buffer.
         /// </summary>
         /// <param name="data">The buffer to advance and read from.</param>
@@ -172,7 +257,7 @@ namespace System
             }
 
             high = *data;
-            high &= 0x3FF;
+            high &= (char)0x3FF;
             if (data[1] < 0xDC00 || data[1] >= 0xE000)
             {
                 // bad surrogate pair
@@ -184,7 +269,7 @@ namespace System
             data++;
             low = *data;
             data++;
-            low &= 0x3FF;
+            low &= (char)0x3FF;
             codePoint = high;
             codePoint <<= 10;
             codePoint |= low;
