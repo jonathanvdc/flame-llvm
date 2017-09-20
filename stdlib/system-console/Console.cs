@@ -9,14 +9,65 @@ namespace System
 {
     public static class Console
     {
+        private static readonly byte[] utf8Buffer = new byte[4];
+        private static readonly char[] utf16Buffer = new char[2];
+        private static char cachedHighSurrogate = '\0';
+
+        private static void WriteUtf8Bytes(byte[] str, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                IOPrimitives.WriteStdout(str[i]);
+            }
+        }
+
+        private static void WriteUtf16CodePoint(char* begin, char* end)
+        {
+            int byteCount = UnicodeConverter.WriteUtf8CodePoint(
+                UnicodeConverter.ReadUtf16CodePoint(ref begin, end),
+                &utf8Buffer[0]);
+
+            WriteUtf8Bytes(utf8Buffer, byteCount);
+        }
+
         /// <summary>
         /// Writes a character to standard output.
         /// </summary>
         /// <param name="c">The character to write.</param>
         public static void Write(char c)
         {
-            // TODO: convert this character to UTF-8 before writing it.
-            IOPrimitives.WriteStdout((byte)c);
+            char highSurrogate = cachedHighSurrogate;
+            if (highSurrogate == '\0')
+            {
+                if (char.IsHighSurrogate(c))
+                {
+                    cachedHighSurrogate = c;
+                }
+                else
+                {
+                    char* argBegin = &c;
+                    WriteUtf16CodePoint(argBegin, argBegin + 1);
+                }
+            }
+            else
+            {
+                cachedHighSurrogate = '\0';
+                utf16Buffer[0] = highSurrogate;
+                utf16Buffer[1] = c;
+                char* argBegin = &utf16Buffer[0];
+                WriteUtf16CodePoint(argBegin, argBegin + 2);
+            }
+        }
+
+        public static void Flush()
+        {
+            char highSurrogate = cachedHighSurrogate;
+            if (highSurrogate != '\0')
+            {
+                cachedHighSurrogate = '\0';
+                char* argBegin = &highSurrogate;
+                WriteUtf16CodePoint(argBegin, argBegin + 1);
+            }
         }
 
         /// <summary>

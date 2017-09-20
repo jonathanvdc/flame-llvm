@@ -46,6 +46,11 @@ namespace System
         public char this[int i] => data[i];
 
         /// <summary>
+        /// Gets a pointer to this string's backing data.
+        /// </summary>
+        private char* DataPointer => Length == 0 ? null : &data[0];
+
+        /// <summary>
         /// Checks if this string is equal to the given string.
         /// </summary>
         /// <param name="other">The string to compare this string to.</param>
@@ -165,8 +170,8 @@ namespace System
         /// <returns>A C-style string for which the caller is responsible.</returns>
         public static unsafe byte* ToCString(string str)
         {
-            char* beginPtr = &str.data[0];
-            char* endPtr = &str.data[str.Length - 1];
+            char* beginPtr = str.DataPointer;
+            char* endPtr = beginPtr + str.Length - 1;
             var utf8Length = UnicodeConverter.GetUtf16ToUtf8BufferLength(beginPtr, endPtr);
 
             byte* cStr = (byte*)Marshal.AllocHGlobal(utf8Length + 1);

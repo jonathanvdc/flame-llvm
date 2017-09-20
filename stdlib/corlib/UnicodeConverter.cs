@@ -204,7 +204,7 @@ namespace System
                 n = 4;
             } while (false);
 
-            if (buffer != null)
+            if (buffer != (byte*)null)
             {
                 buffer[0] = b;
                 if (n > 1)

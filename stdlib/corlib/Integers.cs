@@ -81,4 +81,19 @@ namespace System
             }
         }
     }
+
+    public partial struct Char
+    {
+        /// <summary>
+        /// Indicates if the specified character is a high surrogate.
+        /// </summary>
+        /// <param name="c">The character to examine.</param>
+        /// <returns>
+        /// <c>true</c> if the numeric value of character ranges from U+D800 through U+DBFF; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsHighSurrogate(char c)
+        {
+            return c >= '\uD800' && c <= '\uDBFF';
+        }
+    }
 }
