@@ -66,7 +66,7 @@ namespace System
         public static uint ReadUtf8CodePoint(ref byte* data, byte* end)
         {
             byte c = *data;
-            int result = 0;
+            int count = 0;
             int cont = 0;
             while (data != end)
             {
@@ -76,7 +76,7 @@ namespace System
                     switch (bytetype(c))
                     {
                         case ASCII:
-                            result = c;
+                            count = c;
                             break;
                         case LEAD2:
                             cont = 1;
@@ -84,21 +84,21 @@ namespace System
                             * will cause the bits belonging to the LEAD byte to be
                             * eliminated, leaving the bits we care about.
                             */
-                            result = c & (~LEAD2);
+                            count = c & (~LEAD2);
                             break;
                         case LEAD3:
                             cont = 2;
-                            result = c & (~LEAD3);
+                            count = c & (~LEAD3);
                             break;
                         case LEAD4:
                             cont = 3;
-                            result = c & (~LEAD4);
+                            count = c & (~LEAD4);
                             break;
                         default:
                             /* either an unexpected CONT byte showed up
                             * or an invalid byte.
                             */
-                            result = BadCodePoint;
+                            count = BadCodePoint;
                             break;
                     }
                 }
@@ -107,15 +107,15 @@ namespace System
                     switch (bytetype(c))
                     {
                         case CONT:
-                            result <<= 6; /* room for 6 more bits */
-                            result += c & (~CONT);
+                            count <<= 6; /* room for 6 more bits */
+                            count += c & (~CONT);
                             --cont;
                             break;
                         default:
                             /* There was something other than a CONT byte, either
                             * an invalid byte or an unexpected LEAD or ASCII byte
                             */
-                            result = BadCodePoint;
+                            count = BadCodePoint;
                             break;
                     }
                 }
@@ -123,7 +123,7 @@ namespace System
                 data++;
                 if (cont == 0)
                 {
-                    return (uint)result;
+                    return (uint)count;
                 }
             }
         }
@@ -132,8 +132,10 @@ namespace System
         /// Writes a code point to a UTF-8--encoded buffer.
         /// </summary>
         /// <param name="codePoint">The code point to write.</param>
-        /// <param name="buffer">The buffer to write the code point to.</param>
-        /// <returns>The number of bytes that were written to the buffer.</returns>
+        /// <param name="buffer">
+        /// The buffer to write the code point to.
+        /// If this buffer is <c>null</c>, then no bytes are written.</param>
+        /// <returns>The number of bytes that are used to encode the code point in UTF-8.</returns>
         public static int WriteUtf8CodePoint(uint codePoint, byte* buffer)
         {
             byte b = 0, c = 0, d = 0, e = 0;
@@ -202,13 +204,17 @@ namespace System
                 n = 4;
             } while (false);
 
-            buffer[0] = b;
-            if (n > 1)
-                buffer[1] = c;
-            if (n > 2)
-                buffer[2] = d;
-            if (n > 3)
-                buffer[3] = e;
+            if (buffer != null)
+            {
+                buffer[0] = b;
+                if (n > 1)
+                    buffer[1] = c;
+                if (n > 2)
+                    buffer[2] = d;
+                if (n > 3)
+                    buffer[3] = e;
+            }
+
             return n;
         }
 
@@ -301,6 +307,21 @@ namespace System
             buffer[0] = (char)(high | 0xD800);
             buffer[1] = (char)(low | 0xDC00);
             return 2;
+        }
+
+        /// <summary>
+        /// Gets the length of the UTF-8 buffer required to transcribe a UTF-16
+        /// string to a UTF-8 string.
+        /// </summary>
+        /// <returns>The size of the UTF-8 buffer in bytes.</returns>
+        public static int GetUtf16ToUtf8BufferLength(char* begin, char* end)
+        {
+            int count = 0;
+            while (begin != end)
+            {
+                count += WriteUtf8CodePoint(ReadUtf16CodePoint(ref begin, end), null);
+            }
+            return count;
         }
     }
 }
