@@ -165,14 +165,17 @@ namespace System
         /// <returns>A C-style string for which the caller is responsible.</returns>
         public static unsafe byte* ToCString(string str)
         {
-            // TODO: actually implement proper UTF-16 -> UTF-8 conversion.
-            // This naive algorithm only works for some characters.
-            // (fortunately, these characters include the ASCII range)
+            char* beginPtr = &str.data[0];
+            char* endPtr = &str.data[str.Length - 1];
+            var utf8Length = UnicodeConverter.GetUtf16ToUtf8BufferLength(beginPtr, endPtr);
 
-            byte* cStr = (byte*)Marshal.AllocHGlobal(str.Length + 1);
-            for (int i = 0; i < str.Length; i++)
+            byte* cStr = (byte*)Marshal.AllocHGlobal(utf8Length + 1);
+            int offset = 0;
+            while (beginPtr != endPtr)
             {
-                cStr[i] = (byte)str[i];
+                offset += UnicodeConverter.WriteUtf8CodePoint(
+                    UnicodeConverter.ReadUtf16CodePoint(ref beginPtr, endPtr),
+                    &cStr[offset]);
             }
             cStr[str.Length] = (byte)'\0';
             return cStr;
