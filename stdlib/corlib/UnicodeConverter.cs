@@ -3,17 +3,19 @@ namespace System
     /// <summary>
     /// Contains functionality that helps parse UTF-8--encoded text.
     /// </summary>
-    internal static class UnicodeConverter
+    internal static unsafe class UnicodeConverter
     {
         // The UTF-8 decoding logic here is based on the Yuu source
         // code by @proxypoke (https://github.com/proxypoke), licensed
         // under the [WTFPLv2](http://sam.zoy.org/wtfpl/COPYING).
         // Repo URL: https://github.com/proxypoke/yuu
         //
-        // The UTF-16 encoding logic here is based on Pietro Gagliardi's
+        // The UTF-16 decoding/encoding logic here is based on Pietro Gagliardi's
         // utf library (https://github.com/andlabs), licensed under
         // the MIT license (https://github.com/andlabs/utf/blob/master/LICENSE).
         // Repo URL: https://github.com/andlabs/utf
+
+        private const int BadCodePoint = 0xFFFD;
 
         private const byte ASCII = 128;
         private const byte CONT = 192;
@@ -67,7 +69,7 @@ namespace System
         /// <param name="data">The buffer to advance and read from.</param>
         /// <param name="end">The tail of the buffer to read from.</param>
         /// <returns>A code point.</returns>
-        public static unsafe uint ReadUtf8CodePoint(ref byte* data, byte* end)
+        public static uint ReadUtf8CodePoint(ref byte* data, byte* end)
         {
             byte c = *data;
             int result = 0;
@@ -135,23 +137,79 @@ namespace System
         }
 
         /// <summary>
+        /// Reads a code point from the given UTF-16--encoded buffer.
+        /// </summary>
+        /// <param name="data">The buffer to advance and read from.</param>
+        /// <param name="end">The tail of the buffer to read from.</param>
+        /// <returns>A code point.</returns>
+        public static uint ReadUtf16CodePoint(ref char* data, char* end)
+        {
+            char high, low;
+            uint codePoint;
+
+            if (*data < 0xD800 || *data >= 0xE000)
+            {
+                // self-representing character
+                codePoint = *data;
+                data++;
+                return codePoint;
+            }
+
+            if (*data >= 0xDC00)
+            {
+                // out-of-order surrogates
+                codePoint = BadCodePoint;
+                data++;
+                return codePoint;
+            }
+
+            if (data == end)
+            {
+                // not enough elements
+                codePoint = BadCodePoint;
+                data++;
+                return codePoint;
+            }
+
+            high = *data;
+            high &= 0x3FF;
+            if (data[1] < 0xDC00 || data[1] >= 0xE000)
+            {
+                // bad surrogate pair
+                codePoint = BadCodePoint;
+                data++;
+                return codePoint;
+            }
+
+            data++;
+            low = *data;
+            data++;
+            low &= 0x3FF;
+            codePoint = high;
+            codePoint <<= 10;
+            codePoint |= low;
+            codePoint += 0x10000;
+            return codePoint;
+        }
+
+        /// <summary>
         /// Writes a code point to a UTF-16--encoded buffer.
         /// </summary>
         /// <param name="codePoint">The code point to write.</param>
         /// <param name="buffer">The buffer to write the code point to.</param>
         /// <returns>The number of 16-bit integers that were written to the buffer.</returns>
-        public static unsafe int WriteUtf16CodePoint(uint codePoint, char* buffer)
+        public static int WriteUtf16CodePoint(uint codePoint, char* buffer)
         {
             // not in the valid range for Unicode
             if (codePoint > 0x10FFFF)
             {
-                throw new Object();
+                codePoint = BadCodePoint;
             }
 
             // surrogate code points cannot be encoded
             if (codePoint >= 0xD800 && codePoint < 0xE000)
             {
-                throw new Object();
+                codePoint = BadCodePoint;
             }
 
             if (codePoint < 0x10000)
