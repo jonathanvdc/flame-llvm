@@ -836,18 +836,22 @@ namespace Flame.LLVM
 
             // Implement the `wait_for_cctor_lock` block.
             BuildStore(waitForLockBlock.Builder, ConstInt(Int8Type(), 1, false), isRunningHerePtr);
+
+            var cmpxhg = BuildAtomicCmpXchg(
+                waitForLockBlock.Builder,
+                isRunningPtr,
+                ConstInt(Int8Type(), 0, false),
+                ConstInt(Int8Type(), 1, false),
+                LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent,
+                LLVMAtomicOrdering.LLVMAtomicOrderingMonotonic,
+                false);
+            cmpxhg.SetValueName("is_running_cctor_cmpxhg");
+
             BuildCondBr(
                 waitForLockBlock.Builder,
                 BuildExtractValue(
                     waitForLockBlock.Builder,
-                    BuildAtomicCmpXchg(
-                        waitForLockBlock.Builder,
-                        isRunningPtr,
-                        ConstInt(Int8Type(), 0, false),
-                        ConstInt(Int8Type(), 1, false),
-                        LLVMAtomicOrdering.LLVMAtomicOrderingSequentiallyConsistent,
-                        LLVMAtomicOrdering.LLVMAtomicOrderingMonotonic,
-                        false),
+                    cmpxhg,
                     1,
                     "has_exchanged"),
                 maybeRunBlock.Block,
