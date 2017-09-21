@@ -93,7 +93,31 @@ namespace System
         /// </returns>
         public static bool IsHighSurrogate(char c)
         {
-            return c >= '\uD800' && c <= '\uDBFF';
+            return c >= (char)0xD800 && c <= (char)0xDBFF;
+        }
+
+        /// <summary>
+        /// Indicates if the specified character is a low surrogate.
+        /// </summary>
+        /// <param name="c">The character to examine.</param>
+        /// <returns>
+        /// <c>true</c> if the numeric value of character ranges from U+DC00 through U+DFFF; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsLowSurrogate(char c)
+        {
+            return c >= (char)0xDC00 && c <= (char)0xDFFF;
+        }
+
+        /// <summary>
+        /// Indicates if the specified character is a surrogate.
+        /// </summary>
+        /// <param name="c">The character to examine.</param>
+        /// <returns>
+        /// <c>true</c> if the numeric value of character ranges from U+D800 through U+DFFF; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsSurrogate(char c)
+        {
+            return c >= (char)0xD800 && c <= (char)0xDFFF;
         }
     }
 }
