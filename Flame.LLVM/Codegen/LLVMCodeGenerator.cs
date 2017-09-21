@@ -1073,12 +1073,12 @@ namespace Flame.LLVM.Codegen
 
         public ICodeBlock EmitMarkLabel(UniqueTag Label)
         {
-            throw new NotImplementedException();
+            return new MarkLabelBlock(this, Label);
         }
 
         public ICodeBlock EmitGotoLabel(UniqueTag Label, ICodeBlock Condition)
         {
-            throw new NotImplementedException();
+            return new BranchLabelBlock(this, Label);
         }
 
         #endregion
