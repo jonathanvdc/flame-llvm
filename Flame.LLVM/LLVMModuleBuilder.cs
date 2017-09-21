@@ -285,6 +285,10 @@ namespace Flame.LLVM
             var funcType = DeclarePrototype(Method);
             var funcDef = AddFunction(module, abi.Mangler.Mangle(Method, true), funcType);
             funcDef.SetLinkage(LLVMLinkage.LLVMWeakODRLinkage);
+            AddAttributeAtIndex(
+                funcDef,
+                LLVMAttributeIndex.LLVMAttributeFunctionIndex,
+                CreateEnumAttribute("nounwind"));
 
             // Define T[,...].Length's body.
             var codeGenerator = new Codegen.LLVMCodeGenerator(Method);
