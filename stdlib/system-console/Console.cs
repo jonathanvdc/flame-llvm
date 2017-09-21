@@ -41,10 +41,15 @@ namespace System
             {
                 if (char.IsHighSurrogate(c))
                 {
+                    // We'll remember high surrogates instead of printing them
+                    // right away. (They need to be matched to a low surrogate,
+                    // which is yet to come.)
                     cachedHighSurrogate = c;
                 }
                 else
                 {
+                    // This character represents a single code point write it
+                    // to standard output immediately.
                     char* argBegin = &c;
                     WriteUtf16CodePoint(argBegin, argBegin + 1);
                 }
@@ -52,13 +57,30 @@ namespace System
             else
             {
                 cachedHighSurrogate = '\0';
-                utf16Buffer[0] = highSurrogate;
-                utf16Buffer[1] = c;
-                char* argBegin = &utf16Buffer[0];
-                WriteUtf16CodePoint(argBegin, argBegin + 2);
+                if (char.IsLowSurrogate(c))
+                {
+                    // Copy both characters in the surrogate pair into the UTF-16
+                    // buffer, transcribe the UTF-16 buffer's contents into UTF-8
+                    // and write the result to standard output.
+                    utf16Buffer[0] = highSurrogate;
+                    utf16Buffer[1] = c;
+                    char* argBegin = &utf16Buffer[0];
+                    WriteUtf16CodePoint(argBegin, argBegin + 2);
+                }
+                else
+                {
+                    // Bad surrogate pair. Write both characters individually.
+                    char* argBegin = &highSurrogate;
+                    WriteUtf16CodePoint(argBegin, argBegin + 1);
+                    argBegin = &c;
+                    WriteUtf16CodePoint(argBegin, argBegin + 1);
+                }
             }
         }
 
+        /// <summary>
+        /// Flushes the standard output buffer.
+        /// </summary>
         public static void Flush()
         {
             char highSurrogate = cachedHighSurrogate;
