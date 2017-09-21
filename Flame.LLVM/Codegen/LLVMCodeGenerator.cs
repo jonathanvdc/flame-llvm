@@ -343,11 +343,11 @@ namespace Flame.LLVM.Codegen
                 }
                 else if (valType == PrimitiveTypes.Char)
                 {
-                    return EmitTypeBinary(new RetypedBlock(this, valBlock, PrimitiveTypes.Int16), Type, Op);
+                    return EmitTypeBinary(new RetypedBlock(this, valBlock, PrimitiveTypes.UInt16), Type, Op);
                 }
                 else if (Type == PrimitiveTypes.Char)
                 {
-                    return new RetypedBlock(this, (CodeBlock)EmitTypeBinary(valBlock, PrimitiveTypes.Int16, Op), Type);
+                    return new RetypedBlock(this, (CodeBlock)EmitTypeBinary(valBlock, PrimitiveTypes.UInt16, Op), Type);
                 }
                 else if (valType.GetIsPointer() && Type.GetIsInteger())
                 {
