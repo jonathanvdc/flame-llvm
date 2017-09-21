@@ -108,12 +108,32 @@ namespace Flame.LLVM
                 GenericsInternalizingPass.GenericsInternalizingPassName,
                 UseAlways);
 
+            // Use -fdeconstruct-cfg-eh to deconstruct exception control-flow graphs
+            // if -O2 or higher has been specified (we won't construct a flow graph
+            // otherwise)
+            extraPasses.RegisterPassCondition(
+                new PassCondition(
+                    DeconstructExceptionFlowPass.DeconstructExceptionFlowPassName,
+                    UseOptimizeNormal));
+
+            // Use -fdeconstruct-cfg to deconstruct control-flow graphs if -O2 or more
+            // has been specified (we won't construct a flow graph otherwise)
+            extraPasses.RegisterPassCondition(
+                new PassCondition(
+                    DeconstructFlowGraphPass.DeconstructFlowGraphPassName,
+                    UseOptimizeNormal));
+
             return new BuildTarget(targetAsm, DependencyBuilder, "ll", true, extraPasses.ToPreferences());
         }
 
-        private bool UseAlways(OptimizationInfo Info)
+        private static bool UseAlways(OptimizationInfo Info)
         {
             return true;
+        }
+
+        private static bool UseOptimizeNormal(OptimizationInfo Info)
+        {
+            return Info.OptimizeNormal;
         }
 
         private static UnqualifiedName NameExpandedType(IType Type)
