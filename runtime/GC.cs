@@ -7,7 +7,6 @@ namespace __compiler_rt
     {
         [#builtin_attribute(NoAliasAttribute)]
         [#builtin_attribute(NoThrowAttribute)]
-        [#builtin_attribute(ReadNoneAttribute)]
         private static extern void* GC_malloc(ulong size);
 
         /// <summary>
@@ -18,7 +17,6 @@ namespace __compiler_rt
         /// <returns>A pointer to a region of storage.</returns>
         [#builtin_attribute(NoAliasAttribute)]
         [#builtin_attribute(NoThrowAttribute)]
-        [#builtin_attribute(ReadNoneAttribute)]
         public static void* Allocate(ulong size)
         {
             return GC_malloc(size);
