@@ -1,4 +1,4 @@
-namespace System.IO
+namespace System.Primitives.IO
 {
     /// <summary>
     /// Defines input/output primitives, which can be used to 

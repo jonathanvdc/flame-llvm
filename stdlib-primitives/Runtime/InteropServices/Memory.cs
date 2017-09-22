@@ -1,9 +1,9 @@
-namespace System.Runtime.InteropServices
+namespace System.Primitives.InteropServices
 {
     /// <summary>
-    /// Provides facilities for interacting with unmanaged code.
+    /// Handles unmanaged memory.
     /// </summary>
-    public static class Marshal
+    public static class Memory
     {
         private static extern void* calloc(ulong num, ulong size);
         private static extern void free(void* ptr);

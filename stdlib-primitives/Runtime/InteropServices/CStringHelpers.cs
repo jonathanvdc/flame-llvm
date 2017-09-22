@@ -1,4 +1,4 @@
-namespace System.Runtime.InteropServices
+namespace System.Primitives.InteropServices
 {
     /// <summary>
     /// Defines helper methods to interact with null-terminated strings.

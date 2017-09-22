@@ -3,6 +3,7 @@ runtime-lib = ../runtime/bin/flo/runtime.flo
 corlib-files = \
 	corlib/*.cs \
 	corlib/Collections.Generic/*.cs \
+	corlib/Runtime.InteropServices/*.cs \
 	../stdlib-primitives/bin/flo/stdlib-primitives.flo
 
 corlib-libs = $(runtime-lib)
