@@ -144,7 +144,7 @@ namespace System
         /// </summary>
         /// <param name="buffer">The buffer that contains the string.</param>
         /// <returns>A string.</returns>
-        public static unsafe string FromCString(byte* buffer)
+        internal static unsafe string FromCString(byte* buffer)
         {
             int utf8Length = (int)CStringHelpers.StringLength(buffer);
             var utf16Buffer = new char[utf8Length];
@@ -169,7 +169,7 @@ namespace System
         /// </summary>
         /// <param name="str">The string to convert to a C-style string.</param>
         /// <returns>A C-style string for which the caller is responsible.</returns>
-        public static unsafe byte* ToCString(string str)
+        internal static unsafe byte* ToCString(string str)
         {
             char* beginPtr = str.DataPointer;
             char* endPtr = beginPtr + str.Length - 1;
