@@ -36,7 +36,7 @@ namespace System.Runtime.InteropServices
             if (ptr.ToPointer() == (void*)null)
                 return null;
             else
-                return String.FromCString((byte*)(void*)ptr);
+                return String.FromCString((byte*)ptr.ToPointer());
         }
 
         /// <summary>
