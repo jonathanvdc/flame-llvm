@@ -277,12 +277,14 @@ namespace Flame.LLVM
             var delegateAttribute = ParentType.GetAttribute(
                 MethodType.DelegateAttributeType) as IntrinsicAttribute;
 
+            string methodName = PreMangledName.Unmangle(Name).ToString();
+
+            var parameters = this.GetParameters();
+
             if (delegateAttribute != null
-                && delegateAttribute.Arguments[0].GetValue<string>() ==
-                    PreMangledName.Unmangle(Name).ToString())
+                && delegateAttribute.Arguments[0].GetValue<string>() == methodName)
             {
                 // Implement this method using a simple invocation expression.
-                var parameters = this.GetParameters();
                 var args = new IExpression[parameters.Length];
                 for (int i = 0; i < args.Length; i++)
                 {
@@ -295,6 +297,36 @@ namespace Flame.LLVM
                             new ThisVariable(DeclaringType).CreateGetExpression(),
                             MethodType.Create(this)),
                         args));
+            }
+            else if (methodName == "LoadDelegateHasContextInternal"
+                && IsStatic
+                && ReturnType == PrimitiveTypes.Boolean
+                && parameters.Length == 1)
+            {
+                return new ReturnStatement(
+                    LLVMCodeGenerator.ToExpression(
+                        new UnaryBlock(
+                            codeGenerator,
+                            (CodeBlock)new ArgumentVariable(parameters[0], 0)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            PrimitiveTypes.Boolean,
+                            DelegateBlock.BuildLoadHasContext)));
+            }
+            else if (methodName == "LoadDelegateFunctionPointerInternal"
+                && IsStatic
+                && ReturnType.GetIsPointer()
+                && parameters.Length == 1)
+            {
+                return new ReturnStatement(
+                    LLVMCodeGenerator.ToExpression(
+                        new UnaryBlock(
+                            codeGenerator,
+                            (CodeBlock)new ArgumentVariable(parameters[0], 0)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            ReturnType,
+                            DelegateBlock.BuildLoadFunctionPointer)));
             }
             else
             {

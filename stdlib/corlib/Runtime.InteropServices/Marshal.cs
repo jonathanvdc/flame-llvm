@@ -54,5 +54,42 @@ namespace System.Runtime.InteropServices
             else
                 return new IntPtr(String.ToCString(str));
         }
+
+        /// <summary>
+        /// Converts a delegate of a specified type to a function pointer that is callable from unmanaged code.
+        /// </summary>
+        /// <param name="value">The delegate to convert to a function pointer.</param>
+        /// <returns>A function pointer.</returns>
+        [#builtin_attribute(RuntimeImplementedAttribute)]
+        private static void* LoadDelegateFunctionPointerInternal(object value);
+
+        /// <summary>
+        /// Tells if the given delegate has a context value.
+        /// </summary>
+        /// <param name="value">A delegate value.</param>
+        /// <returns><c>true</c> if the delegate has a context value; otherwise, <c>false</c>.</returns>
+        [#builtin_attribute(RuntimeImplementedAttribute)]
+        private static bool LoadDelegateHasContextInternal(object value);
+
+        /// <summary>
+        /// Converts a delegate of a specified type to a function pointer that is callable from unmanaged code.
+        /// </summary>
+        /// <param name="value">The delegate to convert to a function pointer.</param>
+        /// <returns>A function pointer.</returns>
+        public static IntPtr GetFunctionPointerForDelegate<TDelegate>(TDelegate value)
+        {
+            // if (value == null)
+            // {
+            //     throw new ArgumentNullException("value");
+            // }
+            //
+            // if (LoadDelegateHasContextInternal(value))
+            // {
+            //     throw new NotImplementedException(
+            //         "Converting a delegate with a context value to a function pointer is not implemented yet.");
+            // }
+
+            return (IntPtr)LoadDelegateFunctionPointerInternal(value);
+        }
     }
 }

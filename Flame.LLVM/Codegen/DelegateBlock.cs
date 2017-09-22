@@ -175,13 +175,46 @@ namespace Flame.LLVM.Codegen
         /// </summary>
         /// <param name="Builder">A block builder.</param>
         /// <param name="Delegate">A pointer to a delegate's data.</param>
+        /// <param name="Name">The name of the resulting value.</param>
+        /// <returns>An opaque pointer to the delegate's function.</returns>
+
+        public static LLVMValueRef BuildLoadFunctionPointer(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Delegate,
+            string Name)
+        {
+            return BuildLoadFieldPointer(Builder, Delegate, 2, Name);
+        }
+
+        /// <summary>
+        /// Creates a sequence of instructions that loads a delegate's function pointer
+        /// as an opaque pointer.
+        /// </summary>
+        /// <param name="Builder">A block builder.</param>
+        /// <param name="Delegate">A pointer to a delegate's data.</param>
         /// <returns>An opaque pointer to the delegate's function.</returns>
 
         public static LLVMValueRef BuildLoadFunctionPointer(
             LLVMBuilderRef Builder,
             LLVMValueRef Delegate)
         {
-            return BuildLoadFieldPointer(Builder, Delegate, 2, "function_ptr");
+            return BuildLoadFunctionPointer(Builder, Delegate, "function_ptr");
+        }
+
+        /// <summary>
+        /// Creates a sequence of instructions that loads a delegate's has-context
+        /// flag.
+        /// </summary>
+        /// <param name="Builder">A block builder.</param>
+        /// <param name="Delegate">A pointer to a delegate's data.</param>
+        /// <param name="Name">The name of the resulting value.</param>
+        /// <returns>A flag that tells if the delegate has a context value.</returns>
+        public static LLVMValueRef BuildLoadHasContext(
+            LLVMBuilderRef Builder,
+            LLVMValueRef Delegate,
+            string Name)
+        {
+            return BuildLoadFieldPointer(Builder, Delegate, 3, Name);
         }
 
         /// <summary>
@@ -195,7 +228,7 @@ namespace Flame.LLVM.Codegen
             LLVMBuilderRef Builder,
             LLVMValueRef Delegate)
         {
-            return BuildLoadFieldPointer(Builder, Delegate, 3, "has_context");
+            return BuildLoadHasContext(Builder, Delegate, "has_context");
         }
     }
 }
