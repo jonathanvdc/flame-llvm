@@ -82,8 +82,7 @@ namespace System.Runtime.InteropServices
             // {
             //     throw new ArgumentNullException("value");
             // }
-            //
-            // if (LoadDelegateHasContextInternal(value))
+            // else if (LoadDelegateHasContextInternal(value))
             // {
             //     throw new NotImplementedException(
             //         "Converting a delegate with a context value to a function pointer is not implemented yet.");
