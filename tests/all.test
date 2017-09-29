@@ -50,6 +50,8 @@ tests
     template CheckOutput<echo/echo.cs, howdy, howdy>;
     template CheckOutput<enum/enum.cs, , True>;
     template CheckOutput<fibonacci/fibonacci.cs, 6, 8>;
+    // Finalizers test disabled because finalizers aren't fully functional yet
+    // template CheckOutput<finalizer/finalizer.cs, 6, 8>;
     template CheckOutput<floating-point/floating-point.cs, , -3628800>;
     template CheckOutput<fractal/fractal.cs, , Mandelbrot:6839743 Julia:6449238>;
     template CheckOutput<gc/main.cs, gc, gc>;
