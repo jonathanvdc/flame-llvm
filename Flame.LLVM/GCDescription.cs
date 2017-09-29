@@ -83,15 +83,22 @@ namespace Flame.LLVM
         /// <inheritdoc/>
         public override IStatement RegisterFinalizer(IExpression Pointer, IMethod Finalizer)
         {
-            return new ExpressionStatement(
-                new InvocationExpression(
-                    RegisterFinalizerMethod,
-                    null,
-                    new IExpression[]
-                    {
-                        Pointer,
-                        new GetMethodExpression(Finalizer, null)
-                    }));
+            if (RegisterFinalizerMethod == null)
+            {
+                return EmptyStatement.Instance;
+            }
+            else
+            {
+                return new ExpressionStatement(
+                    new InvocationExpression(
+                        RegisterFinalizerMethod,
+                        null,
+                        new IExpression[]
+                        {
+                            Pointer,
+                            new GetMethodExpression(Finalizer, null)
+                        }));
+            }
         }
     }
 
