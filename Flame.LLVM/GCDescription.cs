@@ -201,28 +201,32 @@ namespace Flame.LLVM
             return method;
         }
 
+        private static IMethod GetStaticMethodNamed(IType Type, string Name)
+        {
+            IMethod result = null;
+            var name = new SimpleName(Name);
+            foreach (var method in Type.Methods)
+            {
+                if (method.Name.Equals(name)
+                    && method.IsStatic)
+                {
+                    result = method;
+                }
+            }
+            return result;
+        }
+
         private IMethod GetRegisterFinalizerMethod()
         {
             var gcType = GCType.Value;
             if (gcType == null)
                 return null;
 
-            var voidPtr = PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer);
+            // Search for a method with signature
+            // 'static T RegisterFinalizer(...)'.
+            var result = GetStaticMethodNamed(gcType, RegisterFinalizerMethodName);
 
-            var callbackSignature = new DescribedMethod("", null, PrimitiveTypes.Void, true);
-            callbackSignature.AddParameter(new DescribedParameter("ptr", voidPtr));
-
-            var method = gcType.GetMethod(
-                new SimpleName(RegisterFinalizerMethodName),
-                true,
-                PrimitiveTypes.Void,
-                new IType[]
-                {
-                    voidPtr,
-                    MethodType.Create(callbackSignature)
-                });
-
-            if (method == null)
+            if (result == null)
             {
                 Log.LogError(
                     new LogEntry(
@@ -231,7 +235,7 @@ namespace Flame.LLVM
                         new SimpleName(RegisterFinalizerMethodName).Qualify(GCTypeName).ToString() +
                         "(void*, void(void*))', which must be present for finalizers to work."));
             }
-            return method;
+            return result;
         }
     }
 }

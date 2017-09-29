@@ -113,6 +113,7 @@
     <Compile Include="Codegen\VoidBlock.cs" />
     <Compile Include="Passes\BoxUnboxTypePass.cs" />
     <Compile Include="Passes\ConstCharArrayExpression.cs" />
+    <Compile Include="Passes\FinalizerRegistrationPass.cs" />
     <Compile Include="Passes\GenericsInternalizingPass.cs" />
     <Compile Include="Passes\StringConcatPass.cs" />
     <Compile Include="Passes\StringLiteralPass.cs" />

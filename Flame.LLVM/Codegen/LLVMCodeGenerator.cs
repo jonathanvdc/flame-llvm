@@ -707,51 +707,12 @@ namespace Flame.LLVM.Codegen
                             .Select<CodeBlock, IExpression>(ToExpression)
                             .ToArray<IExpression>())));
 
-                // TODO: a type's finalizer is looked up every time an object is constructed.
-                // That's a pretty expensive operation and we could speed it up greatly
-                // by introducing a cache.
-                var rootAncestor = GetRootAncestor(constructedType);
-                var rootFinalizer = GetFinalizer(rootAncestor);
-                var finalizer = rootFinalizer == null
-                    ? null
-                    : rootFinalizer.GetImplementation(constructedType);
-
-                if (finalizer != null
-                    && !finalizer.HasAttribute(
-                        PrimitiveAttributes.Instance.NopAttribute.AttributeType))
-                {
-                    statements.Add(
-                        ((LLVMMethod)Method).Abi.GarbageCollector.RegisterFinalizer(
-                            new ReinterpretCastExpression(
-                                tmp.CreateGetExpression(),
-                                PrimitiveTypes.Void.MakePointerType(PointerKind.TransientPointer)),
-                            finalizer));
-                }
-
                 var expr = new InitializedExpression(
                     new BlockStatement(statements),
                     tmp.CreateGetExpression());
                 return expr.Emit(this);
             }
             throw new NotImplementedException();
-        }
-
-        private static IMethod GetFinalizer(IType Type)
-        {
-            return Type.GetMethod(
-                new SimpleName("Finalize"),
-                false,
-                PrimitiveTypes.Void,
-                new IType[] { });
-        }
-
-        private static IType GetRootAncestor(IType Type)
-        {
-            var parent = Type.GetParent();
-            if (parent == null)
-                return Type;
-            else
-                return GetRootAncestor(parent);
         }
 
         /// <summary>

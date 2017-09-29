@@ -84,6 +84,14 @@ namespace Flame.LLVM
 
             extraPasses.RegisterPassCondition(StringLiteralPass.StringLiteralPassName, UseAlways);
 
+            // Always use -fregister-finalizers to setup finalizers.
+            extraPasses.RegisterMethodPass(
+                new AtomicPassInfo<IStatement, IStatement>(
+                    new FinalizerRegistrationPass(targetAsm.Abi.GarbageCollector),
+                    FinalizerRegistrationPass.FinalizerRegistrationPassName));
+
+            extraPasses.RegisterPassCondition(FinalizerRegistrationPass.FinalizerRegistrationPassName, UseAlways);
+
             // Always use -flower-new-struct, for correctness reasons.
             extraPasses.RegisterPassCondition(NewValueTypeLoweringPass.NewValueTypeLoweringPassName, UseAlways);
 
