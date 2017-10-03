@@ -135,7 +135,8 @@ namespace Flame.LLVM.Codegen
                 var method = (LLVMMethod)Callee;
 
                 if (method.DeclaringType.GetIsValueType()
-                    || !method.GetIsVirtual())
+                    || !method.GetIsVirtual()
+                    || Target.Pointer == IntPtr.Zero)
                 {
                     return EmitCallee(BasicBlock, Target, Callee, Operator.GetDelegate);
                 }

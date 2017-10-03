@@ -96,7 +96,7 @@ namespace Flame.LLVM
                         new IExpression[]
                         {
                             Pointer,
-                            new GetMethodExpression(Finalizer, null)
+                            new GetMethodExpression(Finalizer, null, Operator.GetDelegate)
                         }));
             }
         }
