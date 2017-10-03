@@ -17,7 +17,7 @@ namespace __compiler_rt
         private static extern GC_obj* GC_malloc(GC_size_t size);
 
         [#builtin_attribute(NoThrowAttribute)]
-        private static extern void GC_register_finalizer(
+        private static extern void GC_register_finalizer_ignore_self(
             GC_obj* obj,
             GC_finalization_proc* finalizer,
             GC_obj* finalizerContext,
@@ -58,9 +58,16 @@ namespace __compiler_rt
             GC_obj* obj,
             GC_finalization_delegate finalizer)
         {
+            // TODO: maybe switch to 'GC_register_finalizer_no_order', which allows
+            // the GC to collect cyclic graphs of finalizable objects at the cost of
+            // allowing finalizers to access dangling pointers. This is what the
+            // reference implementation does, but maybe topological ordering is better.
+            // http://www.hboehm.info/gc/finalization.html makes an argument for the
+            // current finalization scheme.
+
             GC_finalization_proc* oldFinalizer;
             GC_obj* oldFinalizerContext;
-            GC_register_finalizer(
+            GC_register_finalizer_ignore_self(
                 obj,
                 LoadDelegateFunctionPointerInternal(RunFinalizer),
                 #builtin_ref_to_ptr(finalizer),
