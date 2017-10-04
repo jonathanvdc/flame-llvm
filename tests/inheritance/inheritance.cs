@@ -23,7 +23,7 @@ public class Point3 : Point2
     public int Z;
 }
 
-public class Point4 : Point3
+public sealed class Point4 : Point3
 {
     public Point3(int X, int Y, int Z, int W)
         : base(X, Y, Z)
