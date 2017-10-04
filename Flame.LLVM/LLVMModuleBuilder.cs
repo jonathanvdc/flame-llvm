@@ -95,6 +95,7 @@ namespace Flame.LLVM
                         // function is imported multiple times by different classes.
                         var funcType = DeclarePrototype(Method);
                         result = AddFunction(module, methodName, funcType);
+                        AddParameterAttributes(result, Method);
                         if (Method.HasAttribute(NoAliasAttribute.AttributeType))
                         {
                             AddAttributeAtIndex(
@@ -121,6 +122,65 @@ namespace Flame.LLVM
                 declaredMethods[Method] = result;
             }
             return result;
+        }
+
+        private void AddParameterAttributes(LLVMValueRef FuncDef, IMethod Method)
+        {
+            bool hasThis = !Method.IsStatic;
+
+            // A 'this' parameter should always be dereferenceable.
+            if (hasThis)
+            {
+                AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)1, CreateEnumAttribute("dereferenceable"));
+            }
+
+            // Compute offset such that `(LLVMAttributeIndex)(i + offset)` identifiers
+            // the ith parameter.
+            int offset = hasThis ? 2 : 1;
+
+            var parameters = Method.GetParameters();
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var paramType = parameters[i].ParameterType;
+                if (IsDereferenceableType(paramType))
+                {
+                    AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)(i + offset), CreateEnumAttribute("dereferenceable"));
+                }
+                else if (IsDereferenceableOrNullType(paramType))
+                {
+                    AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)(i + offset), CreateEnumAttribute("dereferenceable_or_null"));
+                }
+            }
+        }
+
+        private static bool IsDereferenceableType(IType Type)
+        {
+            if (Type.GetIsPointer())
+            {
+                var ptrType = Type.AsPointerType();
+                if (ptrType.PointerKind.Equals(PointerKind.ReferencePointer))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsDereferenceableOrNullType(IType Type)
+        {
+            if (Type.GetIsPointer())
+            {
+                var ptrType = Type.AsPointerType();
+                if (ptrType.PointerKind.Equals(PointerKind.BoxPointer))
+                {
+                    return true;
+                }
+            }
+            else if (Type.GetIsReferenceType())
+            {
+                return true;
+            }
+            return false;
         }
 
         private LLVMAttributeRef CreateEnumAttribute(string Name)
