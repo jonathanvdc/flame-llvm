@@ -245,8 +245,20 @@ namespace Flame.LLVM.Codegen
             }
             else if (Op.Equals(Operator.IsInstance))
             {
-                // Rewrite `x is T` as `x != (decltype(x))null && x->vtable.typeid % T.vtable.typeid == 0`.
+                // If T is virtual/abstract/interface, then rewrite `x is T` as
+                // `x != (decltype(x))null && x->vtable.typeid % T.vtable.typeid == 0`.
+                //
+                // Otherwise, we can use
+                // `x != (decltype(x))null && x->vtable == T.vtable`.
+                bool isVirtual = Type.GetIsVirtual()
+                    || Type.GetIsAbstract()
+                    || Type.GetIsInterface();
+
                 var valTmp = DeclareLocal(new UniqueTag("is_tmp"), new TypeVariableMember(valBlock.Type));
+
+                var valVTablePtr = (CodeBlock)EmitDereferencePointer(EmitVTablePtr(valTmp.EmitGet()), true);
+                var typeVTablePtr = new TypeVTableBlock(this, (LLVMType)Type);
+
                 return EmitSequence(
                     valTmp.EmitSet(valBlock),
                     this.EmitLogicalAnd(
@@ -254,15 +266,18 @@ namespace Flame.LLVM.Codegen
                             valTmp.EmitGet(),
                             EmitTypeBinary(EmitNull(), valBlock.Type, Operator.ReinterpretCast),
                             Operator.CheckInequality),
-                        EmitBinary(
-                            EmitBinary(
-                                new TypeIdBlock(
-                                    this,
-                                    (CodeBlock)EmitDereferencePointer(EmitVTablePtr(valTmp.EmitGet()), true)),
-                                new TypeIdBlock(this, new TypeVTableBlock(this, (LLVMType)Type)),
-                                Operator.Remainder),
-                            EmitInteger(new IntegerValue(0UL)),
-                            Operator.CheckEquality)));
+                        isVirtual
+                            ? EmitBinary(
+                                EmitBinary(
+                                    new TypeIdBlock(this, valVTablePtr),
+                                    new TypeIdBlock(this, typeVTablePtr),
+                                    Operator.Remainder),
+                                EmitInteger(new IntegerValue(0UL)),
+                                Operator.CheckEquality)
+                            : EmitBinary(
+                                valVTablePtr,
+                                typeVTablePtr,
+                                Operator.CheckEquality)));
             }
             else if (Op.Equals(Operator.AsInstance))
             {
