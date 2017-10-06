@@ -8,7 +8,7 @@ public static class Program
         {
             ThrowAndFinally();
         }
-        catch (Object o)
+        catch (Exception o)
         {
             Console.Write("are ");
         }
@@ -32,6 +32,6 @@ public static class Program
 
     private static void Throw()
     {
-        throw new Object();
+        throw new InvalidOperationException();
     }
 }
