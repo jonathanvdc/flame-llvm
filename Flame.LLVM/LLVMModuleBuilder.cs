@@ -128,10 +128,21 @@ namespace Flame.LLVM
         {
             bool hasThis = !Method.IsStatic;
 
+            // NOTE: ideally, parameters and return types should have the 'dereferenceable(n)'
+            // attribute instead of 'nonnull'. However, 'dereferenceable(n)' requires us to
+            // specify 'n', the number of bytes that are dereferenceable. However,
+            // *we don't know* what 'n' is because the IR we generate is target-independent.
+            // So we'll just stick to 'nonnull' for now.
+
             // A 'this' parameter should always be dereferenceable.
             if (hasThis)
             {
-                AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)1, CreateEnumAttribute("dereferenceable"));
+                AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)1, CreateEnumAttribute("nonnull"));
+            }
+
+            if (IsDereferenceableType(Method.ReturnType))
+            {
+                AddAttributeAtIndex(FuncDef, LLVMAttributeIndex.LLVMAttributeReturnIndex, CreateEnumAttribute("nonnull"));
             }
 
             // Compute offset such that `(LLVMAttributeIndex)(i + offset)` identifiers
@@ -144,12 +155,12 @@ namespace Flame.LLVM
                 var paramType = parameters[i].ParameterType;
                 if (IsDereferenceableType(paramType))
                 {
-                    AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)(i + offset), CreateEnumAttribute("dereferenceable"));
+                    AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)(i + offset), CreateEnumAttribute("nonnull"));
                 }
-                else if (IsDereferenceableOrNullType(paramType))
+                /* else if (IsDereferenceableOrNullType(paramType))
                 {
                     AddAttributeAtIndex(FuncDef, (LLVMAttributeIndex)(i + offset), CreateEnumAttribute("dereferenceable_or_null"));
-                }
+                } */
             }
         }
 
@@ -163,10 +174,14 @@ namespace Flame.LLVM
                     return true;
                 }
             }
+            else if (Type is LLVMType && ((LLVMType)Type).IsSingleValue)
+            {
+                return IsDereferenceableType(((LLVMType)Type).InstanceFields[0].FieldType);
+            }
             return false;
         }
 
-        private static bool IsDereferenceableOrNullType(IType Type)
+        /* private static bool IsDereferenceableOrNullType(IType Type)
         {
             if (Type.GetIsPointer())
             {
@@ -180,8 +195,12 @@ namespace Flame.LLVM
             {
                 return true;
             }
+            else if (Type is LLVMType && ((LLVMType)Type).IsSingleValue)
+            {
+                return IsDereferenceableOrNullType(((LLVMType)Type).InstanceFields[0].FieldType);
+            }
             return false;
-        }
+        } */
 
         private LLVMAttributeRef CreateEnumAttribute(string Name)
         {
