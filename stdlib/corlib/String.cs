@@ -139,6 +139,11 @@ namespace System
         }
 
         /// <summary>
+        /// The zero-length string.
+        /// </summary>
+        public const string Empty = "";
+
+        /// <summary>
         /// Creates a string from the given null-terminated string
         /// of UTF-8 encoded characters.
         /// </summary>
