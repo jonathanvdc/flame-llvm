@@ -166,8 +166,10 @@ namespace System
         }
     }
 
-    // The ArgumentOutOfRangeException is thrown when an argument 
-    // is outside the legal range for that argument.  
+    /// <summary>
+    /// A type of exception that is thrown when a value is outside of the
+    /// legal range for a parameter.
+    /// </summary>
     public class ArgumentOutOfRangeException : ArgumentException
     {
         private const string DefaultMessage = "Specified argument was out of the range of valid values.";
@@ -220,6 +222,57 @@ namespace System
         public virtual object ActualValue
         {
             get { return actualValue; }
+        }
+    }
+
+    /// <summary>
+    /// A type of exception that is thrown when an already-exposed value is accessed.
+    /// </summary>
+    public class ObjectDisposedException : InvalidOperationException
+    {
+        public ObjectDisposedException(string objectName)
+            : this(objectName, "Cannot access a disposed object.")
+        {
+        }
+
+        public ObjectDisposedException(string objectName, string message)
+            : base(message)
+        {
+            this.objectName = objectName;
+        }
+
+        public ObjectDisposedException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// <inheritdoc/>
+        public override string Message
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(ObjectName))
+                {
+                    return base.Message;
+                }
+                else
+                {
+                    return base.Message + Environment.NewLine + "Object name: " + ObjectName;
+                }
+            }
+        }
+
+        private string objectName;
+
+        /// <summary>
+        /// Gets the name of the object that was already disposed.
+        /// </summary>
+        /// <returns>The name of the object.</returns>
+        public string ObjectName
+        {
+            get
+            {
+                return objectName ?? "";
+            }
         }
     }
 }
