@@ -18,7 +18,7 @@ system-console-files = \
 	system-console/*.cs \
 	../stdlib-primitives/bin/flo/stdlib-primitives.flo
 
-system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-console.flo
+system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-io.flo
 
 common-options = -asm-version=0.1.0.0
 
