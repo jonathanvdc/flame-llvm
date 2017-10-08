@@ -139,6 +139,16 @@ namespace System
         }
 
         /// <summary>
+        /// Checks if a string is either null or the zero-length string.
+        /// </summary>
+        /// <param name="str">A string to examine.</param>
+        /// <returns><c>true</c> if the string is null or of length zero; otherwise, <c>false</c>.</returns>
+        public static bool IsNullOrEmpty(string str)
+        {
+            return str == null || str.Length == 0;
+        }
+
+        /// <summary>
         /// The zero-length string.
         /// </summary>
         public const string Empty = "";
