@@ -2,7 +2,7 @@ init
 {
     rt-flo-filename = ../runtime/bin/flo/runtime.flo;
     rt-obj-filename = ../runtime/bin/native/runtime.o;
-    stdlib-flo-filename = ../stdlib/bin/flo/system-console.flo ../stdlib/bin/flo/corlib.flo;
+    stdlib-flo-filename = ../stdlib/bin/flo/system-console.flo ../stdlib/bin/flo/system-io.flo ../stdlib/bin/flo/corlib.flo;
 
     // Compiles input-file to a native executable and ensures
     // that its output matches the oracle.
