@@ -121,14 +121,14 @@ namespace System
         {
             get
             {
-                if (!string.IsNullOrEmpty(paramName))
+                if (string.IsNullOrEmpty(paramName))
                 {
-                    return base.Message + Environment.NewLine +
-                        "Parameter name: " + paramName;
+                    return base.Message;
                 }
                 else
                 {
-                    return base.Message;
+                    return base.Message + Environment.NewLine +
+                        "Parameter name: " + paramName;
                 }
             }
         }
@@ -144,8 +144,7 @@ namespace System
     }
 
     unroll ((TYPE, DEFAULT_MESSAGE) in (
-        (ArgumentNullException, "Value cannot be null."),
-        (ArgumentOutOfRangeException, "Specified argument was out of the range of valid values.")))
+        (ArgumentNullException, "Value cannot be null."),))
     {
         public class TYPE : ArgumentException
         {
@@ -164,6 +163,63 @@ namespace System
             public TYPE(string paramName, string message)
                 : base(message, paramName)
             { }
+        }
+    }
+
+    // The ArgumentOutOfRangeException is thrown when an argument 
+    // is outside the legal range for that argument.  
+    public class ArgumentOutOfRangeException : ArgumentException
+    {
+        private const string DefaultMessage = "Specified argument was out of the range of valid values.";
+
+        public ArgumentOutOfRangeException()
+            : base(DefaultMessage)
+        { }
+
+        public ArgumentOutOfRangeException(string paramName)
+            : base(DefaultMessage, paramName)
+        { }
+
+        public ArgumentOutOfRangeException(string paramName, string message)
+            : base(message, paramName)
+        { }
+
+        public ArgumentOutOfRangeException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        public ArgumentOutOfRangeException(string paramName, object actualValue, string message)
+            : base(message, paramName)
+        {
+            this.actualValue = actualValue;
+        }
+
+        /// <inheritdoc/>
+        public override string Message
+        {
+            get
+            {
+                string s = base.Message;
+                if (actualValue == null)
+                {
+                    return s;
+                }
+                else
+                {
+                    return s + Environment.NewLine + "Actual value was " + actualValue.ToString() + ".";
+                }
+            }
+        }
+
+        private object actualValue;
+
+        /// <summary>
+        /// Gets the value of the argument that broke a method's contract.
+        /// </summary>
+        /// <returns>The actual value of the argument.</returns>
+        public virtual object ActualValue
+        {
+            get { return actualValue; }
         }
     }
 }
