@@ -29,5 +29,10 @@ namespace System
             }
             return stringArray;
         }
+
+        /// <summary>
+        /// Gets the newline string.
+        /// </summary>
+        public static string NewLine => "\n";
     }
 }
