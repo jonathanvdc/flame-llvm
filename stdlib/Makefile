@@ -8,18 +8,24 @@ corlib-files = \
 
 corlib-libs = $(runtime-lib)
 
+system-io-files = \
+	system-io/*.cs \
+	../stdlib-primitives/bin/flo/stdlib-primitives.flo
+
+system-io-libs = $(runtime-lib) bin/flo/corlib.flo
+
 system-console-files = \
 	system-console/*.cs \
 	../stdlib-primitives/bin/flo/stdlib-primitives.flo
 
-system-console-libs = $(runtime-lib) bin/flo/corlib.flo
+system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-console.flo
 
 common-options = -asm-version=0.1.0.0
 
 .PHONY: all flo clean
 all: flo
 
-flo: bin/flo/corlib.flo bin/flo/system-console.flo
+flo: bin/flo/corlib.flo bin/flo/system-io.flo bin/flo/system-console.flo
 
 clean:
 	rm -rf bin/
@@ -39,3 +45,10 @@ bin/flo/system-console.flo: $(system-console-files) $(system-console-libs) | ecs
 		-rt-libs $(system-console-libs) \
 		-o $@ \
 		$(common-options) -asm-name=system-console
+
+bin/flo/system-io.flo: $(system-io-files) $(system-io-libs) | ecsc
+	$(ECSC) $(system-io-files) \
+		-platform ir -environment llvm -Wno-build \
+		-rt-libs $(system-io-libs) \
+		-o $@ \
+		$(common-options) -asm-name=system-io
