@@ -29,10 +29,11 @@ namespace System
         }
 
         /// <summary>
-        /// Creates an array segment that encapsulates an array
-        /// in its entirety.
+        /// Creates an array segment.
         /// </summary>
         /// <param name="data">An array.</param>
+        /// <param name="offset">A start offset in the array.</param>
+        /// <param name="count">The number of items to select in the array.</param>
         public ArraySegment(T[] data, int offset, int count)
         {
             if (data == null)
