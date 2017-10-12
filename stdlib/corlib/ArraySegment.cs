@@ -17,8 +17,16 @@ namespace System
         /// </summary>
         /// <param name="data">An array.</param>
         public ArraySegment(T[] data)
-            : this(data, 0, data.Length)
-        { }
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            Array = data;
+            Offset = 0;
+            Count = data.Length;
+        }
 
         /// <summary>
         /// Creates an array segment that encapsulates an array
