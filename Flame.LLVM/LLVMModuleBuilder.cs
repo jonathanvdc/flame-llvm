@@ -846,7 +846,7 @@ namespace Flame.LLVM
             // We'll generate something along the lines of this when a type's static
             // constructors need to be run:
             //
-            //     if (!has_run_cctor && !is_running_cctor_here)
+            //     if (!is_running_cctor_here && !has_run_cctor)
             //     {
             //         while (!Interlocked.CompareExchange(ref is_running_cctor, false, true)) { }
             //         if (!has_run_cctor)
@@ -859,11 +859,11 @@ namespace Flame.LLVM
             //
             // Or, using gotos:
             //
-            //         if (has_run_cctor) goto after_cctor;
+            //         if (is_running_cctors_here) goto after_cctor;
             //         else goto check_running_cctors_here;
             //
-            //     check_running_cctor_here:
-            //         if (is_running_cctors_here) goto after_cctor;
+            //     check_has_run_cctor:
+            //         if (has_run_cctor) goto after_cctor;
             //         else goto wait_for_cctor_lock;
             //
             //     wait_for_cctor_lock:
@@ -892,7 +892,7 @@ namespace Flame.LLVM
             var isRunningPtr = lockTriple.Item2;
             var isRunningHerePtr = lockTriple.Item3;
 
-            var checkRunningHereBlock = BasicBlock.CreateChildBlock("check_running_cctor_here");
+            var checkHasRunBlock = BasicBlock.CreateChildBlock("check_has_run_cctor");
             var waitForLockBlock = BasicBlock.CreateChildBlock("wait_for_cctor_lock");
             var maybeRunBlock = BasicBlock.CreateChildBlock("maybe_run_cctor");
             var runBlock = BasicBlock.CreateChildBlock("run_cctor");
@@ -904,16 +904,16 @@ namespace Flame.LLVM
                 BasicBlock.Builder,
                 IntToBoolean(
                     BasicBlock.Builder,
-                    BuildAtomicLoad(BasicBlock.Builder, hasRunPtr, "has_run_cctor")),
+                    BuildLoad(BasicBlock.Builder, isRunningHerePtr, "is_running_cctor_here")),
                 afterBlock.Block,
-                checkRunningHereBlock.Block);
+                checkHasRunBlock.Block);
 
-            // Implement the `check_running_cctor_here` block.
+            // Implement the `check_has_run_cctor` block.
             BuildCondBr(
-                checkRunningHereBlock.Builder,
+                checkHasRunBlock.Builder,
                 IntToBoolean(
-                    checkRunningHereBlock.Builder,
-                    BuildLoad(checkRunningHereBlock.Builder, isRunningHerePtr, "is_running_cctor_here")),
+                    checkHasRunBlock.Builder,
+                    BuildAtomicLoad(checkHasRunBlock.Builder, hasRunPtr, "has_run_cctor")),
                 afterBlock.Block,
                 waitForLockBlock.Block);
 
