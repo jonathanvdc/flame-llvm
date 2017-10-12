@@ -5,7 +5,7 @@ namespace System.Primitives.InteropServices
     /// </summary>
     public static unsafe class CStringHelpers
     {
-        private static extern ulong strlen(byte* str);
+        private static extern size_t strlen(byte* str);
 
         /// <summary>
         /// Gets the length (in bytes) of the given null-terminated string.
@@ -14,7 +14,7 @@ namespace System.Primitives.InteropServices
         /// <returns>The string's length.</returns>
         public static ulong StringLength(byte* str)
         {
-            return strlen(str);
+            return (ulong)strlen(str);
         }
     }
 }

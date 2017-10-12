@@ -13,7 +13,7 @@ namespace System.Runtime.InteropServices
         /// <param name="size">The number of bytes to allocate.</param>
         public static IntPtr AllocHGlobal(int size)
         {
-            return (IntPtr)Memory.AllocHGlobal(size);
+            return (IntPtr)Memory.AllocHGlobal((ulong)size);
         }
 
         /// <summary>

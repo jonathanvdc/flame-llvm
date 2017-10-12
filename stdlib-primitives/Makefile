@@ -1,4 +1,5 @@
 files = \
+	*.cs \
 	IO/*.cs \
 	Runtime/InteropServices/*.cs
 

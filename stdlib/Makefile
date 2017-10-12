@@ -9,14 +9,12 @@ corlib-files = \
 corlib-libs = $(runtime-lib)
 
 system-io-files = \
-	system-io/*.cs \
-	../stdlib-primitives/bin/flo/stdlib-primitives.flo
+	system-io/*.cs
 
 system-io-libs = $(runtime-lib) bin/flo/corlib.flo
 
 system-console-files = \
-	system-console/*.cs \
-	../stdlib-primitives/bin/flo/stdlib-primitives.flo
+	system-console/*.cs
 
 system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-io.flo
 
