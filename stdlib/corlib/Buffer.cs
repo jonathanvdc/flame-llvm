@@ -61,14 +61,14 @@ namespace System
             MemoryCopy(source, destination, (ulong)destinationSizeInBytes, (ulong)sourceBytesToCopy);
         }
 
-        internal static void InternalBlockCopy(
+        public static void BlockCopy(
             byte[] source,
             int sourcePos,
             byte[] destination,
             int destinationPos,
             int count)
         {
-            MemoryCopy(&source[sourcePos], &destination[destinationPos], count, count);
+            Memory.MemoryMove(&source[sourcePos], &destination[destinationPos], (ulong)count);
         }
     }
 }
