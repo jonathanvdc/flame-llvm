@@ -120,4 +120,52 @@ namespace System
             return c >= (char)0xD800 && c <= (char)0xDFFF;
         }
     }
+
+    public partial struct SByte
+    {
+        public const sbyte MaxValue = 0x7F;
+        public const sbyte MinValue = (sbyte)0x80;
+    }
+
+    public partial struct Byte
+    {
+        public const byte MaxValue = 0xFF;
+        public const byte MinValue = 0x00;
+    }
+
+    public partial struct Int16
+    {
+        public const short MaxValue = 0x7FFF;
+        public const short MinValue = (short)0x8000;
+    }
+
+    public partial struct UInt16
+    {
+        public const ushort MaxValue = 0xFFFF;
+        public const ushort MinValue = 0x0000;
+    }
+
+    public partial struct Int32
+    {
+        public const int MaxValue = 0x7FFFFFFF;
+        public const int MinValue = (int)0x80000000;
+    }
+
+    public partial struct UInt32
+    {
+        public const uint MaxValue = 0xFFFFFFFF;
+        public const uint MinValue = 0x00000000;
+    }
+
+    public partial struct Int64
+    {
+        public const long MaxValue = 0x7FFFFFFFFFFFFFFF;
+        public const long MinValue = (long)0x8000000000000000;
+    }
+
+    public partial struct UInt64
+    {
+        public const ulong MaxValue = 0xFFFFFFFFFFFFFFFF;
+        public const ulong MinValue = 0x0000000000000000;
+    }
 }
