@@ -51,7 +51,7 @@ namespace System.Primitives
         /// Converts this value to a 32-bit unsigned integer.
         /// </summary>
         /// <returns>A 32-bit unsigned integer.</returns>
-        public uint ToInt32()
+        public uint ToUInt32()
         {
             return (uint)ptr;
         }
@@ -60,7 +60,7 @@ namespace System.Primitives
         /// Converts this value to a 64-bit unsigned integer.
         /// </summary>
         /// <returns>A 64-bit unsigned integer.</returns>
-        public ulong ToInt64()
+        public ulong ToUInt64()
         {
             return (ulong)ptr;
         }
@@ -147,7 +147,7 @@ namespace System.Primitives
         /// <returns>A 32-bit unsigned integer.</returns>
         public static explicit operator uint(size_t pointer)
         {
-            return pointer.ToInt32();
+            return pointer.ToUInt32();
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace System.Primitives
         /// <returns>A 64-bit unsigned integer.</returns>
         public static explicit operator ulong(size_t pointer)
         {
-            return pointer.ToInt64();
+            return pointer.ToUInt64();
         }
 
         /// <summary>
