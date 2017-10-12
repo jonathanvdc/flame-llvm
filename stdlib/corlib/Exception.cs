@@ -53,7 +53,8 @@ namespace System
     unroll ((TYPE, BASE_TYPE, DEFAULT_MESSAGE) in (
         (SystemException, Exception, "System error."),
         (InvalidOperationException, SystemException, "Operation is not valid due to the current state of the object."),
-        (NotSupportedException, SystemException, "Specified method is not supported.")))
+        (NotSupportedException, SystemException, "Specified method is not supported."),
+        (UnauthorizedAccessException, SystemException, "Unauthorized access.")))
     {
         public class TYPE : BASE_TYPE
         {
