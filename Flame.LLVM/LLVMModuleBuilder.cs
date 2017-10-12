@@ -36,7 +36,9 @@ namespace Flame.LLVM
             this.declaredIntrinsics = new Dictionary<IntrinsicValue, LLVMValueRef>();
             this.interfaceStubs = new Dictionary<LLVMMethod, InterfaceStub>();
             this.primeGen = new PrimeNumberGenerator();
-            this.staticConstructorLocks = new Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>>();
+            this.staticConstructorLocks = new Dictionary<
+                LLVMType,
+                Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef, LLVMValueRef>>();
             this.declaredStringChars = new Dictionary<string, LLVMValueRef>();
         }
 
@@ -55,7 +57,7 @@ namespace Flame.LLVM
         private Dictionary<LLVMMethod, InterfaceStub> interfaceStubs;
         private Dictionary<IntrinsicValue, LLVMValueRef> declaredIntrinsics;
         private PrimeNumberGenerator primeGen;
-        private Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>> staticConstructorLocks;
+        private Dictionary<LLVMType, Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef, LLVMValueRef>> staticConstructorLocks;
         private Dictionary<string, LLVMValueRef> declaredStringChars;
 
         private static readonly IntrinsicAttribute NoAliasAttribute =
@@ -791,6 +793,25 @@ namespace Flame.LLVM
             }
         }
 
+        private static uint GetMDKindID(string Name)
+        {
+            return LLVMSharp.LLVM.GetMDKindID(Name, (uint)Name.Length);
+        }
+
+        private static LLVMValueRef MDString(string Name)
+        {
+            return LLVMSharp.LLVM.MDString(Name, (uint)Name.Length);
+        }
+
+        private static LLVMValueRef WithMetadata(
+            LLVMValueRef Value,
+            uint Kind,
+            LLVMValueRef Metadata)
+        {
+            Value.SetMetadata(Kind, Metadata);
+            return Value;
+        }
+
         /// <summary>
         /// Generates code that runs the given type's static constructors.
         /// </summary>
@@ -816,8 +837,11 @@ namespace Flame.LLVM
             //       for the type are in the process of being run **by the current
             //       thread.**
             //
-            Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef> lockTriple;
-            if (!staticConstructorLocks.TryGetValue(Type, out lockTriple))
+            //     * A common metadata node per thread-local variable that is used to
+            //       group loads/stores to that variable in an '!invariant.group'.
+            //
+            Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef, LLVMValueRef> lockQuad;
+            if (!staticConstructorLocks.TryGetValue(Type, out lockQuad))
             {
                 string typeName = Type.Namespace.Assembly.Abi.Mangler.Mangle(Type, true);
 
@@ -829,14 +853,16 @@ namespace Flame.LLVM
                 isRunningGlobal.SetInitializer(ConstInt(Int8Type(), 0, false));
                 isRunningGlobal.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
 
-                var isRunningHereGlobal = AddGlobal(module, Int8Type(), typeName + "__is_running_cctor_here");
-                isRunningHereGlobal.SetInitializer(ConstInt(Int8Type(), 0, false));
+                var isRunningHereGlobal = AddGlobal(module, Int1Type(), typeName + "__is_running_cctor_here");
+                isRunningHereGlobal.SetInitializer(ConstInt(Int1Type(), 0, false));
                 isRunningHereGlobal.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
                 isRunningHereGlobal.SetThreadLocal(true);
 
-                lockTriple = new Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef>(
-                    hasRunGlobal, isRunningGlobal, isRunningHereGlobal);
-                staticConstructorLocks[Type] = lockTriple;
+                var mdNode = MDNode(new LLVMValueRef[] { MDString(typeName + "__is_running_cctor_here") });
+
+                lockQuad = new Tuple<LLVMValueRef, LLVMValueRef, LLVMValueRef, LLVMValueRef>(
+                    hasRunGlobal, isRunningGlobal, isRunningHereGlobal, mdNode);
+                staticConstructorLocks[Type] = lockQuad;
             }
 
             // A type's static constructors need to be run *before* any of its static fields
@@ -888,9 +914,11 @@ namespace Flame.LLVM
             //     after_cctor:
             //         ...
 
-            var hasRunPtr = lockTriple.Item1;
-            var isRunningPtr = lockTriple.Item2;
-            var isRunningHerePtr = lockTriple.Item3;
+            var hasRunPtr = lockQuad.Item1;
+            var isRunningPtr = lockQuad.Item2;
+            var isRunningHerePtr = lockQuad.Item3;
+            var invariantGroup = lockQuad.Item4;
+            var invariantGroupMdId = GetMDKindID("invariant.group");
 
             var checkHasRunBlock = BasicBlock.CreateChildBlock("check_has_run_cctor");
             var waitForLockBlock = BasicBlock.CreateChildBlock("wait_for_cctor_lock");
@@ -902,9 +930,10 @@ namespace Flame.LLVM
             // Implement the entry basic block.
             BuildCondBr(
                 BasicBlock.Builder,
-                IntToBoolean(
-                    BasicBlock.Builder,
-                    BuildLoad(BasicBlock.Builder, isRunningHerePtr, "is_running_cctor_here")),
+                WithMetadata(
+                    BuildLoad(BasicBlock.Builder, isRunningHerePtr, "is_running_cctor_here"),
+                    invariantGroupMdId,
+                    invariantGroup),
                 afterBlock.Block,
                 checkHasRunBlock.Block);
 
@@ -918,7 +947,10 @@ namespace Flame.LLVM
                 waitForLockBlock.Block);
 
             // Implement the `wait_for_cctor_lock` block.
-            BuildStore(waitForLockBlock.Builder, ConstInt(Int8Type(), 1, false), isRunningHerePtr);
+            WithMetadata(
+                BuildStore(waitForLockBlock.Builder, ConstInt(Int1Type(), 1, false), isRunningHerePtr),
+                invariantGroupMdId,
+                invariantGroup);
 
             var cmpxhg = BuildAtomicCmpXchg(
                 waitForLockBlock.Builder,
