@@ -1,6 +1,8 @@
+using System.Primitives;
+
 public unsafe static class Program
 {
-    private static extern ulong strlen(byte* str);
+    private static extern size_t strlen(byte* str);
     private static extern void putchar(byte c);
 
     private static byte[] ToByteArray(byte* buffer, int length)
@@ -15,7 +17,7 @@ public unsafe static class Program
 
     private static byte[] StringToByteArray(byte* buffer)
     {
-        return ToByteArray(buffer, (int)strlen(buffer));
+        return ToByteArray(buffer, (int)(uint)strlen(buffer));
     }
 
     private static void WriteByteArray(byte[] data)

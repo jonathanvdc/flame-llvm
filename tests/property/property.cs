@@ -1,8 +1,10 @@
+using System.Primitives;
+
 public unsafe struct Utf8String
 {
     public Utf8String(byte* data)
     {
-        this.Length = (int)strlen(data);
+        this.Length = (int)(uint)strlen(data);
         this.Data = data;
     }
 
@@ -21,7 +23,7 @@ public unsafe struct Utf8String
     /// </summary>
     public byte this[int i] => Data[i];
 
-    private static extern ulong strlen(byte* data);
+    private static extern size_t strlen(byte* data);
 }
 
 public unsafe static class Console

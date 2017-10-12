@@ -1,15 +1,17 @@
+using System.Primitives;
+
 public struct Utf8String
 {
     public Utf8String(byte* data)
     {
         this.Data = data;
-        this.Length = (int)strlen(data);
+        this.Length = (int)(uint)strlen(data);
     }
 
     public int Length;
     public byte* Data;
 
-    private extern static ulong strlen(byte* str);
+    private extern static size_t strlen(byte* str);
 }
 
 public static class Program

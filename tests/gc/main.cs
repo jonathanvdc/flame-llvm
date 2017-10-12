@@ -1,8 +1,10 @@
+using System.Primitives;
+
 public sealed class Utf8String
 {
     public Utf8String(byte* data)
     {
-        this.Length = (int)strlen(data);
+        this.Length = (int)(uint)strlen(data);
         this.data = data;
     }
 
@@ -12,7 +14,7 @@ public sealed class Utf8String
 
     public byte this[int i] => data[i];
 
-    private static extern ulong strlen(byte* str);
+    private static extern size_t strlen(byte* str);
 }
 
 public unsafe static class Console
