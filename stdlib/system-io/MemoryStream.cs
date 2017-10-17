@@ -365,14 +365,7 @@ namespace System.IO
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer), "buffer cannot be null.");
-            if (offset < 0)
-                throw new ArgumentOutOfRangeException(nameof(offset), offset, "offset cannot be negative.");
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(nameof(count), offset, "count cannot be negative.");
-            if (buffer.Length - offset < count)
-                throw new ArgumentException("A non-existent range of the buffer was specified.");
+            CheckReadArgs(buffer, offset, count);
 
             if (!_isOpen) ThrowStreamIsClosed();
             EnsureWriteable();

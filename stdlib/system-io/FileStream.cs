@@ -187,7 +187,12 @@ namespace System.IO
         /// <inheritdoc/>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            CheckReadArgs(buffer, offset, count);
+            ulong bytesWritten = IOPrimitives.WriteToFile(&buffer[offset], (ulong)count, fileHandle);
+            if (bytesWritten < (ulong)count)
+            {
+                throw new IOException("Wrote only " + bytesWritten + " of " + count + " bytes.");
+            }
         }
     }
 }

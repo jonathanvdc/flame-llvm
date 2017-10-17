@@ -10,6 +10,7 @@ namespace System.Primitives.IO
 
         private extern static void* fopen(byte* name, byte* mode);
         private extern static size_t fread(void* buffer, size_t size, size_t count, void* stream);
+        private extern static size_t fwrite(void* buffer, size_t size, size_t count, void* stream);
 
         /// <summary>
         /// Opens the file with the specified name in the given mode.
@@ -24,13 +25,25 @@ namespace System.Primitives.IO
         /// <summary>
         /// Reads a given number of bytes from a file into a buffer.
         /// </summary>
-        /// <param name="buffer">The buffer to the bytes to.</param>
-        /// <param name="count">The number of bytes to create.</param>
+        /// <param name="buffer">The buffer to write the bytes to.</param>
+        /// <param name="count">The number of bytes to read.</param>
         /// <param name="stream">The file to read the bytes from.</param>
         /// <returns>The number of bytes that were read.</returns>
         public static ulong ReadFromFile(byte* buffer, ulong count, void* stream)
         {
             return (ulong)fread(buffer, (size_t)1u, (size_t)count, stream);
+        }
+
+        /// <summary>
+        /// Writes a given number of bytes from a buffer to a file.
+        /// </summary>
+        /// <param name="buffer">The buffer to read the bytes from.</param>
+        /// <param name="count">The number of bytes to write.</param>
+        /// <param name="stream">The file to write the bytes to.</param>
+        /// <returns>The number of bytes that were written.</returns>
+        public static ulong WriteToFile(byte* buffer, ulong count, void* stream)
+        {
+            return (ulong)fwrite(buffer, (size_t)1u, (size_t)count, stream);
         }
 
         private extern static void* stdin;
