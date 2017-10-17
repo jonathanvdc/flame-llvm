@@ -54,6 +54,7 @@ namespace System
         (SystemException, Exception, "System error."),
         (InvalidOperationException, SystemException, "Operation is not valid due to the current state of the object."),
         (NotSupportedException, SystemException, "Specified method is not supported."),
+        (NotImplementedException, SystemException, "Specified functionality is not implemented."),
         (UnauthorizedAccessException, SystemException, "Unauthorized access.")))
     {
         public class TYPE : BASE_TYPE
