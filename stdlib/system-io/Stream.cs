@@ -225,5 +225,17 @@ namespace System.IO
             if (buffer.Length - offset < count)
                 throw new ArgumentException("A non-existent range of the buffer was specified.");
         }
+
+        internal void EnsureWriteable()
+        {
+            if (!CanWrite)
+                throw new NotSupportedException("Writing is not enabled for this stream.");
+        }
+
+        internal void EnsureReadable()
+        {
+            if (!CanRead)
+                throw new NotSupportedException("Reading is not enabled for this stream.");
+        }
     }
 }

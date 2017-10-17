@@ -111,11 +111,6 @@ namespace System.IO
             get { return _writable; }
         }
 
-        private void EnsureWriteable()
-        {
-            if (!CanWrite) throw new NotSupportedException("Writing is not enabled for this stream.");
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (disposing)

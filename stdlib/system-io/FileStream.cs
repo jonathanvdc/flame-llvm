@@ -181,6 +181,7 @@ namespace System.IO
         public override int Read(byte[] buffer, int offset, int count)
         {
             CheckReadArgs(buffer, offset, count);
+            EnsureReadable();
             return (int)IOPrimitives.ReadFromFile(&buffer[offset], (ulong)count, fileHandle);
         }
 
@@ -188,6 +189,7 @@ namespace System.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             CheckReadArgs(buffer, offset, count);
+            EnsureWriteable();
             ulong bytesWritten = IOPrimitives.WriteToFile(&buffer[offset], (ulong)count, fileHandle);
             if (bytesWritten < (ulong)count)
             {
