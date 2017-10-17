@@ -9,6 +9,7 @@ namespace System.Primitives.IO
         private extern static int fputc(int ch, void* file);
 
         private extern static void* fopen(byte* name, byte* mode);
+        private extern static size_t fread(void* buffer, size_t size, size_t count, void* stream);
 
         /// <summary>
         /// Opens the file with the specified name in the given mode.
@@ -18,6 +19,18 @@ namespace System.Primitives.IO
         public static void* OpenFile(byte* name, byte* mode)
         {
             return fopen(name, mode);
+        }
+
+        /// <summary>
+        /// Reads a given number of bytes from a file into a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to the bytes to.</param>
+        /// <param name="count">The number of bytes to create.</param>
+        /// <param name="stream">The file to read the bytes from.</param>
+        /// <returns>The number of bytes that were read.</returns>
+        public static ulong ReadFromFile(byte* buffer, ulong count, void* stream)
+        {
+            return (ulong)fread(buffer, (size_t)1u, (size_t)count, stream);
         }
 
         private extern static void* stdin;

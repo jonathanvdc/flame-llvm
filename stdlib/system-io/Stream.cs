@@ -210,5 +210,20 @@ namespace System.IO
             oneByteArray[0] = value;
             Write(oneByteArray, 0, 1);
         }
+
+        /// <summary>
+        /// Checks the arguments to a read call.
+        /// </summary>
+        internal static void CheckReadArgs(byte[] buffer, int offset, int count)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer), "buffer cannot be null.");
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), offset, "offset cannot be negative.");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "count cannot be negative.");
+            if (buffer.Length - offset < count)
+                throw new ArgumentException("A non-existent range of the buffer was specified.");
+        }
     }
 }

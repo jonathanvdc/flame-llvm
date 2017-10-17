@@ -180,7 +180,8 @@ namespace System.IO
         /// <inheritdoc/>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            CheckReadArgs(buffer, offset, count);
+            return (int)IOPrimitives.ReadFromFile(&buffer[offset], (ulong)count, fileHandle);
         }
 
         /// <inheritdoc/>
