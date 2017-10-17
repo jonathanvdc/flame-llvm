@@ -7,6 +7,19 @@ namespace System.Primitives.IO
     {
         private extern static int fgetc(void* file);
         private extern static int fputc(int ch, void* file);
+
+        private extern static void* fopen(byte* name, byte* mode);
+
+        /// <summary>
+        /// Opens the file with the specified name in the given mode.
+        /// </summary>
+        /// <param name="name">The name of the file to open.</param>
+        /// <param name="mode">The mode to open the file in.</param>
+        public static void* OpenFile(byte* name, byte* mode)
+        {
+            return fopen(name, mode);
+        }
+
         private extern static void* stdin;
         private extern static void* stdout;
         private extern static void* stderr;
