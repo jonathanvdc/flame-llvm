@@ -12,6 +12,7 @@ namespace System.Primitives.IO
         private extern static void fclose(void* stream);
         private extern static size_t fread(void* buffer, size_t size, size_t count, void* stream);
         private extern static size_t fwrite(void* buffer, size_t size, size_t count, void* stream);
+        private extern static long ftell(void* stream);
 
         /// <summary>
         /// Opens the file with the specified name in the given mode.
@@ -30,6 +31,16 @@ namespace System.Primitives.IO
         public static void CloseFile(void* stream)
         {
             fclose(stream);
+        }
+
+        /// <summary>
+        /// Gets the current position in the given file.
+        /// </summary>
+        /// <param name="stream">A file handle.</param>
+        /// <returns>The position in the file.</returns>
+        public static long GetFilePosition(void* stream)
+        {
+            return ftell(stream);
         }
 
         /// <summary>

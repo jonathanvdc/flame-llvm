@@ -156,7 +156,7 @@ namespace System.IO
         {
             get
             {
-                throw new NotImplementedException();
+                return IOPrimitives.GetFilePosition(fileHandle);
             }
             set
             {
