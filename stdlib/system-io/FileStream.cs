@@ -149,8 +149,7 @@ namespace System.IO
             {
                 // TODO: error checking
                 var oldPos = Position;
-                Seek(0, SeekOrigin.End);
-                var size = Position;
+                var size = Seek(0, SeekOrigin.End);
                 Seek(oldPos, SeekOrigin.Begin);
                 return size;
             }
