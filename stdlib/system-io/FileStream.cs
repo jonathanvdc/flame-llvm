@@ -179,7 +179,8 @@ namespace System.IO
         /// <inheritdoc/>
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            IOPrimitives.FileSeek(fileHandle, offset, (int)origin);
+            return Position;
         }
 
         /// <inheritdoc/>

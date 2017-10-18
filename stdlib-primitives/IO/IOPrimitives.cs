@@ -13,6 +13,7 @@ namespace System.Primitives.IO
         private extern static size_t fread(void* buffer, size_t size, size_t count, void* stream);
         private extern static size_t fwrite(void* buffer, size_t size, size_t count, void* stream);
         private extern static long ftell(void* stream);
+        private extern static int fseek(void* stream, long offset, int origin);
 
         /// <summary>
         /// Opens the file with the specified name in the given mode.
@@ -41,6 +42,18 @@ namespace System.Primitives.IO
         public static long GetFilePosition(void* stream)
         {
             return ftell(stream);
+        }
+
+        /// <summary>
+        /// Seeks to the specified offset from an origin in the given file. 
+        /// </summary>
+        /// <param name="stream">A file handle.</param>
+        /// <param name="offset">An offset.</param>
+        /// <param name="origin">An origin to seek from.</param>
+        /// <returns></returns>
+        public static int FileSeek(void* stream, long offset, int origin)
+        {
+            return fseek(stream, offset, origin);
         }
 
         /// <summary>
