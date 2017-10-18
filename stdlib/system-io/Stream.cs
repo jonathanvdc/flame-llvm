@@ -174,8 +174,17 @@ namespace System.IO
 
         }
 
+        /// <summary>
+        /// Synchronizes the stream with the underlying storage.
+        /// </summary>
         public abstract void Flush();
 
+        /// <summary>
+        /// Seeks to an offset from an origin in a file.
+        /// </summary>
+        /// <param name="offset">An offset from an origin.</param>
+        /// <param name="origin">An origin to seek from.</param>
+        /// <returns>The new position in the file.</returns>
         public abstract long Seek(long offset, SeekOrigin origin);
 
         public abstract void SetLength(long value);
