@@ -160,7 +160,12 @@ namespace System.IO
             }
             set
             {
-                throw new NotImplementedException();
+                // TODO: error checking
+                var oldPos = Position;
+                FileSeek(0, SeekOrigin.End);
+                var size = Position;
+                FileSeek(oldPos, SeekOrigin.Begin);
+                return size;
             }
         }
 
