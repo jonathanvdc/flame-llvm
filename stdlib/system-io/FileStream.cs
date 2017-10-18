@@ -21,7 +21,7 @@ namespace System.IO
         {
             this.Name = Name;
             this.access = access;
-            this.fileHandle = OpenFile(mode);
+            this.fileHandle = OpenFile(name, mode, access);
             if (fileHandle == (void*)null)
             {
                 throw new IOException("Cannot open file at '" + name + "'.");
@@ -37,13 +37,15 @@ namespace System.IO
         /// <returns>The file name.</returns>
         public string Name { get; private set; }
 
-        /// <inheritdoc/>
-        public override bool CanRead => (access & FileAccess.Read) == FileAccess.Read;
+        private bool IsOpen => fileHandle != (void*)null;
 
         /// <inheritdoc/>
-        public override bool CanWrite => (access & FileAccess.Write) == FileAccess.Write;
+        public override bool CanRead => IsOpen && (access & FileAccess.Read) == FileAccess.Read;
 
-        private void* OpenFile(FileMode mode)
+        /// <inheritdoc/>
+        public override bool CanWrite => IsOpen && (access & FileAccess.Write) == FileAccess.Write;
+
+        private static void* OpenFile(string name, FileMode mode, FileAccess access)
         {
             // TODO: the special cases are not thread-safe and certainly
             // not atomic. How can we handle this?
@@ -54,40 +56,43 @@ namespace System.IO
             // here.
             if (mode == FileMode.Truncate)
             {
-                if (!FileExists(Name))
+                if (!FileExists(name))
                 {
                     throw new IOException(
-                        "Cannot truncate file at '" + Name +
+                        "Cannot truncate file at '" + name +
                         "' because it does not exist.");
                 }
-                return OpenFile(FileMode.Open);
+                return OpenFile(name, FileMode.Open, access);
             }
             else if (mode == FileMode.CreateNew)
             {
-                if (FileExists(Name))
+                if (FileExists(name))
                 {
                     throw new IOException(
-                        "Cannot create a new file at '" + Name +
+                        "Cannot create a new file at '" + name +
                         "' as one already exists.");
                 }
-                return OpenFile(FileMode.Create);
+                return OpenFile(name, FileMode.Create, access);
             }
             else if (mode == FileMode.OpenOrCreate)
             {
-                return OpenFile(FileExists(Name) ? FileMode.Open : FileMode.Create);
+                return OpenFile(name, FileExists(name) ? FileMode.Open : FileMode.Create, access);
             }
+
+            bool canRead = (access & FileAccess.Read) == FileAccess.Read;
+            bool canWrite = (access & FileAccess.Write) == FileAccess.Write;
 
             // Handle basic open/create/append operations here.
             switch (mode)
             {
                 case FileMode.Open:
-                    return OpenFile(Name, CanWrite ? "r+b" : "rb");
+                    return OpenFile(name, canWrite ? "r+b" : "rb");
 
                 case FileMode.Create:
-                    return OpenFile(Name, CanRead ? "w+b" : "wb");
+                    return OpenFile(name, canRead ? "w+b" : "wb");
 
                 case FileMode.Append:
-                    return OpenFile(Name, CanRead ? "a+b" : "ab");
+                    return OpenFile(name, canRead ? "a+b" : "ab");
 
                 default:
                     throw new NotImplementedException();
@@ -194,6 +199,15 @@ namespace System.IO
             if (bytesWritten < (ulong)count)
             {
                 throw new IOException("Wrote only " + bytesWritten + " of " + count + " bytes.");
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (IsOpen)
+            {
+                IOPrimitives.CloseFile(fileHandle);
+                fileHandle = null;
             }
         }
     }

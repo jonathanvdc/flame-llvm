@@ -9,6 +9,7 @@ namespace System.Primitives.IO
         private extern static int fputc(int ch, void* file);
 
         private extern static void* fopen(byte* name, byte* mode);
+        private extern static void fclose(void* stream);
         private extern static size_t fread(void* buffer, size_t size, size_t count, void* stream);
         private extern static size_t fwrite(void* buffer, size_t size, size_t count, void* stream);
 
@@ -20,6 +21,15 @@ namespace System.Primitives.IO
         public static void* OpenFile(byte* name, byte* mode)
         {
             return fopen(name, mode);
+        }
+
+        /// <summary>
+        /// Closes the given file.
+        /// </summary>
+        /// <param name="stream">A file handle.</param>
+        public static void CloseFile(void* stream)
+        {
+            fclose(stream);
         }
 
         /// <summary>
