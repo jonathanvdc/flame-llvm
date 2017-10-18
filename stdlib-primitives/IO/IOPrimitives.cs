@@ -10,6 +10,7 @@ namespace System.Primitives.IO
 
         private extern static void* fopen(byte* name, byte* mode);
         private extern static void fclose(void* stream);
+        private extern static void fflush(void* stream);
         private extern static size_t fread(void* buffer, size_t size, size_t count, void* stream);
         private extern static size_t fwrite(void* buffer, size_t size, size_t count, void* stream);
         private extern static long ftell(void* stream);
@@ -32,6 +33,15 @@ namespace System.Primitives.IO
         public static void CloseFile(void* stream)
         {
             fclose(stream);
+        }
+
+        /// <summary>
+        /// Synchronizes an output stream with the underlying file.
+        /// </summary>
+        /// <param name="stream">The output stream to synchronize with a file.</param>
+        public static void FlushFile(void* stream)
+        {
+            fflush(stream);
         }
 
         /// <summary>

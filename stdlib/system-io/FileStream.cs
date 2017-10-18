@@ -178,7 +178,7 @@ namespace System.IO
         /// <inheritdoc/>
         public override void Flush()
         {
-            throw new NotImplementedException();
+            IOPrimitives.FlushFile(fileHandle);
         }
 
         /// <inheritdoc/>
