@@ -83,6 +83,28 @@ namespace System
         }
 
         /// <summary>
+        /// Determines if two strings have the same content.
+        /// </summary>
+        /// <param name="value1">The first string.</param>
+        /// <param name="value2">The second string.</param>
+        /// <returns><c>true</c> if the strings' content are equal; otherwise, <c>false</c>.</returns>
+        public static bool operator==(String value1, String value2)
+        {
+            return object.Equals(value1, value2);
+        }
+
+        /// <summary>
+        /// Determines if two strings do not have same content.
+        /// </summary>
+        /// <param name="value1">The first string.</param>
+        /// <param name="value2">The second string.</param>
+        /// <returns><c>true</c> if the strings' content are not equal; otherwise, <c>false</c>.</returns>
+        public static bool operator!=(String value1, String value2)
+        {
+            return !object.Equals(value1, value2);
+        }
+
+        /// <summary>
         /// Checks if this string is equal to the given value.
         /// </summary>
         /// <param name="other">The value to compare this string to.</param>
