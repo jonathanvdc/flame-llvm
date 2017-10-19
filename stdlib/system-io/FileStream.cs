@@ -138,7 +138,8 @@ namespace System.IO
         {
             get
             {
-                throw new NotImplementedException();
+                // Check if seeking to the current position works.
+                return IOPrimitives.FileSeek(fileHandle, 0, (int)SeekOrigin.Current) == 0;
             }
         }
 
