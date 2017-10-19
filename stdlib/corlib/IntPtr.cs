@@ -45,7 +45,7 @@ namespace System
         /// been initialized to zero.
         /// </summary>
         /// <returns>Zero as a pointer-sized integer.</returns>
-        public static readonly IntPtr Zero = new IntPtr((void*)null);
+        public static IntPtr Zero => new IntPtr((void*)null);
 
         /// <summary>
         /// Converts this value to a 32-bit signed integer.
