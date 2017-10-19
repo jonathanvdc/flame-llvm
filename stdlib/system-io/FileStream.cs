@@ -189,7 +189,8 @@ namespace System.IO
             {
                 throw new IOException(
                     "Cannot seek to position at offset '" + offset +
-                    "' from the " + SeekOriginToString(origin) + ".");
+                    "' from the " + SeekOriginToString(origin) +
+                    ". Error code: '" + error + "'.");
             }
             return Position;
         }
