@@ -70,4 +70,5 @@ tests
     template CheckOutput<struct/struct.cs, struct-test, struct-test>;
     template CheckOutput<throw/throw.cs, , how are ya>;
     template CheckOutput<virtual-calls/virtual-calls.cs, , 28 113 150>;
+    template CheckOutput<write-file/write-file.cs, @($create-temp-file txt), Write/read successful>;
 }
