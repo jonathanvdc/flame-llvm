@@ -187,7 +187,7 @@ namespace System
         internal static unsafe byte* ToCString(string str)
         {
             char* beginPtr = str.DataPointer;
-            char* endPtr = beginPtr + str.Length - 1;
+            char* endPtr = beginPtr + str.Length;
             var utf8Length = UnicodeConverter.GetUtf16ToUtf8BufferLength(beginPtr, endPtr);
 
             byte* cStr = (byte*)Marshal.AllocHGlobal(utf8Length + 1);
@@ -198,7 +198,7 @@ namespace System
                     UnicodeConverter.ReadUtf16CodePoint(ref beginPtr, endPtr),
                     &cStr[offset]);
             }
-            cStr[str.Length] = (byte)'\0';
+            cStr[offset] = (byte)'\0';
             return cStr;
         }
 
