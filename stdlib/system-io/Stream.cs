@@ -246,5 +246,20 @@ namespace System.IO
             if (!CanRead)
                 throw new NotSupportedException("Reading is not enabled for this stream.");
         }
+
+        internal static string SeekOriginToString(SeekOrigin origin)
+        {
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    return "start of the file";
+                case SeekOrigin.Current:
+                    return "current position";
+                case SeekOrigin.End:
+                    return "end of the file";
+                default:
+                    return "unknown origin (value: '" + origin + "')";
+            }
+        }
     }
 }

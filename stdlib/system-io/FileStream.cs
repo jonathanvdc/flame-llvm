@@ -184,7 +184,13 @@ namespace System.IO
         /// <inheritdoc/>
         public override long Seek(long offset, SeekOrigin origin)
         {
-            IOPrimitives.FileSeek(fileHandle, offset, (int)origin);
+            var error = IOPrimitives.FileSeek(fileHandle, offset, (int)origin);
+            if (error != 0)
+            {
+                throw new IOException(
+                    "Cannot seek to position at offset '" + offset +
+                    "' from the " + SeekOriginToString(origin) + ".");
+            }
             return Position;
         }
 
