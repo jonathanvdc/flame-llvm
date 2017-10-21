@@ -139,7 +139,7 @@ namespace System.IO
             get
             {
                 // Check if seeking to the current position works.
-                return IOPrimitives.FileSeek(fileHandle, 0, (int)SeekOrigin.Current) == 0;
+                return IsOpen && IOPrimitives.FileSeek(fileHandle, 0, (int)SeekOrigin.Current) == 0;
             }
         }
 
@@ -178,12 +178,14 @@ namespace System.IO
         /// <inheritdoc/>
         public override void Flush()
         {
+            EnsureOpen();
             IOPrimitives.FlushFile(fileHandle);
         }
 
         /// <inheritdoc/>
         public override long Seek(long offset, SeekOrigin origin)
         {
+            EnsureOpen();
             var error = IOPrimitives.FileSeek(fileHandle, offset, (int)origin);
             if (error != 0)
             {
@@ -222,6 +224,12 @@ namespace System.IO
                 IOPrimitives.CloseFile(fileHandle);
                 fileHandle = null;
             }
+        }
+
+        private void EnsureOpen()
+        {
+            if (!IsOpen)
+                throw new ObjectDisposedException("Stream has already been closed.");
         }
     }
 }
