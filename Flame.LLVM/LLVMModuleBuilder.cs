@@ -93,11 +93,14 @@ namespace Flame.LLVM
                         // already.
                         //
                         // It's tempting to think that a valid assembly declares
-                        // methods only once, that's not true: sometimes, the same
+                        // methods only once, but it's not true: sometimes, the same
                         // function is imported multiple times by different classes.
                         var funcType = DeclarePrototype(Method);
                         result = AddFunction(module, methodName, funcType);
+                        result.SetUnnamedAddr(true);
+
                         AddParameterAttributes(result, Method);
+
                         if (Method.HasAttribute(NoAliasAttribute.AttributeType))
                         {
                             AddAttributeAtIndex(
