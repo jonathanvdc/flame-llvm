@@ -8,6 +8,11 @@ corlib-files = \
 
 corlib-libs = $(runtime-lib)
 
+system-text-files = \
+	system-text/*.cs
+
+system-text-libs = $(runtime-lib) bin/flo/corlib.flo
+
 system-io-files = \
 	system-io/*.cs
 
@@ -23,7 +28,7 @@ common-options = -asm-version=0.1.0.0
 .PHONY: all flo clean
 all: flo
 
-flo: bin/flo/corlib.flo bin/flo/system-io.flo bin/flo/system-console.flo
+flo: bin/flo/corlib.flo bin/flo/system-text.flo bin/flo/system-io.flo bin/flo/system-console.flo
 
 clean:
 	rm -rf bin/
@@ -37,12 +42,12 @@ bin/flo/corlib.flo: $(corlib-files) $(corlib-libs) | ecsc
 		-o $@ \
 		$(common-options) -asm-name=stdlib
 
-bin/flo/system-console.flo: $(system-console-files) $(system-console-libs) | ecsc
-	$(ECSC) $(system-console-files) \
+bin/flo/system-text.flo: $(system-text-files) $(system-text-libs) | ecsc
+	$(ECSC) $(system-text-files) \
 		-platform ir -environment llvm -Wno-build \
-		-rt-libs $(system-console-libs) \
+		-rt-libs $(system-text-libs) \
 		-o $@ \
-		$(common-options) -asm-name=system-console
+		$(common-options) -asm-name=system-text
 
 bin/flo/system-io.flo: $(system-io-files) $(system-io-libs) | ecsc
 	$(ECSC) $(system-io-files) \
@@ -50,3 +55,10 @@ bin/flo/system-io.flo: $(system-io-files) $(system-io-libs) | ecsc
 		-rt-libs $(system-io-libs) \
 		-o $@ \
 		$(common-options) -asm-name=system-io
+
+bin/flo/system-console.flo: $(system-console-files) $(system-console-libs) | ecsc
+	$(ECSC) $(system-console-files) \
+		-platform ir -environment llvm -Wno-build \
+		-rt-libs $(system-console-libs) \
+		-o $@ \
+		$(common-options) -asm-name=system-console
