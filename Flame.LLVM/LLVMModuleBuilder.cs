@@ -1052,6 +1052,7 @@ namespace Flame.LLVM
                     },
                     false);
                 result = DeclareGlobal(data.TypeOf(), "__string_literal." + declaredStringChars.Count);
+                result.SetUnnamedAddr(true);
                 result.SetLinkage(LLVMLinkage.LLVMInternalLinkage);
                 result.SetGlobalConstant(true);
                 result.SetInitializer(data);
