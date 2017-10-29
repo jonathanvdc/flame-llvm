@@ -15,12 +15,40 @@ namespace System.Text
         /// <returns>The number of bytes required to encode the selected characters.</returns>
         public abstract int GetByteCount(char[] chars, int index, int count);
 
+        /// <summary>
+        /// Encodes a range of characters from a character array as a
+        /// range of bytes in a byte array.
+        /// </summary>
+        /// <param name="chars">The array of characters of which a range is to be encoded.</param>
+        /// <param name="charIndex">The index of the first character in the array to encode.</param>
+        /// <param name="charCount">The number of characters to encode.</param>
+        /// <param name="bytes">The array of bytes to write encoded data to.</param>
+        /// <param name="byteIndex">The index in the byte array at which to start writing.</param>
+        /// <returns>The number of bytes that the characters were encoded as.</returns>
         public abstract int GetBytes(
             char[] chars, int charIndex, int charCount,
             byte[] bytes, int byteIndex);
 
+        /// <summary>
+        /// Returns the number of characters required to decode a range of bytes in
+        /// a byte array.
+        /// </summary>
+        /// <param name="bytes">The bytes to decode.</param>
+        /// <param name="index">The index of the first byte to dencode.</param>
+        /// <param name="count">The number of bytes to dencode.</param>
+        /// <returns>The number of characters required to dencode the selected bytes.</returns>
         public abstract int GetCharCount(byte[] bytes, int index, int count);
 
+        /// <summary>
+        /// Decodes a range of bytes from a byte array as a
+        /// range of characters in a characters array.
+        /// </summary>
+        /// <param name="bytes">The array of bytes of which a range is to be decoded.</param>
+        /// <param name="byteIndex">The index of the first byte in the array to decode.</param>
+        /// <param name="byteCount">The number of bytes to decode.</param>
+        /// <param name="chars">The array of characters to write decoded characters to.</param>
+        /// <param name="charIndex">The index in the character array at which to start writing.</param>
+        /// <returns>The number of characters that were decoded.</returns>
         public abstract int GetChars(
             byte[] bytes, int byteIndex, int byteCount,
             char[] chars, int charIndex);
