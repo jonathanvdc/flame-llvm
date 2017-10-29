@@ -150,5 +150,18 @@ namespace System.Text
         {
             return GetString(bytes, 0, bytes.Length);
         }
+
+        /// <summary>
+        /// Decodes a byte buffer into a character string.
+        /// </summary>
+        /// <param name="bytes">A pointer to the first byte to decode.</param>
+        /// <param name="count">The number of bytes to decode.</param>
+        /// <returns>A character string.</returns>
+        public virtual unsafe string GetString(byte* bytes, int count)
+        {
+            var array = new byte[count];
+            Buffer.BlockCopy(bytes, array, 0, count);
+            return GetString(array);
+        }
     }
 }
