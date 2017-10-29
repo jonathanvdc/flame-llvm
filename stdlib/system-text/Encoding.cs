@@ -163,5 +163,11 @@ namespace System.Text
             Buffer.BlockCopy(bytes, array, 0, count);
             return GetString(array);
         }
+
+        /// <summary>
+        /// Gets an encoding for the UTF-16 format using the little endian byte order.
+        /// </summary>
+        /// <returns>An encoding for the UTF-16 format using the little endian byte order.</returns>
+        public static Encoding UnicodeEncoding => new UnicodeEncoding();
     }
 }
