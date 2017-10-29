@@ -52,6 +52,33 @@ namespace System
         private char* DataPointer => Length == 0 ? null : &data[0];
 
         /// <summary>
+        /// Copies the characters from a substring of this string to a
+        /// UTF-16 character array.
+        /// </summary>
+        /// <param name="startIndex">The index of the first character to copy.</param>
+        /// <param name="length">The number of characters to copy.</param>
+        /// <returns>A UTF-16 character array.</returns>
+        public char[] ToCharArray(int startIndex, int length)
+        {
+            var array = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                array[i] = this[startIndex + i];
+            }
+            return array;
+        }
+
+        /// <summary>
+        /// Copies the characters from this string to a
+        /// UTF-16 character array.
+        /// </summary>
+        /// <returns>A UTF-16 character array.</returns>
+        public char[] ToCharArray()
+        {
+            return ToCharArray(0, Length);
+        }
+
+        /// <summary>
         /// Checks if this string is equal to the given string.
         /// </summary>
         /// <param name="other">The string to compare this string to.</param>
