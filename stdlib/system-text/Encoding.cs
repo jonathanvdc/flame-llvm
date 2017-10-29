@@ -68,5 +68,58 @@ namespace System.Text
         /// <param name="byteCount">The number of bytes to decode.</param>
         /// <returns>The maximum number of characters produced by decoding <c>byteCount</c> bytes.</returns>
         public abstract int GetMaxCharCount(int byteCount);
+
+        /// <summary>
+        /// Encodes a range of characters from a character array as an array of bytes.
+        /// </summary>
+        /// <param name="chars">The array of characters of which a range is to be encoded.</param>
+        /// <param name="index">The index of the first character in the array to encode.</param>
+        /// <param name="count">The number of characters to encode.</param>
+        /// <returns>An array of bytes.</returns>
+        public virtual byte[] GetBytes(char[] chars, int index, int count)
+        {
+            int byteCount = GetByteCount(chars, index, count);
+            var bytes = new byte[byteCount];
+            GetBytes(chars, index, count, bytes, 0);
+            return bytes;
+        }
+
+        /// <summary>
+        /// Encodes a character array as an array of bytes.
+        /// </summary>
+        /// <param name="chars">The array of characters to encode.</param>
+        /// <returns>An array of bytes.</returns>
+        public virtual byte[] GetBytes(char[] chars)
+        {
+            return GetBytes(chars, 0, chars.Length);
+        }
+
+        /// <summary>
+        /// Encodes a character string as an array of bytes.
+        /// </summary>
+        /// <param name="chars">The character string to encode.</param>
+        /// <returns>An array of bytes.</returns>
+        public virtual byte[] GetBytes(string chars)
+        {
+            return GetBytes(chars.ToCharArray());
+        }
+
+        /// <summary>
+        /// Encodes a range of characters from a character string as an array of bytes.
+        /// </summary>
+        /// <param name="chars">The string of characters of which a range is to be encoded.</param>
+        /// <param name="charIndex">The index of the first character in the array to encode.</param>
+        /// <param name="charCount">The number of characters to encode.</param>
+        /// <param name="bytes">The array of bytes to write encoded data to.</param>
+        /// <param name="byteIndex">The index in the byte array at which to start writing.</param>
+        /// <returns>The number of bytes that the characters were encoded as.</returns>
+        public virtual int GetBytes(
+            string chars, int index, int count,
+            byte[] bytes, int byteIndex)
+        {
+            return GetBytes(
+                chars.ToCharArray(index, count), 0, count,
+                bytes, byteIndex);
+        }
     }
 }
