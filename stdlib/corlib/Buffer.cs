@@ -61,6 +61,8 @@ namespace System
             MemoryCopy(source, destination, (ulong)destinationSizeInBytes, (ulong)sourceBytesToCopy);
         }
 
+        #region Non-standard overloads of BlockCopy
+
         public static void BlockCopy(
             byte[] source,
             int sourcePos,
@@ -68,7 +70,35 @@ namespace System
             int destinationPos,
             int count)
         {
-            Memory.MemoryMove(&source[sourcePos], &destination[destinationPos], (ulong)count);
+            BlockCopy(&source[sourcePos], &destination[destinationPos], count);
         }
+
+        public static void BlockCopy(
+            byte* source,
+            byte* destination,
+            int count)
+        {
+            Memory.MemoryMove(source, destination, (ulong)count);
+        }
+
+        public static void BlockCopy(
+            byte* source,
+            byte[] destination,
+            int destinationPos,
+            int count)
+        {
+            BlockCopy(source, &destination[destinationPos], count);
+        }
+
+        public static void BlockCopy(
+            byte[] source,
+            int sourcePos,
+            byte* destination,
+            int count)
+        {
+            BlockCopy(&source[sourcePos], destination, count);
+        }
+
+        #endregion
     }
 }
