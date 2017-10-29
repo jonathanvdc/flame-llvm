@@ -16,21 +16,22 @@ namespace System
         /// </summary>
         /// <param name="characters">The characters the string is composed of.</param>
         public String(char[] characters)
-            : this(characters, characters.Length)
+            : this(characters, 0, characters.Length)
         { }
 
         /// <summary>
-        /// Creates a string from the given sequence of characters.
+        /// Creates a string from a sequence of characters.
         /// </summary>
         /// <param name="characters">The characters the string is composed of.</param>
+        /// <param name="offset">The index of the first character to copy from the array.</param>
         /// <param name="length">The number of characters to copy from the array.</param>
-        public String(char[] characters, int length)
+        public String(char[] characters, int offset, int length)
         {
             // Copy the array to an array of our own.
             data = new char[length];
             for (int i = 0; i < length; i++)
             {
-                data[i] = characters[i];
+                data[i] = characters[i + offset];
             }
         }
 
@@ -222,7 +223,7 @@ namespace System
                     &utf16Buffer[utf16Length]);
             }
 
-            return new String(utf16Buffer, utf16Length);
+            return new String(utf16Buffer, 0, utf16Length);
         }
 
         /// <summary>
