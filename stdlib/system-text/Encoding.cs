@@ -168,6 +168,6 @@ namespace System.Text
         /// Gets an encoding for the UTF-16 format using the little endian byte order.
         /// </summary>
         /// <returns>An encoding for the UTF-16 format using the little endian byte order.</returns>
-        public static Encoding UnicodeEncoding => new UnicodeEncoding();
+        public static Encoding Unicode => new UnicodeEncoding();
     }
 }
