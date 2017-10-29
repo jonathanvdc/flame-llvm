@@ -70,6 +70,15 @@ namespace System.Text
         public abstract int GetMaxCharCount(int byteCount);
 
         /// <summary>
+        /// Obtains an encoder that can encode a range of characters as bytes.
+        /// </summary>
+        /// <returns>An encoder instance for this encoding.</returns>
+        public virtual Encoder GetEncoder()
+        {
+            return new DefaultEncoder(this);
+        }
+
+        /// <summary>
         /// Encodes a range of characters from a character array as an array of bytes.
         /// </summary>
         /// <param name="chars">The array of characters of which a range is to be encoded.</param>
@@ -169,5 +178,11 @@ namespace System.Text
         /// </summary>
         /// <returns>An encoding for the UTF-16 format using the little endian byte order.</returns>
         public static Encoding Unicode => new UnicodeEncoding();
+
+        /// <summary>
+        /// Gets an encoding for the UTF-8 format.
+        /// </summary>
+        /// <returns>An encoding for the UTF-8 format.</returns>
+        public static Encoding UTF8 => new UTF8Encoding();
     }
 }
