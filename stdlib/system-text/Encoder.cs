@@ -1,5 +1,8 @@
 namespace System.Text
 {
+    /// <summary>
+    /// A base class for objects that convert arrays of characters to bytes.
+    /// </summary>
     public abstract class Encoder
     {
         public abstract int GetBytes(

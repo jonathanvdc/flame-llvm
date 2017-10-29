@@ -79,6 +79,15 @@ namespace System.Text
         }
 
         /// <summary>
+        /// Obtains an decoder that can decode a range of bytes as characters.
+        /// </summary>
+        /// <returns>A decoder instance for this encoding.</returns>
+        public virtual Decoder GetDecoder()
+        {
+            return new DefaultDecoder(this);
+        }
+
+        /// <summary>
         /// Encodes a range of characters from a character array as an array of bytes.
         /// </summary>
         /// <param name="chars">The array of characters of which a range is to be encoded.</param>
