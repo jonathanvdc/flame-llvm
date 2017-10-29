@@ -6,6 +6,23 @@ namespace System
     public static class BitConverter
     {
         /// <summary>
+        /// Checks if this machine uses a little-endian encoding.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if this machine uses a little-endian encoding; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsLittleEndian
+        {
+            get
+            {
+                ushort s = 0xFF00;
+                var ptr = &s;
+                var firstByte = *(byte*)s;
+                return firstByte == 0x00;
+            }
+        }
+
+        /// <summary>
         /// Reinterprets a double-precision floating-point number's underlying storage
         /// as a 64-bit integer.
         /// </summary>
