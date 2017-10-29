@@ -121,5 +121,34 @@ namespace System.Text
                 chars.ToCharArray(index, count), 0, count,
                 bytes, byteIndex);
         }
+
+        /// <summary>
+        /// Decodes a range of bytes from a byte array into a character string.
+        /// </summary>
+        /// <param name="bytes">The array of bytes from which a range is decoded.</param>
+        /// <param name="index">The index of the first byte to decode.</param>
+        /// <param name="count">The number of bytes to decode.</param>
+        /// <returns>A character string.</returns>
+        public virtual string GetString(byte[] bytes, int index, int count)
+        {
+            // TODO: GetMaxCharCount may be excessively generous. On the other hand,
+            // the char array is temporary, so it might be cheaper to simply allocate
+            // a big block, fill it up and deallocate it as opposed to first decoding
+            // the bytes once to figure out their length, then allocating a buffer that
+            // is just big enough, filling it up and finally deallocating it.
+            var buffer = new char[GetMaxCharCount(count)];
+            int length = GetChars(bytes, index, count, buffer, 0);
+            return new String(buffer, 0, length);
+        }
+
+        /// <summary>
+        /// Decodes a byte array into a character string.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to decode.</param>
+        /// <returns>A character string.</returns>
+        public virtual string GetString(byte[] bytes)
+        {
+            return GetString(bytes, 0, bytes.Length);
+        }
     }
 }
