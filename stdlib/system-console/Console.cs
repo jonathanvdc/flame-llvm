@@ -4,6 +4,7 @@
 #importMacros(LeMP);
 
 using System.Primitives.IO;
+using System.Primitives.Text;
 
 namespace System
 {

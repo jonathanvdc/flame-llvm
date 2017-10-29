@@ -1,4 +1,4 @@
-namespace System
+namespace System.Primitives.Text
 {
     /// <summary>
     /// Contains functionality that helps parse UTF-8--encoded text.

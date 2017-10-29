@@ -1,4 +1,5 @@
 using System.Primitives.InteropServices;
+using System.Primitives.Text;
 using System.Runtime.InteropServices;
 
 namespace System
