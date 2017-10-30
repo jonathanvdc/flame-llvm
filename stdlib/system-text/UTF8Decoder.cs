@@ -74,6 +74,9 @@ namespace System.Text
             byte[] bytes, int byteIndex, int byteCount,
             char[] chars, int charIndex)
         {
+            // TODO: the logic in this algorithm is non-trivial. We should
+            // test UTF8Decoder extensively.
+
             // TODO: check that we're not overflowing any of these buffers here.
 
             int numCharsParsed = 0;
