@@ -62,8 +62,11 @@ namespace System.Primitives.Text
         /// </summary>
         /// <param name="data">The buffer to advance and read from.</param>
         /// <param name="end">The tail of the buffer to read from.</param>
+        /// <param name="eof">
+        /// Tells if the end of the buffer was reached before a code point could be decoded.
+        /// </param>
         /// <returns>A code point.</returns>
-        public static uint ReadUtf8CodePoint(ref byte* data, byte* end)
+        public static uint ReadUtf8CodePoint(ref byte* data, byte* end, out bool eof)
         {
             byte c = *data;
             int count = 0;
@@ -123,9 +126,24 @@ namespace System.Primitives.Text
                 data++;
                 if (cont == 0)
                 {
+                    eof = false;
                     return (uint)count;
                 }
             }
+            eof = true;
+            return BadCodePoint;
+        }
+
+        /// <summary>
+        /// Reads a UTF-8--encoded code point from the given buffer.
+        /// </summary>
+        /// <param name="data">The buffer to advance and read from.</param>
+        /// <param name="end">The tail of the buffer to read from.</param>
+        /// <returns>A code point.</returns>
+        public static uint ReadUtf8CodePoint(ref byte* data, byte* end)
+        {
+            bool eof;
+            return ReadUtf8CodePoint(ref data, end, out eof);
         }
 
         /// <summary>
