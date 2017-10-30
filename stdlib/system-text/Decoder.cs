@@ -22,5 +22,10 @@ namespace System.Text
         {
             return GetChars(bytes, byteIndex, byteCount, chars, charIndex);
         }
+
+        public virtual void Reset()
+        {
+
+        }
     }
 }
