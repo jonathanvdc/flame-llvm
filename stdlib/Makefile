@@ -16,12 +16,12 @@ system-text-libs = $(runtime-lib) bin/flo/corlib.flo
 system-io-files = \
 	system-io/*.cs
 
-system-io-libs = $(runtime-lib) bin/flo/corlib.flo
+system-io-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-text.flo
 
 system-console-files = \
 	system-console/*.cs
 
-system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-io.flo
+system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-text.flo bin/flo/system-io.flo
 
 common-options = -asm-version=0.1.0.0
 
