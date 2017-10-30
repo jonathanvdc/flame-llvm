@@ -37,28 +37,28 @@ include ../flame-make-scripts/use-ecsc.mk
 
 bin/flo/corlib.flo: $(corlib-files) $(corlib-libs) | ecsc
 	$(ECSC) $(corlib-files) \
-		-platform ir -environment llvm -Wno-build \
+		-platform ir -environment llvm -Wall -Wextra -Wno-build \
 		-rt-libs $(runtime-lib) \
 		-o $@ \
 		$(common-options) -asm-name=stdlib
 
 bin/flo/system-text.flo: $(system-text-files) $(system-text-libs) | ecsc
 	$(ECSC) $(system-text-files) \
-		-platform ir -environment llvm -Wno-build \
+		-platform ir -environment llvm -Wall -Wextra -Wno-build \
 		-rt-libs $(system-text-libs) \
 		-o $@ \
 		$(common-options) -asm-name=system-text
 
 bin/flo/system-io.flo: $(system-io-files) $(system-io-libs) | ecsc
 	$(ECSC) $(system-io-files) \
-		-platform ir -environment llvm -Wno-build \
+		-platform ir -environment llvm -Wall -Wextra -Wno-build \
 		-rt-libs $(system-io-libs) \
 		-o $@ \
 		$(common-options) -asm-name=system-io
 
 bin/flo/system-console.flo: $(system-console-files) $(system-console-libs) | ecsc
 	$(ECSC) $(system-console-files) \
-		-platform ir -environment llvm -Wno-build \
+		-platform ir -environment llvm -Wall -Wextra -Wno-build \
 		-rt-libs $(system-console-libs) \
 		-o $@ \
 		$(common-options) -asm-name=system-console
