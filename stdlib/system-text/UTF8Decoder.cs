@@ -2,7 +2,7 @@ using System.Primitives.Text;
 
 namespace System.Text
 {
-    public sealed class UTF8Decoder : Decoder
+    internal sealed class UTF8Decoder : Decoder
     {
         public UTF8Decoder()
         {
