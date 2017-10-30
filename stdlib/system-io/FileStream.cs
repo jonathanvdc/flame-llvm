@@ -8,6 +8,23 @@ namespace System.IO
     /// </summary>
     public unsafe class FileStream : Stream
     {
+        /// <summary>
+        /// Creates a file stream from the given handle and access.
+        /// </summary>
+        /// <param name="fileHandle">A file handle.</param>
+        /// <param name="access">A file access specifier</param>
+        public FileStream(IntPtr fileHandle, FileAccess access)
+        {
+            if (fileHandle == IntPtr.Zero)
+            {
+                throw new ArgumentNullException("fileHandle");
+            }
+
+            this.Name = null;
+            this.access = access;
+            this.fileHandle = fileHandle.ToPointer();
+        }
+
         public FileStream(string name, FileMode mode)
             : this(
                 name,
