@@ -95,6 +95,21 @@ namespace System.Primitives.IO
         private extern static void* stderr;
 
         /// <summary>
+        /// Gets a file handle for the standard error stream.
+        /// </summary>
+        public static void* StandardErrorFile => stderr;
+
+        /// <summary>
+        /// Gets a file handle for the standard input stream.
+        /// </summary>
+        public static void* StandardInputFile => stdin;
+
+        /// <summary>
+        /// Gets a file handle for the standard output stream.
+        /// </summary>
+        public static void* StandardOutputFile => stdout;
+
+        /// <summary>
         /// Writes a single byte to standard output.
         /// </summary>
         /// <param name="b">The byte to write.</param>
