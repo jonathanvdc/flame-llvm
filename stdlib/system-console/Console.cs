@@ -5,104 +5,42 @@
 
 using System.Primitives.IO;
 using System.Primitives.Text;
+using System.IO;
+using System.Text;
 
 namespace System
 {
     public static class Console
     {
-        private static readonly byte[] utf8Buffer = new byte[4];
-        private static readonly char[] utf16Buffer = new char[2];
-        private static char cachedHighSurrogate = '\0';
-
-        private static void WriteUtf8Bytes(byte[] str, int count)
+        static Console()
         {
-            for (int i = 0; i < count; i++)
-            {
-                IOPrimitives.WriteStdout(str[i]);
-            }
-        }
+            Error = new StreamWriter(
+                new FileStream((IntPtr)IOPrimitives.StandardErrorFile, FileAccess.Write),
+                Encoding.UTF8);
 
-        private static void WriteUtf16CodePoint(char* begin, char* end)
-        {
-            int byteCount = UnicodeConverter.WriteUtf8CodePoint(
-                UnicodeConverter.ReadUtf16CodePoint(ref begin, end),
-                &utf8Buffer[0]);
-
-            WriteUtf8Bytes(utf8Buffer, byteCount);
+            Out = new StreamWriter(
+                new FileStream((IntPtr)IOPrimitives.StandardOutputFile, FileAccess.Write),
+                Encoding.UTF8);
         }
 
         /// <summary>
-        /// Writes a character to standard output.
+        /// Gets or sets the standard error text writer.
         /// </summary>
-        /// <param name="c">The character to write.</param>
-        public static void Write(char c)
-        {
-            char highSurrogate = cachedHighSurrogate;
-            if (highSurrogate == '\0')
-            {
-                if (char.IsHighSurrogate(c))
-                {
-                    // We'll remember high surrogates instead of printing them
-                    // right away. (They need to be matched to a low surrogate,
-                    // which is yet to come.)
-                    cachedHighSurrogate = c;
-                }
-                else
-                {
-                    // This character represents a single code point write it
-                    // to standard output immediately.
-                    char* argBegin = &c;
-                    WriteUtf16CodePoint(argBegin, argBegin + 1);
-                }
-            }
-            else
-            {
-                cachedHighSurrogate = '\0';
-                if (char.IsLowSurrogate(c))
-                {
-                    // Copy both characters in the surrogate pair into the UTF-16
-                    // buffer, transcribe the UTF-16 buffer's contents into UTF-8
-                    // and write the result to standard output.
-                    utf16Buffer[0] = highSurrogate;
-                    utf16Buffer[1] = c;
-                    char* argBegin = &utf16Buffer[0];
-                    WriteUtf16CodePoint(argBegin, argBegin + 2);
-                }
-                else
-                {
-                    // Bad surrogate pair. Write both characters individually.
-                    char* argBegin = &highSurrogate;
-                    WriteUtf16CodePoint(argBegin, argBegin + 1);
-                    argBegin = &c;
-                    WriteUtf16CodePoint(argBegin, argBegin + 1);
-                }
-            }
-        }
+        /// <returns>The standard error text writer.</returns>
+        public static TextWriter Error { get; set; }
+
+        /// <summary>
+        /// Gets or sets the standard output text writer.
+        /// </summary>
+        /// <returns>The standard output text writer.</returns>
+        public static TextWriter Out { get; set; }
 
         /// <summary>
         /// Flushes the standard output buffer.
         /// </summary>
         public static void Flush()
         {
-            char highSurrogate = cachedHighSurrogate;
-            if (highSurrogate != '\0')
-            {
-                cachedHighSurrogate = '\0';
-                char* argBegin = &highSurrogate;
-                WriteUtf16CodePoint(argBegin, argBegin + 1);
-            }
-        }
-
-        /// <summary>
-        /// Writes a string to standard output.
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        public static void Write(string str)
-        {
-            for (int i = 0; i < str.Length; i++)
-            {
-                Write(str[i]);
-            }
+            Out.Flush();
         }
 
         /// <summary>
@@ -110,30 +48,14 @@ namespace System
         /// </summary>
         public static void WriteLine()
         {
-            Write('\n');
+            Out.WriteLine();
         }
 
-        /// <summary>
-        /// Writes a character to standard output, followed by an end-of-line sequence.
-        /// </summary>
-        /// <param name="c">The character to write.</param>
-        public static void WriteLine(char c)
-        {
-            Write(c);
-            WriteLine();
-        }
-
-        /// <summary>
-        /// Writes a string to standard output, followed by an end-of-line sequence.
-        /// </summary>
-        /// <param name="str">The string to write.</param>
-        public static void WriteLine(string str)
-        {
-            Write(str);
-            WriteLine();
-        }
-
-        unroll ((TYPE) in (bool, int, long, double))
+        unroll ((TYPE) in (
+            char, string, bool, object,
+            sbyte, short, int, long,
+            byte, ushort, uint, ulong,
+            float, double))
         {
             /// <summary>
             /// Writes the given value to standard output.
@@ -141,7 +63,7 @@ namespace System
             /// <param name="value">The value to write.</param>
             public static void Write(TYPE value)
             {
-                Write(value.ToString());
+                Out.Write(value.ToString());
             }
 
             /// <summary>
@@ -150,8 +72,7 @@ namespace System
             /// <param name="value">The value to write.</param>
             public static void WriteLine(TYPE value)
             {
-                Write(value);
-                WriteLine();
+                Out.WriteLine(value);
             }
         }
     }
