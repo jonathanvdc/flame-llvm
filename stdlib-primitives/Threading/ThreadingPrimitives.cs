@@ -38,28 +38,30 @@ namespace System.Primitives.Threading
         /// </summary>
         /// <param name="startRoutine">The routine run by the thread.</param>
         /// <param name="threadId">The thread's identifier.</param>
-        /// <returns>An error code. A nonzero exit code indicates failure.</returns>
-        public static int CreateThread(
+        /// <returns><c>true</c> if the thread was created successfully; otherwise, <c>false</c>.</returns>
+        public static bool CreateThread(
             ThreadStartRoutine startRoutine,
             out ThreadId threadId)
         {
             threadId = default(ThreadId);
             var startRoutinePtr = #builtin_ref_to_ptr(startRoutine);
-            return pthread_create(
+            int errorCode = pthread_create(
                 &threadId.id,
                 (pthread_attr_t*)null,
                 LoadDelegateFunctionPointerInternal(RunStartRoutine),
                 startRoutinePtr);
+            return errorCode == 0;
         }
 
         /// <summary>
         /// Waits for the thread with the given identifier to complete.
         /// </summary>
         /// <param name="threadId">A thread identifier.</param>
-        /// <returns>An error code. A nonzero exit code indicates failure.</returns>
-        public static int JoinThread(ThreadId threadId)
+        /// <returns><c>true</c> if the thread was joined successfully; otherwise, <c>false</c>.</returns>
+        public static bool JoinThread(ThreadId threadId)
         {
-            return pthread_join(threadId.id, (void* *)null);
+            int errorCode = pthread_join(threadId.id, (void* *)null);
+            return errorCode == 0;
         }
 
         private static void* RunStartRoutine(
