@@ -109,7 +109,7 @@ flame-llvm program.flo /path/to/flame-llvm-repo/stdlib/flo/corlib.flo --platform
 -o program.ll
 
 # Compile the LLVM IR to an executable. Link in the runtime and libgc.
-clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -lc++abi -Wno-override-module -o a.out
+clang program.ll /path/to/flame-llvm-repo/runtime/bin/native/runtime.o -lgc -lc++abi -pthreads -Wno-override-module -o a.out
 ```
 
 ## Feature status
