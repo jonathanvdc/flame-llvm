@@ -14,26 +14,68 @@ namespace System
     {
         static Console()
         {
-            Error = new StreamWriter(
-                new FileStream((IntPtr)IOPrimitives.StandardErrorFile, FileAccess.Write),
-                Encoding.UTF8);
+            stderr = new FileStream(
+                (IntPtr)IOPrimitives.StandardErrorFile,
+                FileAccess.Write);
 
-            Out = new StreamWriter(
-                new FileStream((IntPtr)IOPrimitives.StandardOutputFile, FileAccess.Write),
-                Encoding.UTF8);
+            stdout = new FileStream(
+                (IntPtr)IOPrimitives.StandardOutputFile,
+                FileAccess.Write);
+
+            Error = new StreamWriter(stderr, Encoding.UTF8);
+            Out = new StreamWriter(stdout, Encoding.UTF8);
+        }
+
+        private static readonly FileStream stderr;
+        private static readonly FileStream stdout; 
+
+        /// <summary>
+        /// Gets the standard error text writer.
+        /// </summary>
+        /// <returns>The standard error text writer.</returns>
+        public static TextWriter Error { get; private set; }
+
+        /// <summary>
+        /// Gets the standard output text writer.
+        /// </summary>
+        /// <returns>The standard output text writer.</returns>
+        public static TextWriter Out { get; private set; }
+
+        /// <summary>
+        /// Sets the standard error text writer.
+        /// </summary>
+        /// <param name="writer">A new error text writer.</param>
+        public static void SetError(TextWriter writer)
+        {
+            Error = writer;
         }
 
         /// <summary>
-        /// Gets or sets the standard error text writer.
+        /// Sets the standard output text writer.
         /// </summary>
-        /// <returns>The standard error text writer.</returns>
-        public static TextWriter Error { get; set; }
+        /// <param name="writer">A new output text writer.</param>
+        public static void SetOut(TextWriter writer)
+        {
+            Out = writer;
+        }
 
         /// <summary>
-        /// Gets or sets the standard output text writer.
+        /// Acquires the standard error stream.
         /// </summary>
-        /// <returns>The standard output text writer.</returns>
-        public static TextWriter Out { get; set; }
+        /// <returns>The standard error stream.</returns>
+        public Stream OpenStandardError()
+        {
+            return stderr;
+        }
+
+        /// <summary>
+        /// Acquires the standard output stream.
+        /// </summary>
+        /// <returns>The standard output stream.</returns>
+        public Stream OpenStandardOutput()
+        {
+            return stdout;
+        }
 
         /// <summary>
         /// Flushes the standard output buffer.
@@ -58,7 +100,7 @@ namespace System
             float, double))
         {
             /// <summary>
-            /// Writes the given value to standard output.
+            /// Writes a value to standard output.
             /// </summary>
             /// <param name="value">The value to write.</param>
             public static void Write(TYPE value)
@@ -67,7 +109,7 @@ namespace System
             }
 
             /// <summary>
-            /// Writes the given value to standard output, followed by an end-of-line sequence.
+            /// Writes a value to standard output, followed by an end-of-line sequence.
             /// </summary>
             /// <param name="value">The value to write.</param>
             public static void WriteLine(TYPE value)
