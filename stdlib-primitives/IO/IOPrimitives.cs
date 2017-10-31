@@ -7,6 +7,7 @@ namespace System.Primitives.IO
     {
         private extern static int fgetc(void* file);
         private extern static int fputc(int ch, void* file);
+        private extern static int fputs(byte* str, void* file);
 
         private extern static void* fopen(byte* name, byte* mode);
         private extern static void fclose(void* stream);
@@ -88,6 +89,16 @@ namespace System.Primitives.IO
         public static ulong WriteToFile(byte* buffer, ulong count, void* stream)
         {
             return (ulong)fwrite(buffer, (size_t)1u, (size_t)count, stream);
+        }
+
+        /// <summary>
+        /// Writes a C-style string to a file.
+        /// </summary>
+        /// <param name="str">The string to write.</param>
+        /// <param name="stream">The file to write the string to.</param>
+        public static void WriteCStringToFile(byte* str, void* stream)
+        {
+            fputs(str, stream);
         }
 
         private extern static void* stdin;

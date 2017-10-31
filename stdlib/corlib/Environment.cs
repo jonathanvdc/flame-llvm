@@ -1,9 +1,12 @@
+using System.Runtime.InteropServices;
+using System.Primitives.IO;
+
 namespace System
 {
     /// <summary>
     /// Defines logic that allows an application to interact with its environment.
     /// </summary>
-    public static class Environment
+    public static unsafe class Environment
     {
         /// <summary>
         /// Initializes the environment.
@@ -28,6 +31,27 @@ namespace System
                 stringArray[i - 1] = String.FromCString(argv[i]);
             }
             return stringArray;
+        }
+
+        /// <summary>
+        /// Handles a fatal exception.
+        /// </summary>
+        /// <param name="ex">The exception to handle.</param>
+        [#builtin_hidden]
+        public static void HandleFatalException(Exception ex)
+        {
+            // We can't use the Console class here (because it is
+            // defined in a library that depends on this one).
+            // Instead, we'll use IO primitives, which have the
+            // added advantage of being leaner.
+            var errorMessage = Marshal.StringToHGlobalAnsi(
+                "A fatal exception was thrown.\n" + ex.Message);
+
+            IOPrimitives.WriteCStringToFile(
+                (byte*)errorMessage.ToPointer(),
+                IOPrimitives.StandardErrorFile);
+
+            Marshal.FreeHGlobal(errorMessage);
         }
 
         /// <summary>
