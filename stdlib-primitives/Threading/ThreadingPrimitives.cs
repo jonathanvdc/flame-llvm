@@ -16,6 +16,17 @@ namespace System.Primitives.Threading
         internal pthread_t id;
     }
 
+    public enum ThreadResultCode : int
+    {
+        Success = 0,
+
+        Deadlock = 9975,
+
+        InvalidOperation = 9943,
+
+        ThreadNotFound = 9969
+    }
+
     public static class ThreadingPrimitives
     {
         /// <summary>
@@ -38,30 +49,28 @@ namespace System.Primitives.Threading
         /// </summary>
         /// <param name="startRoutine">The routine run by the thread.</param>
         /// <param name="threadId">The thread's identifier.</param>
-        /// <returns><c>true</c> if the thread was created successfully; otherwise, <c>false</c>.</returns>
-        public static bool CreateThread(
+        /// <returns>A result code.</returns>
+        public static ThreadResultCode CreateThread(
             ThreadStartRoutine startRoutine,
             out ThreadId threadId)
         {
             threadId = default(ThreadId);
             var startRoutinePtr = #builtin_ref_to_ptr(startRoutine);
-            int errorCode = pthread_create(
+            return (ThreadResultCode)pthread_create(
                 &threadId.id,
                 (pthread_attr_t*)null,
                 LoadDelegateFunctionPointerInternal(RunStartRoutine),
                 startRoutinePtr);
-            return errorCode == 0;
         }
 
         /// <summary>
         /// Waits for the thread with the given identifier to complete.
         /// </summary>
         /// <param name="threadId">A thread identifier.</param>
-        /// <returns><c>true</c> if the thread was joined successfully; otherwise, <c>false</c>.</returns>
-        public static bool JoinThread(ThreadId threadId)
+        /// <returns>A result code.</returns>
+        public static ThreadResultCode JoinThread(ThreadId threadId)
         {
-            int errorCode = pthread_join(threadId.id, (void* *)null);
-            return errorCode == 0;
+            return (ThreadResultCode)pthread_join(threadId.id, (void* *)null);
         }
 
         private static void* RunStartRoutine(
