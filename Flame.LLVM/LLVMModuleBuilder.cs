@@ -889,14 +889,14 @@ namespace Flame.LLVM
             // Or, using gotos:
             //
             //         if (is_running_cctors_here) goto after_cctor;
-            //         else goto check_running_cctors_here;
+            //         else goto check_has_run_cctor;
             //
             //     check_has_run_cctor:
+            //         is_running_cctors_here = true;
             //         if (has_run_cctor) goto after_cctor;
             //         else goto wait_for_cctor_lock;
             //
             //     wait_for_cctor_lock:
-            //         is_running_cctors_here = true;
             //         has_exchanged = Interlocked.CompareExchange(ref is_running_cctos, false, true);
             //         if (has_exchanged) goto maybe_run_cctor;
             //         else goto wait_for_cctor_lock;
@@ -941,6 +941,11 @@ namespace Flame.LLVM
                 checkHasRunBlock.Block);
 
             // Implement the `check_has_run_cctor` block.
+            WithMetadata(
+                BuildStore(checkHasRunBlock.Builder, ConstInt(Int1Type(), 1, false), isRunningHerePtr),
+                invariantGroupMdId,
+                invariantGroup);
+
             BuildCondBr(
                 checkHasRunBlock.Builder,
                 IntToBoolean(
@@ -950,11 +955,6 @@ namespace Flame.LLVM
                 waitForLockBlock.Block);
 
             // Implement the `wait_for_cctor_lock` block.
-            WithMetadata(
-                BuildStore(waitForLockBlock.Builder, ConstInt(Int1Type(), 1, false), isRunningHerePtr),
-                invariantGroupMdId,
-                invariantGroup);
-
             var cmpxhg = BuildAtomicCmpXchg(
                 waitForLockBlock.Builder,
                 isRunningPtr,
