@@ -22,8 +22,8 @@ namespace System
                 (IntPtr)IOPrimitives.StandardOutputFile,
                 FileAccess.Write);
 
-            Error = new StreamWriter(stderr, Encoding.UTF8);
-            Out = new StreamWriter(stdout, Encoding.UTF8);
+            Error = TextWriter.Synchronized(new StreamWriter(stderr, Encoding.UTF8));
+            Out = TextWriter.Synchronized(new StreamWriter(stdout, Encoding.UTF8));
         }
 
         private static readonly FileStream stderr;
