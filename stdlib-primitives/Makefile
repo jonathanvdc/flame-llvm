@@ -2,6 +2,7 @@ files = \
 	*.cs \
 	IO/*.cs \
 	Text/*.cs \
+	Threading/*.cs \
 	Runtime/InteropServices/*.cs
 
 libs = ../runtime/bin/flo/runtime.flo
