@@ -55,8 +55,12 @@ namespace System.IO
         protected virtual void Dispose(bool disposing) { }
         public virtual void Flush() { }
 
-        public static readonly TextWriter Null;
-        public static TextWriter Synchronized(TextWriter writer) { throw null; }
+        public static readonly TextWriter Null = new NullTextWriter();
+
+        public static TextWriter Synchronized(TextWriter writer)
+        {
+            return new SynchronizedTextWriter(writer);
+        }
 
         /// <summary>
         /// Prints out a character.
@@ -198,6 +202,220 @@ namespace System.IO
         public virtual void WriteLine()
         {
             Write(CoreNewLine);
+        }
+    }
+
+    internal sealed class NullTextWriter : TextWriter
+    {
+        public NullTextWriter()
+        { }
+
+        /// <inheritdoc/>
+        public override Encoding Encoding => null;
+
+        /// <inheritdoc/>
+        public override void Write(char value)
+        {
+            // Do nothing.
+        }
+
+        /// <inheritdoc/>
+        public override void Write(string value)
+        {
+            // Do nothing.
+        }
+
+        /// <inheritdoc/>
+        public override void Write(char[] buffer, int index, int count)
+        {
+            // Do nothing.
+        }
+    }
+
+    internal sealed class SynchronizedTextWriter : TextWriter
+    {
+        public SynchronizedTextWriter(TextWriter writer)
+        {
+            this.writer = writer;
+        }
+
+        private TextWriter writer;
+
+        private void AcquireLock()
+        {
+            // TODO: implement this
+        }
+
+        private void ReleaseLock()
+        {
+            // TODO: implement this
+        }
+
+        /// <inheritdoc/>
+        public override Encoding Encoding => writer.Encoding;
+
+        /// <inheritdoc/>
+        public override string NewLine
+        {
+            get => writer.NewLine;
+            set
+            {
+                AcquireLock();
+                try
+                {
+                    writer.NewLine = value;
+                }
+                finally
+                {
+                    ReleaseLock();
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Close()
+        {
+            AcquireLock();
+            try
+            {
+                writer.Close();
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            AcquireLock();
+            try
+            {
+                writer.Dispose();
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Flush()
+        {
+            AcquireLock();
+            try
+            {
+                writer.Flush();
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Write(char[] buffer)
+        {
+            AcquireLock();
+            try
+            {
+                writer.Write(buffer);
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void WriteLine(char[] buffer)
+        {
+            AcquireLock();
+            try
+            {
+                writer.WriteLine(buffer);
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Write(char[] buffer, int index, int count)
+        {
+            AcquireLock();
+            try
+            {
+                writer.Write(buffer, index, count);
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void WriteLine(char[] buffer, int index, int count)
+        {
+            AcquireLock();
+            try
+            {
+                writer.WriteLine(buffer, index, count);
+            }
+            finally
+            {
+                ReleaseLock();
+            }
+        }
+
+        unroll ((TYPE) in (
+            char, bool, string, object,
+            sbyte, byte, short, ushort, int, uint, long, ulong,
+            float, double))
+        {
+            /// <inheritdoc/>
+            public override void Write(TYPE value)
+            {
+                AcquireLock();
+                try
+                {
+                    writer.Write(value);
+                }
+                finally
+                {
+                    ReleaseLock();
+                }
+            }
+
+            /// <inheritdoc/>
+            public override void WriteLine(TYPE value)
+            {
+                AcquireLock();
+                try
+                {
+                    writer.WriteLine(value);
+                }
+                finally
+                {
+                    ReleaseLock();
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void WriteLine()
+        {
+            AcquireLock();
+            try
+            {
+                writer.WriteLine();
+            }
+            finally
+            {
+                ReleaseLock();
+            }
         }
     }
 }
