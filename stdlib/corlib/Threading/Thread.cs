@@ -15,7 +15,7 @@ namespace System.Threading
         /// <param name="start">The function that is run when the thread is started.</param>
         public Thread(ThreadStart start)
         {
-            this.entryPoint = entryPoint;
+            this.entryPoint = start;
             this.IsAlive = false;
         }
 
@@ -40,11 +40,12 @@ namespace System.Threading
                 throw new InvalidOperationException("Thread instance has already been started.");
             }
 
-            if (!ThreadingPrimitives.CreateThread(entryPoint.Invoke, out id))
+            if (ThreadingPrimitives.CreateThread(entryPoint.Invoke, out id) != ThreadResultCode.Success)
             {
                 throw new Exception("An error occurred while trying to start a new thread.");
             }
             entryPoint = null;
+            IsAlive = true;
         }
 
         /// <summary>
@@ -58,9 +59,23 @@ namespace System.Threading
             }
             IsAlive = false;
 
-            if (!ThreadingPrimitives.JoinThread(id))
+            var resultCode = ThreadingPrimitives.JoinThread(id);
+            switch (resultCode)
             {
-                throw new Exception("An error occurred while trying to join threads.");
+                case ThreadResultCode.Success:
+                    break;
+
+                case ThreadResultCode.Deadlock:
+                    throw new InvalidOperationException("Deadlock was detected while joining threads.");
+
+                case ThreadResultCode.InvalidOperation:
+                    throw new InvalidOperationException("Cannot join threads.");
+
+                case ThreadResultCode.ThreadNotFound:
+                    throw new InvalidOperationException("Unknown thread.");
+
+                default:
+                    throw new Exception("An error occurred while trying to join threads.");
             }
         }
     }
