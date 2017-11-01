@@ -1,17 +1,18 @@
+#importMacros(LeMP.CSharp6);
+
 namespace System.Collections.Generic
 {
     /// <summary>
     /// A strongly-typed array list.
     /// </summary>
-    public class List<T> : Object, IEnumerable<T>
+    public class List<T> : Object, IEnumerable<T>, ICollection<T>
     {
         /// <summary>
         /// Creates an empty list.
         /// </summary>
         public List()
         {
-            this.contents = new T[initialCapacity];
-            this.size = 0;
+            Clear();
         }
 
         private T[] contents;
@@ -28,6 +29,9 @@ namespace System.Collections.Generic
         /// Gets the list's current size.
         /// </summary>
         public int Count => size;
+
+        /// <inheritdoc/>
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Gets or sets the nth element in this list.
@@ -56,6 +60,102 @@ namespace System.Collections.Generic
 
             contents[size] = value;
             size++;
+        }
+
+        /// <summary>
+        /// Checks if the list contains a value.
+        /// </summary>
+        /// <param name="value">A value.</param>
+        /// <returns>
+        /// <c>true</c> if the list contains the value; otherwise, <c>false</c>.
+        /// </returns>
+        public bool Contains(T value)
+        {
+            return IndexOf(value) >= 0;
+        }
+
+        /// <summary>
+        /// Gets the index in the list of the first occurrence of a value.
+        /// </summary>
+        /// <param name="value">A value.</param>
+        /// <returns>
+        /// The index of the first occurrence of a value, if it is in the list;
+        /// otherwise, a negative value.
+        /// </returns>
+        public int IndexOf(T value)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                if (object.Equals(contents[i], value))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Copies the contents of the list to an array, starting
+        /// at an offset in the array.
+        /// </summary>
+        /// <param name="destination">The destination array.</param>
+        /// <param name="offset">
+        /// The offset where the first element of this list is placed.
+        /// </param>
+        public unsafe void CopyTo(T[] destination, int offset)
+        {
+            if (destination.Length - offset < Count)
+            {
+                throw new ArgumentException(
+                    nameof(destination),
+                    "Destination array is not large enough.");
+            }
+
+            Array.Copy<T>(contents, 0, destination, offset, size);
+        }
+
+        /// <summary>
+        /// Removes all elements from the list.
+        /// </summary>
+        public void Clear()
+        {
+            this.contents = new T[initialCapacity];
+            this.size = 0;
+        }
+
+        /// <summary>
+        /// Copies the contents of the list to an array.
+        /// </summary>
+        /// <returns>An array containing the list's elements.</returns>
+        public T[] ToArray()
+        {
+            var array = new T[Count];
+            CopyTo(array, 0);
+            return array;
+        }
+
+        /// <summary>
+        /// Removes the first occurrence of an element from the list.
+        /// </summary>
+        /// <param name="value">The value to remove.</param>
+        /// <returns>
+        /// <c>true</c> an element was removed; otherwise, <c>false</c>.
+        /// </returns>
+        public bool Remove(T value)
+        {
+            int index = IndexOf(value);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            MoveSublist(index + 1, index, Count - index - 1);
+            size--;
+        }
+
+        private void MoveSublist(int oldIndex, int newIndex, int newLength)
+        {
+            Array.Copy<T>(contents, oldIndex, contents, newIndex, newLength);
         }
 
         /// <summary>
