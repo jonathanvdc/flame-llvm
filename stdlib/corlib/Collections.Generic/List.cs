@@ -36,10 +36,12 @@ namespace System.Collections.Generic
         {
             get
             {
+                EnsureInBounds(index);
                 return contents[index];
             }
             set
             {
+                EnsureInBounds(index);
                 contents[index] = value;
             }
         }
@@ -89,6 +91,14 @@ namespace System.Collections.Generic
         public IEnumerator<T> GetEnumerator()
         {
             return new ArrayEnumerator<T>(contents, 0, size);
+        }
+
+        private void EnsureInBounds(int index)
+        {
+            if (index >= size)
+            {
+                throw new IndexOutOfRangeException();
+            }
         }
     }
 
