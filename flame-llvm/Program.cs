@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Flame.Build;
 using Flame.Compiler;
+using Flame.Compiler.Emit;
 using Flame.Compiler.Expressions;
 using Flame.Compiler.Statements;
 using Flame.Compiler.Variables;
@@ -90,10 +91,19 @@ namespace Flame.LLVM
             //     [#builtin_llvm_linkage(external)]
             //     public static int main(int argc, byte** argv)
             //     {
-            //         return actual_entry_point(...);
-            //         // --or--
-            //         actual_entry_point(...);
-            //         return 0;
+            //         try
+            //         {
+            //             var parsedArgs = Environment.Initialize(argc, argv);
+            //             return actual_entry_point(...);
+            //             // --or--
+            //             actual_entry_point(...);
+            //             return 0;
+            //         }
+            //         catch (Exception ex)
+            //         {
+            //             Environment.HandleFatalException(ex);
+            //             return 1;
+            //         }
             //     }
             // }
 
@@ -132,6 +142,34 @@ namespace Flame.LLVM
                         new ExpressionStatement(epCall),
                         new ReturnStatement(new IntegerExpression(0))
                     });
+
+            var handleExceptionMethod = BindEnvironmentHandleFatalExceptionMethod(Binder);
+            if (handleExceptionMethod != null)
+            {
+                var exceptionParam = handleExceptionMethod.Parameters.Single<IParameter>();
+                var catchClause = new CatchClause(
+                    new DescribedVariableMember(
+                        exceptionParam.Name,
+                        exceptionParam.ParameterType));
+
+                catchClause.Body = new BlockStatement(new IStatement[]
+                {
+                    new ExpressionStatement(
+                        new InvocationExpression(
+                            handleExceptionMethod,
+                            null,
+                            new IExpression[]
+                            {
+                                catchClause.ExceptionVariable.CreateGetExpression()
+                            })),
+
+                    new ReturnStatement(new IntegerExpression(1))
+                });
+
+                mainThunk.Body = new TryStatement(
+                    mainThunk.Body,
+                    new CatchClause[] { catchClause });
+            }
 
             epType.AddMethod(mainThunk);
             mainAsm.AddType(epType);
@@ -243,6 +281,31 @@ namespace Flame.LLVM
                 true,
                 PrimitiveTypes.String.MakeArrayType(1),
                 GetParameterTypes(MainThunk));
+        }
+
+        private static IMethod BindEnvironmentHandleFatalExceptionMethod(
+            IBinder Binder)
+        {
+            var envType = Binder.BindType(new SimpleName("Environment").Qualify("System"));
+            if (envType == null)
+            {
+                return null;
+            }
+
+            var name = new SimpleName("HandleFatalException");
+            IMethod result = null;
+            foreach (var item in envType.Methods)
+            {
+                if (item.IsStatic
+                    && !item.IsConstructor
+                    && item.Name.Equals(name)
+                    && item.Parameters.Count<IParameter>() == 1)
+                {
+                    result = item;
+                }
+            }
+
+            return result;
         }
 
         private static IType[] GetParameterTypes(IMethod Method)
