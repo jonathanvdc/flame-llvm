@@ -1,5 +1,3 @@
-#importMacros(LeMP.CSharp6);
-
 namespace System
 {
     // TODO: tweak the compiler to make all arrays implement 'System.Array'.
