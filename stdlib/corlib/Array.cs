@@ -27,6 +27,9 @@ namespace System
             T[] destination, int destinationIndex,
             int length)
         {
+            if (length == 0)
+                return;
+
             EnsureValidRange(
                 nameof(sourceIndex), nameof(source),
                 sourceIndex, length, source.Length);
@@ -39,7 +42,7 @@ namespace System
                 &source[sourceIndex],
                 &destination[destinationIndex],
                 (destination.Length - destinationIndex) * sizeof(T),
-                (length - sourceIndex) * sizeof(T));
+                length * sizeof(T));
         }
 
         internal static bool IsValidRange(int rangeStart, int rangeLength, int dataLength)
@@ -58,7 +61,8 @@ namespace System
                 throw new ArgumentOutOfRangeException(
                     argName,
                     rangeStart,
-                    arrayName + " array range [" + rangeStart + ", " + rangeStart + rangeLength + ") is out of bounds.");
+                    arrayName + " array range [" + rangeStart +
+                    ", " + (rangeStart + rangeLength) + ") is out of bounds.");
             }
         }
 
@@ -69,7 +73,7 @@ namespace System
             if (argValue >= arrayLength)
             {
                 throw new ArgumentOutOfRangeException(
-                    nameof(argName),
+                    argName,
                     argValue,
                     argName + " is greater than the length of the " + arrayName + " array.");
             }
