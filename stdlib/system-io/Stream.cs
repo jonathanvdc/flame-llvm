@@ -1,8 +1,6 @@
 // Code based on https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/IO/Stream.cs,
 // licensed from the .NET foundation under the MIT license.
 
-#importMacros(LeMP.CSharp6);
-
 namespace System.IO
 {
     public abstract class Stream : IDisposable

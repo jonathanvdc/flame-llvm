@@ -1,5 +1,3 @@
-#importMacros(LeMP.CSharp6);
-
 namespace System
 {
     // TODO: ArraySegment<T> is not feature-complete yet. It lacks

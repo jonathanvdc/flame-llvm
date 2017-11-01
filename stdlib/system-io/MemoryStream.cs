@@ -1,8 +1,6 @@
 // Code based on https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/IO/MemoryStream.cs,
 // licensed from the .NET foundation under the MIT license.
 
-#importMacros(LeMP.CSharp6);
-
 namespace System.IO
 {
     // A MemoryStream represents a Stream in memory (ie, it has no backing store).
