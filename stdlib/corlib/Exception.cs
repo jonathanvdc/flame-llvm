@@ -55,7 +55,8 @@ namespace System
         (InvalidOperationException, SystemException, "Operation is not valid due to the current state of the object."),
         (NotSupportedException, SystemException, "Specified method is not supported."),
         (NotImplementedException, SystemException, "Specified functionality is not implemented."),
-        (UnauthorizedAccessException, SystemException, "Unauthorized access.")))
+        (UnauthorizedAccessException, SystemException, "Unauthorized access."),
+        (IndexOutOfRangeException, SystemException, "Index was outside the bounds of the array.")))
     {
         public class TYPE : BASE_TYPE
         {
