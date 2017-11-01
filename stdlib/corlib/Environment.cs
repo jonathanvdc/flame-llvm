@@ -45,7 +45,8 @@ namespace System
             // Instead, we'll use IO primitives, which have the
             // added advantage of being leaner.
             var errorMessage = Marshal.StringToHGlobalAnsi(
-                "A fatal exception was thrown.\n" + ex.Message);
+                "error: a fatal exception was thrown." + NewLine +
+                "Exception message: " + ex.Message + NewLine);
 
             IOPrimitives.WriteCStringToFile(
                 (byte*)errorMessage.ToPointer(),
