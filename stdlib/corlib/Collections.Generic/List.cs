@@ -1,11 +1,9 @@
-#importMacros(LeMP.CSharp6);
-
 namespace System.Collections.Generic
 {
     /// <summary>
     /// A strongly-typed array list.
     /// </summary>
-    public class List<T> : Object, IEnumerable<T>, ICollection<T>
+    public class List<T> : Object, IList<T>, IReadOnlyList<T>
     {
         /// <summary>
         /// Creates an empty list.
@@ -112,6 +110,10 @@ namespace System.Collections.Generic
             }
 
             Array.Copy<T>(contents, 0, destination, offset, size);
+            // for (int i = 0; i < size; i++)
+            // {
+            //     destination[offset + i] = contents[i];
+            // }
         }
 
         /// <summary>
@@ -135,6 +137,24 @@ namespace System.Collections.Generic
         }
 
         /// <summary>
+        /// Inserts a value at a specific index in the list.
+        /// </summary>
+        /// <param name="index">The index to insert the value at.</param>
+        /// <param name="value">The value to insert.</param>
+        public void Insert(int index, T value)
+        {
+            if (index >= size + 1)
+            {
+                throw new IndexOutOfRangeException();
+            }
+            
+            EnsureCapacity(size + 1);
+            MoveSublist(index, index + 1, Count - index);
+            contents[index] = value;
+            size++;
+        }
+
+        /// <summary>
         /// Removes the first occurrence of an element from the list.
         /// </summary>
         /// <param name="value">The value to remove.</param>
@@ -148,6 +168,20 @@ namespace System.Collections.Generic
             {
                 return false;
             }
+            else
+            {
+                RemoveAt(index);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Removes the element at a particular index in the list.
+        /// </summary>
+        /// <param name="index">The index of the element to remove.</param>
+        public void RemoveAt(int index)
+        {
+            EnsureInBounds(index);
 
             MoveSublist(index + 1, index, Count - index - 1);
             size--;
@@ -180,10 +214,7 @@ namespace System.Collections.Generic
         private void ResizeCapacity(int newCapacity)
         {
             var newContents = new T[newCapacity];
-            for (int i = 0; i < size; i++)
-            {
-                newContents[i] = contents[i];
-            }
+            CopyTo(newContents, 0);
             contents = newContents;
         }
 
