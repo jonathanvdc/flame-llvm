@@ -8,7 +8,7 @@ Traditional BCL implementations are expansive, highly fine-tuned beasts. The `fl
 
 Here are some ground rules:
 
-  * Code should be kept simple and straightforward.
+  * Code should be kept straightforward and concise.
   * Try to keep individual libraries lean and minimize their dependencies.
     * This reduces the coupling between standard library classes and, consequently, the number of classes required at run-time. The result is a smaller executable.
     * As a special instance of this rule: don't define non-essential classes such as `Console` and `HashSet<T>` in `corlib`. Put them in `system-console` and `system-collections`, respectively.
@@ -23,7 +23,7 @@ The `flame-llvm` standard library consists of the following components:
 
   * `corlib` defines `Object`, `Environment`, and other basic functionality. It is not a full BCL implementation, but rather a collection of essentials which other libraries can extend.
 
-  * `system-console` define the `Console` class, which handles standard input, error and output.
+  * `system-console` defines the `Console` class, which handles standard input, error and output.
 
   * `system-io` defines IO-related classes, such as `Stream` and `TextWriter`.
 
