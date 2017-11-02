@@ -24,7 +24,6 @@ runtime: exe
 
 .PHONY: stdlib
 stdlib: exe runtime
-	make -C stdlib-primitives all
 	make -C stdlib all
 
 .PHONY: nuget
@@ -36,6 +35,7 @@ clean: clean-compare-test clean-ecsc
 	make -C Flame.LLVM clean
 	make -C flame-llvm clean
 	make -C runtime clean
+	make -C stdlib clean
 
 .PHONY: test
 test: exe runtime stdlib | compare-test ecsc

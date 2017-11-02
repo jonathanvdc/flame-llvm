@@ -1,11 +1,20 @@
 runtime-lib = ../runtime/bin/flo/runtime.flo
 
+primitives-files = \
+	primitives/*.cs \
+	primitives/InteropServices/*.cs \
+	primitives/IO/*.cs \
+	primitives/Text/*.cs \
+	primitives/Threading/*.cs
+
+primitives-libs = $(runtime-lib)
+
 corlib-files = \
 	corlib/*.cs \
 	corlib/Collections.Generic/*.cs \
 	corlib/Runtime.InteropServices/*.cs \
 	corlib/Threading/*.cs \
-	../stdlib-primitives/bin/flo/stdlib-primitives.flo
+	bin/flo/primitives.flo
 
 corlib-libs = $(runtime-lib)
 
@@ -29,17 +38,24 @@ common-options = -asm-version=0.1.0.0
 .PHONY: all flo clean
 all: flo
 
-flo: bin/flo/corlib.flo bin/flo/system-text.flo bin/flo/system-io.flo bin/flo/system-console.flo
+flo: bin/flo/primitives.flo bin/flo/corlib.flo bin/flo/system-text.flo bin/flo/system-io.flo bin/flo/system-console.flo
 
 clean:
 	rm -rf bin/
 
 include ../flame-make-scripts/use-ecsc.mk
 
+bin/flo/primitives.flo: $(primitives-files) $(primitives-libs) | ecsc
+	$(ECSC) $(primitives-files) \
+		-platform ir -environment llvm -Wall -Wextra -Wno-build \
+		-rt-libs $(primitives-libs) \
+		-o $@ \
+		$(common-options) -asm-name=primitives
+
 bin/flo/corlib.flo: $(corlib-files) $(corlib-libs) | ecsc
 	$(ECSC) $(corlib-files) \
 		-platform ir -environment llvm -Wall -Wextra -Wno-build \
-		-rt-libs $(runtime-lib) \
+		-rt-libs $(corlib-libs) \
 		-o $@ \
 		$(common-options) -asm-name=stdlib
 
