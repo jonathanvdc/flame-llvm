@@ -1,13 +1,15 @@
+using System.Collections.Generic;
+
 namespace System
 {
     // TODO: ArraySegment<T> is not feature-complete yet. It lacks
     // - Equals/GetHashCode overrides
-    // - IEnumerable<T>, IList<T>, ... implementations
+    // - ICollection<T>, IList<T>, ... implementations
 
     /// <summary>
     /// Describes a segment of an array.
     /// </summary>
-    public struct ArraySegment<T>
+    public struct ArraySegment<T> : IEnumerable<T>
     {
         /// <summary>
         /// Creates an array segment that encapsulates an array
@@ -87,5 +89,11 @@ namespace System
         /// </summary>
         /// <returns>The number of elements in the array segment.</returns>
         public int Count { get; private set; }
+
+        /// <inheritdoc/>
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new ArrayEnumerator<T>(Array, Offset, Count);
+        }
     }
 }
