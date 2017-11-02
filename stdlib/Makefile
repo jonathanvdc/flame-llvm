@@ -1,4 +1,4 @@
-runtime-lib = ../runtime/bin/flo/runtime.flo
+runtime-lib = ../runtime/bin/flo/runtime-csharp.flo
 
 primitives-files = \
 	primitives/*.cs \

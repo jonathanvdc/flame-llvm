@@ -18,6 +18,7 @@ clean:
 include ../flame-make-scripts/use-ecsc.mk
 
 bin/native/runtime-c.ll: $(c-files)
+	mkdir -p bin/native
 	clang-4.0 $(c-files) -emit-llvm -S -o $@
 
 bin/flo/runtime-csharp.flo: $(csharp-files) | ecsc
