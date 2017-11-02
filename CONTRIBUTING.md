@@ -10,4 +10,8 @@ There are lots of ways for you to help out with making `flame-llvm` successful:
     3. Optimize an already-implemented BCL API.
     4. Implement a compiler feature.
 
-If you'd like to work with `flame-llvm` but you get stuck on something/get confused/don't know what to do, then just drop me an issue. I'd be happy to help you.
+If you'd like to work with `flame-llvm` but end up getting stuck on something/getting confused/not knowing what to do, then just drop me an issue. I'd be happy to offer whatever help I can.
+
+## Contributing standard library code
+
+A BCL implementation is essential to making `flame-llvm` usable, so any and all contributions that help improve the standard library are most welcome. However, if you're considering contributing standard library code, then **please take a brief look at the [philosophy section](stdlib/README.md#philosophy) of the standard library's README.** It contains a few design guidelines which your contribution should (ideally) respect.
