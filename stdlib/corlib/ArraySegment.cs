@@ -9,7 +9,7 @@ namespace System
     /// <summary>
     /// Describes a segment of an array.
     /// </summary>
-    public struct ArraySegment<T> : IEnumerable<T>
+    public struct ArraySegment<T> : IEnumerable<T>, IReadOnlyList<T>
     {
         /// <summary>
         /// Creates an array segment that encapsulates an array
@@ -90,10 +90,35 @@ namespace System
         /// <returns>The number of elements in the array segment.</returns>
         public int Count { get; private set; }
 
+        /// <summary>
+        /// Gets or sets the element at a particular index in this array segment.
+        /// </summary>
+        public T this[int index]
+        {
+            get
+            {
+                EnsureInBounds(index);
+                return Array[Offset + index];
+            }
+            set
+            {
+                EnsureInBounds(index);
+                Array[Offset + index] = value;
+            }
+        }
+
         /// <inheritdoc/>
         public IEnumerator<T> GetEnumerator()
         {
             return new ArrayEnumerator<T>(Array, Offset, Count);
+        }
+
+        private void EnsureInBounds(int index)
+        {
+            if (index < 0 || index >= Count)
+            {
+                throw new IndexOutOfRangeException();
+            }
         }
     }
 }
