@@ -32,7 +32,7 @@ namespace System.Collections.Generic
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Gets or sets the nth element in this list.
+        /// Gets or sets the element at a particular index in this list.
         /// </summary>
         public T this[int index]
         {
@@ -226,7 +226,7 @@ namespace System.Collections.Generic
 
         private void EnsureInBounds(int index)
         {
-            if (index >= size)
+            if (index < 0 || index >= size)
             {
                 throw new IndexOutOfRangeException();
             }
