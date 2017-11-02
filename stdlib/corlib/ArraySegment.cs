@@ -54,11 +54,11 @@ namespace System
                     count,
                     "count is less than zero.");
             }
-            else if (offset + count < data.Length)
+            else if (offset + count > data.Length)
             {
                 throw new ArgumentException(
                     nameof(count),
-                    "offset + count is less than the length of the array.");
+                    "offset + count is greater than the length of the array.");
             }
 
             Array = data;
