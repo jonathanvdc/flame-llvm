@@ -225,6 +225,11 @@ namespace Flame.LLVM
             LLVMValueRef result;
             if (!declaredVirtMethods.TryGetValue(Method, out result))
             {
+                if (Method.GetIsAbstract() || Method.DeclaringType.GetIsInterface())
+                {
+                    return ConstNull(PointerType(DeclarePrototype(Method), 0));
+                }
+
                 var declMethod = Declare(Method);
                 if (Method.DeclaringType.GetIsValueType())
                 {
