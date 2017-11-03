@@ -11,6 +11,7 @@ namespace System.Primitives
         /// <param name="value">A 32-bit unsigned integer.</param>
         public size_t(uint value)
         {
+            this = default(size_t);
             this.ptr = (void*)value;
         }
 
@@ -20,6 +21,7 @@ namespace System.Primitives
         /// <param name="value">A 64-bit unsigned integer.</param>
         public size_t(ulong value)
         {
+            this = default(size_t);
             this.ptr = (void*)value;
         }
 
@@ -29,6 +31,7 @@ namespace System.Primitives
         /// <param name="value">An opaque pointer.</param>
         public size_t(void* value)
         {
+            this = default(size_t);
             this.ptr = value;
         }
 

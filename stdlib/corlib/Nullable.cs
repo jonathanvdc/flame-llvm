@@ -12,6 +12,7 @@ namespace System
         /// <param name="value">The inner value.</param>
         public Nullable(T value)
         {
+            this = default(Nullable<T>);
             this.value = value;
             this.HasValue = true;
         }

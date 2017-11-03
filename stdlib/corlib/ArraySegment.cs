@@ -18,6 +18,7 @@ namespace System
         /// <param name="data">An array.</param>
         public ArraySegment(T[] data)
         {
+            this = default(ArraySegment<T>);
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));
@@ -36,6 +37,7 @@ namespace System
         /// <param name="count">The number of items to select in the array.</param>
         public ArraySegment(T[] data, int offset, int count)
         {
+            this = default(ArraySegment<T>);
             if (data == null)
             {
                 throw new ArgumentNullException(nameof(data));

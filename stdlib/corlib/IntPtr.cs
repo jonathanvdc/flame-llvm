@@ -11,6 +11,7 @@ namespace System
         /// <param name="value">A 32-bit signed integer.</param>
         public IntPtr(int value)
         {
+            this = default(IntPtr);
             this.ptr = (void*)value;
         }
 
@@ -20,6 +21,7 @@ namespace System
         /// <param name="value">A 64-bit signed integer.</param>
         public IntPtr(long value)
         {
+            this = default(IntPtr);
             this.ptr = (void*)value;
         }
 
@@ -29,6 +31,7 @@ namespace System
         /// <param name="value">An opaque pointer.</param>
         public IntPtr(void* value)
         {
+            this = default(IntPtr);
             this.ptr = value;
         }
 
