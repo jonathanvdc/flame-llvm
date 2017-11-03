@@ -20,12 +20,21 @@ corlib-libs = $(runtime-lib)
 system-console-files = \
 	system-console/*.cs
 
-system-console-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-text.flo bin/flo/system-io.flo
+system-console-libs = \
+	$(runtime-lib) \
+	bin/flo/corlib.flo \
+	bin/flo/system-text.flo \
+	bin/flo/system-threading.flo \
+	bin/flo/system-io.flo
 
 system-io-files = \
 	system-io/*.cs
 
-system-io-libs = $(runtime-lib) bin/flo/corlib.flo bin/flo/system-text.flo
+system-io-libs = \
+	$(runtime-lib) \
+	bin/flo/corlib.flo \
+	bin/flo/system-text.flo \
+	bin/flo/system-threading.flo
 
 system-text-files = \
 	system-text/*.cs

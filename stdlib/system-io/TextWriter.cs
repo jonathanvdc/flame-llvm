@@ -4,6 +4,7 @@
 #importMacros(LeMP);
 
 using System.Text;
+using System.Threading;
 
 namespace System.IO
 {
@@ -18,8 +19,17 @@ namespace System.IO
             CoreNewLine = CoreNewLineStr.ToCharArray();
         }
 
+        ~TextWriter()
+        {
+            if (!isDisposed)
+            {
+                Dispose(false);
+            }
+        }
+
         protected char[] CoreNewLine;
         private string CoreNewLineStr;
+        private bool isDisposed;
 
         /// <summary>
         /// Gets the encoding used by this text writer.
@@ -49,6 +59,7 @@ namespace System.IO
 
         public void Dispose()
         {
+            isDisposed = true;
             Dispose(true);
         }
 
@@ -237,18 +248,20 @@ namespace System.IO
         public SynchronizedTextWriter(TextWriter writer)
         {
             this.writer = writer;
+            this.mutex = new Mutex();
         }
 
         private TextWriter writer;
+        private Mutex mutex;
 
         private void AcquireLock()
         {
-            // TODO: implement this
+            mutex.WaitOne();
         }
 
         private void ReleaseLock()
         {
-            // TODO: implement this
+            mutex.ReleaseMutex();
         }
 
         /// <inheritdoc/>
@@ -289,15 +302,11 @@ namespace System.IO
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            AcquireLock();
-            try
+            if (disposing)
             {
                 writer.Dispose();
             }
-            finally
-            {
-                ReleaseLock();
-            }
+            mutex.Dispose();
         }
 
         /// <inheritdoc/>
