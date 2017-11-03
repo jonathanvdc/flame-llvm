@@ -13,10 +13,20 @@ namespace System.Threading
         // really matter from a user's perspective and inheriting directly
         // from WaitHandle in user code is usually rather useless.
 
+        protected WaitHandle()
+        {
+            isDisposed = false;
+        }
+
         ~WaitHandle()
         {
-            Dispose(false);
+            if (!isDisposed)
+            {
+                Dispose(false);
+            }
         }
+
+        private bool isDisposed;
 
         public abstract bool WaitOne();
 
@@ -24,11 +34,12 @@ namespace System.Threading
 
         public virtual void Close()
         {
-            Dispose(true);
+            Dispose();
         }
 
         public void Dispose()
         {
+            isDisposed = true;
             Dispose(true);
         }
     }
