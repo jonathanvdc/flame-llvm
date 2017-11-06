@@ -222,7 +222,7 @@ namespace System.Primitives.Text
                 n = 4;
             } while (false);
 
-            if (buffer != (byte*)null)
+            if (buffer != null)
             {
                 buffer[0] = b;
                 if (n > 1)
@@ -314,7 +314,7 @@ namespace System.Primitives.Text
 
             if (codePoint < 0x10000)
             {
-                if (buffer != (char*)null)
+                if (buffer != null)
                 {
                     buffer[0] = (char)codePoint;
                 }
@@ -325,7 +325,7 @@ namespace System.Primitives.Text
             int low = (int)codePoint & 0x3FF;
             codePoint >>= 10;
             int high = (int)codePoint & 0x3FF;
-            if (buffer != (char*)null)
+            if (buffer != null)
             {
                 buffer[0] = (char)(high | 0xD800);
                 buffer[1] = (char)(low | 0xDC00);

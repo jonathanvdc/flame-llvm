@@ -33,7 +33,7 @@ namespace System.Runtime.InteropServices
         /// <returns>A UTF-16 string if <c>ptr</c> is not <c>IntPtr.Zero</c>; otherwise, <c>null</c>.</returns>
         public static string PtrToStringAnsi(IntPtr ptr)
         {
-            if (ptr.ToPointer() == (void*)null)
+            if (ptr.ToPointer() == null)
                 return null;
             else
                 return String.FromCString((byte*)ptr.ToPointer());
@@ -50,7 +50,7 @@ namespace System.Runtime.InteropServices
         public static IntPtr StringToHGlobalAnsi(string str)
         {
             if (str == null)
-                return new IntPtr((void*)null);
+                return new IntPtr(null);
             else
                 return new IntPtr(String.ToCString(str));
         }

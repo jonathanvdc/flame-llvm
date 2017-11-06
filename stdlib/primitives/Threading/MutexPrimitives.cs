@@ -18,8 +18,8 @@ namespace System.Primitives.Threading
         /// <c>true</c> if this handle is a null handle; otherwise, <c>false</c>.
         /// </returns>
         public bool IsNull =>
-            MutexPointer == (pthread_mutex_t*)null
-            && AttributePointer == (pthread_mutexattr_t*)null;
+            MutexPointer == null
+            && AttributePointer == null;
 
         internal pthread_mutex_t* MutexPointer { get; private set; }
         internal pthread_mutexattr_t* AttributePointer { get; private set; }

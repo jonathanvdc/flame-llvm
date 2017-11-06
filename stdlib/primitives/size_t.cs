@@ -48,7 +48,7 @@ namespace System.Primitives
         /// been initialized to zero.
         /// </summary>
         /// <returns>Zero as a pointer-sized integer.</returns>
-        public static size_t Zero => new size_t((void*)null);
+        public static size_t Zero => new size_t(null);
 
         /// <summary>
         /// Converts this value to a 32-bit unsigned integer.

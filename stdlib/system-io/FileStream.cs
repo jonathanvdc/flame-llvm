@@ -39,7 +39,7 @@ namespace System.IO
             this.Name = Name;
             this.access = access;
             this.fileHandle = OpenFile(name, mode, access);
-            if (fileHandle == (void*)null)
+            if (fileHandle == null)
             {
                 throw new IOException("Cannot open file at '" + name + "'.");
             }
@@ -54,7 +54,7 @@ namespace System.IO
         /// <returns>The file name.</returns>
         public string Name { get; private set; }
 
-        private bool IsOpen => fileHandle != (void*)null;
+        private bool IsOpen => fileHandle != null;
 
         /// <inheritdoc/>
         public override bool CanRead => IsOpen && (access & FileAccess.Read) == FileAccess.Read;
@@ -139,7 +139,7 @@ namespace System.IO
         private static bool FileExists(string name)
         {
             void* handle = OpenFile(name, "r");
-            if (handle == (void*)null)
+            if (handle == null)
             {
                 // TODO: maybe look at errno?
                 return false;

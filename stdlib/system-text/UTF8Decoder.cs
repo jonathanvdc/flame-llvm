@@ -155,7 +155,7 @@ namespace System.Text
 
         private static int WriteToCharBuffer(uint codePoint, char[] buffer, int offset)
         {
-            return UnicodeConverter.WriteUtf16CodePoint(codePoint, buffer == null ? (char*)null : &buffer[offset]);
+            return UnicodeConverter.WriteUtf16CodePoint(codePoint, buffer == null ? null : &buffer[offset]);
         }
     }
 }

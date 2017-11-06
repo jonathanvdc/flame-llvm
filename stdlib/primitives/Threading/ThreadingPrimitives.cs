@@ -70,14 +70,14 @@ namespace System.Primitives.Threading
         /// <returns>A result code.</returns>
         public static ThreadResultCode JoinThread(ThreadId threadId)
         {
-            return (ThreadResultCode)pthread_join(threadId.id, (void* *)null);
+            return (ThreadResultCode)pthread_join(threadId.id, null);
         }
 
         private static void* RunStartRoutine(
             ThreadStartRoutine startRoutine)
         {
             startRoutine();
-            return (void*)null;
+            return null;
         }
     }
 }

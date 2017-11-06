@@ -111,7 +111,7 @@ namespace System.Text
             int byteCount = 0;
             for (int i = 0; i < count; i++)
             {
-                byteCount += EncodeChar(chars[index + i], (byte*)null);
+                byteCount += EncodeChar(chars[index + i], null);
             }
 
             cachedHighSurrogate = oldCache;
