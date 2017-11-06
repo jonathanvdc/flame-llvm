@@ -46,6 +46,7 @@ tests
     template CheckOutput<abstract/abstract.cs, , 111 161>;
     template CheckOutput<array/array.cs, aloha, aloha>;
     template CheckOutput<boxing/boxing.cs, , False True False 1>;
+    template CheckOutput<compare-exchange/compare-exchange.cs, , 10 5>;
     template CheckOutput<custom-delegates/custom-delegates.cs, , 100 100>;
     template CheckOutput<delegates/delegates.cs, , 100>;
     template CheckOutput<echo/echo.cs, howdy, howdy>;
