@@ -76,6 +76,7 @@
     <Compile Include="Codegen\BranchLabelBlock.cs" />
     <Compile Include="Codegen\CatchClause.cs" />
     <Compile Include="Codegen\CodeBlock.cs" />
+    <Compile Include="Codegen\CompareExchangeBlock.cs" />
     <Compile Include="Codegen\ComparisonBlock.cs" />
     <Compile Include="Codegen\ConstantBlock.cs" />
     <Compile Include="Codegen\ConstCharArrayBlock.cs" />

@@ -13,6 +13,7 @@ corlib-files = \
 	corlib/*.cs \
 	corlib/Collections.Generic/*.cs \
 	corlib/Runtime.InteropServices/*.cs \
+	corlib/Threading/*.cs \
 	bin/flo/primitives.flo
 
 corlib-libs = $(runtime-lib)

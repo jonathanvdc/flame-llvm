@@ -328,6 +328,24 @@ namespace Flame.LLVM
                             ReturnType,
                             DelegateBlock.BuildLoadFunctionPointer)));
             }
+            else if (methodName == "CompareExchange"
+                && IsStatic
+                && parameters.Length == 3)
+            {
+                return new ReturnStatement(
+                    LLVMCodeGenerator.ToExpression(
+                        new CompareExchangeBlock(
+                            (CodeBlock)new ArgumentVariable(parameters[0], 0)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            (CodeBlock)new ArgumentVariable(parameters[1], 1)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            (CodeBlock)new ArgumentVariable(parameters[2], 2)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            codeGenerator)));
+            }
             else
             {
                 throw new NotSupportedException(
