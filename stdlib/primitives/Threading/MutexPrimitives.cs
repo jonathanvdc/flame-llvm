@@ -17,14 +17,46 @@ namespace System.Primitives.Threading
         /// <returns>
         /// <c>true</c> if this handle is a null handle; otherwise, <c>false</c>.
         /// </returns>
-        public bool IsNull => ptr == (pthread_mutex_t*)null;
+        public bool IsNull =>
+            MutexPointer == (pthread_mutex_t*)null
+            && AttributePointer == (pthread_mutexattr_t*)null;
 
-        internal pthread_mutex_t* ptr;
+        internal pthread_mutex_t* MutexPointer { get; private set; }
+        internal pthread_mutexattr_t* AttributePointer { get; private set; }
+
+        private static extern uint pthread_get_mutex_size();
+
+        private static extern uint pthread_get_mutexattr_size();
+
+        internal static MutexHandle Allocate()
+        {
+            var result = default(MutexHandle);
+            result.AttributePointer = Memory.AllocHGlobal(pthread_get_mutexattr_size());
+            result.MutexPointer = Memory.AllocHGlobal(pthread_get_mutex_size());
+            return result;
+        }
+
+        internal void Free()
+        {
+            Memory.FreeHGlobal(MutexPointer);
+            Memory.FreeHGlobal(AttributePointer);
+            MutexPointer = null;
+            AttributePointer = null;
+        }
     }
 
     public static class MutexPrimitives
     {
-        private static extern uint pthread_get_mutex_size();
+        private static extern int pthread_get_mutex_errorcheck_type();
+
+        private static extern int pthread_mutexattr_init(
+            pthread_mutexattr_t* attr);
+
+        private static extern int pthread_mutexattr_settype(
+            pthread_mutexattr_t* attr, int type);
+
+        private static extern int pthread_mutexattr_destroy(
+            pthread_mutexattr_t* attr);
 
         private static extern int pthread_mutex_init(
             pthread_mutex_t* mutex, pthread_mutexattr_t* attr);
@@ -48,19 +80,33 @@ namespace System.Primitives.Threading
         /// <returns>A result code.</returns>
         public static ThreadResultCode CreateMutex(out MutexHandle mutex)
         {
-            var mutexPtr = Memory.AllocHGlobal(pthread_get_mutex_size());
+            mutex = MutexHandle.Allocate();
 
-            var result = (ThreadResultCode)pthread_mutex_init(
-                mutexPtr, (pthread_mutexattr_t*)null);
-
-            mutex = default(MutexHandle);
-            if (result == ThreadResultCode.Success)
+            var result = (ThreadResultCode)pthread_mutexattr_init(mutex.AttributePointer);
+            if (result != ThreadResultCode.Success)
             {
-                mutex.ptr = mutexPtr;
+                mutex.Free();
+                return result;
             }
-            else
+
+            result = (ThreadResultCode)pthread_mutexattr_settype(
+                mutex.AttributePointer, pthread_get_mutex_errorcheck_type());
+
+            if (result != ThreadResultCode.Success)
             {
-                Memory.FreeHGlobal(mutexPtr);
+                pthread_mutexattr_destroy(mutex.AttributePointer);
+                mutex.Free();
+                return result;
+            }
+
+            result = (ThreadResultCode)pthread_mutex_init(
+                mutex.MutexPointer, mutex.AttributePointer);
+
+            if (result != ThreadResultCode.Success)
+            {
+                pthread_mutexattr_destroy(mutex.AttributePointer);
+                mutex.Free();
+                return result;
             }
             return result;
         }
@@ -78,9 +124,12 @@ namespace System.Primitives.Threading
                 return ThreadResultCode.Success;
             }
 
-            var result = (ThreadResultCode)pthread_mutex_destroy(mutex.ptr);
-            Memory.FreeHGlobal(mutex.ptr);
-            return result;
+            var mutexResult = (ThreadResultCode)pthread_mutex_destroy(mutex.MutexPointer);
+            var attrResult = (ThreadResultCode)pthread_mutexattr_destroy(mutex.AttributePointer);
+            mutex.Free();
+            return mutexResult == ThreadResultCode.Success
+                ? attrResult
+                : mutexResult;
         }
 
         /// <summary>
@@ -90,7 +139,7 @@ namespace System.Primitives.Threading
         /// <returns>A result code.</returns>
         public static ThreadResultCode LockMutex(MutexHandle mutex)
         {
-            return (ThreadResultCode)pthread_mutex_lock(mutex.ptr);
+            return (ThreadResultCode)pthread_mutex_lock(mutex.MutexPointer);
         }
 
         /// <summary>
@@ -101,7 +150,7 @@ namespace System.Primitives.Threading
         /// <returns>A result code.</returns>
         public static ThreadResultCode TryLockMutex(MutexHandle mutex)
         {
-            return (ThreadResultCode)pthread_mutex_trylock(mutex.ptr);
+            return (ThreadResultCode)pthread_mutex_trylock(mutex.MutexPointer);
         }
 
         /// <summary>
@@ -111,7 +160,7 @@ namespace System.Primitives.Threading
         /// <returns>A result code.</returns>
         public static ThreadResultCode UnlockMutex(MutexHandle mutex)
         {
-            return (ThreadResultCode)pthread_mutex_unlock(mutex.ptr);
+            return (ThreadResultCode)pthread_mutex_unlock(mutex.MutexPointer);
         }
     }
 }
