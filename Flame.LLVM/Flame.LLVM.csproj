@@ -98,6 +98,7 @@
     <Compile Include="Codegen\MarkLabelBlock.cs" />
     <Compile Include="Codegen\PopBlock.cs" />
     <Compile Include="Codegen\PrologueSpec.cs" />
+    <Compile Include="Codegen\ReadModifyWriteBlock.cs" />
     <Compile Include="Codegen\ReturnBlock.cs" />
     <Compile Include="Codegen\RetypedBlock.cs" />
     <Compile Include="Codegen\SequenceBlock.cs" />

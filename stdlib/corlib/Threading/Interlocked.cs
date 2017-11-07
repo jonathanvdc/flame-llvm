@@ -125,5 +125,113 @@ namespace System.Threading
             T value,
             T comparand)
             where T : class;
+
+        [#builtin_attribute(RuntimeImplementedAttribute)]
+        private static int AtomicRMWAdd(
+            ref int destination,
+            int value);
+
+        /// <summary>
+        /// Adds two 32-bit signed integers and replaces the first
+        /// with the sum, in an atomic operation.
+        /// </summary>
+        /// <param name="destination">
+        /// A reference to a destination, whose value is first read from
+        /// and then written to in an atomic operation.
+        /// </param>
+        /// <param name="value">
+        /// A value to add to the destination value.
+        /// </param>
+        /// <returns>
+        /// The new value at the destination.
+        /// </returns>
+        public static int Add(
+            ref int destination,
+            int value)
+        {
+            return AtomicRMWAdd(ref destination, value);
+        }
+
+        [#builtin_attribute(RuntimeImplementedAttribute)]
+        private static long AtomicRMWAdd(
+            ref long destination,
+            long value);
+
+        /// <summary>
+        /// Adds two 64-bit signed integers and replaces the first
+        /// with the sum, in an atomic operation.
+        /// </summary>
+        /// <param name="destination">
+        /// A reference to a destination, whose value is first read from
+        /// and then written to in an atomic operation.
+        /// </param>
+        /// <param name="value">
+        /// A value to add to the destination value.
+        /// </param>
+        /// <returns>
+        /// The new value at the destination.
+        /// </returns>
+        public static long Add(
+            ref long destination,
+            long value)
+        {
+            return AtomicRMWAdd(ref destination, value);
+        }
+
+        /// <summary>
+        /// Increments a 32-bit signed integer at a particular destination,
+        /// in an atomic operation.
+        /// </summary>
+        /// <param name="destination">
+        /// A reference to a destination, whose value is first read and then written to
+        /// in an atomic operation.
+        /// </param>
+        /// <returns>The new value at the destination.</returns>
+        public static int Increment(ref int destination)
+        {
+            return Add(ref destination, 1);
+        }
+
+        /// <summary>
+        /// Increments a 64-bit signed integer at a particular destination,
+        /// in an atomic operation.
+        /// </summary>
+        /// <param name="destination">
+        /// A reference to a destination, whose value is first read and then written to
+        /// in an atomic operation.
+        /// </param>
+        /// <returns>The new value at the destination.</returns>
+        public static long Increment(ref long destination)
+        {
+            return Add(ref destination, 1);
+        }
+
+        /// <summary>
+        /// Decrements a 32-bit signed integer at a particular destination,
+        /// in an atomic operation.
+        /// </summary>
+        /// <param name="destination">
+        /// A reference to a destination, whose value is first read and then written to
+        /// in an atomic operation.
+        /// </param>
+        /// <returns>The new value at the destination.</returns>
+        public static int Decrement(ref int destination)
+        {
+            return Add(ref destination, -1);
+        }
+
+        /// <summary>
+        /// Decrements a 64-bit signed integer at a particular destination,
+        /// in an atomic operation.
+        /// </summary>
+        /// <param name="destination">
+        /// A reference to a destination, whose value is first read and then written to
+        /// in an atomic operation.
+        /// </param>
+        /// <returns>The new value at the destination.</returns>
+        public static long Decrement(ref long destination)
+        {
+            return Add(ref destination, -1);
+        }
     }
 }

@@ -346,6 +346,23 @@ namespace Flame.LLVM
                                 .Emit(codeGenerator),
                             codeGenerator)));
             }
+            else if (methodName.StartsWith("AtomicRMW")
+                && IsStatic
+                && parameters.Length == 2)
+            {
+                return new ReturnStatement(
+                    LLVMCodeGenerator.ToExpression(
+                        new ReadModifyWriteBlock(
+                            (CodeBlock)new ArgumentVariable(parameters[0], 0)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            (CodeBlock)new ArgumentVariable(parameters[1], 1)
+                                .CreateGetExpression()
+                                .Emit(codeGenerator),
+                            ReadModifyWriteBlock.ParseOperator(
+                                methodName.Substring("AtomicRMW".Length)),
+                            codeGenerator)));
+            }
             else
             {
                 throw new NotSupportedException(
