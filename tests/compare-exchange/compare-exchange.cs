@@ -9,6 +9,8 @@ public static class Program
         int dest = 10;
         int value = 5;
         int comparand = 10;
-        WriteLine(Interlocked.CompareExchange(ref dest, value, comparand) + " " + dest);
+        int oldValue = Interlocked.CompareExchange(ref dest, value, comparand);
+        int oldComparand = Interlocked.Exchange(ref comparand, dest);
+        WriteLine(oldValue + " " + oldComparand + " " + comparand);
     }
 }
